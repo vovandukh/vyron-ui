@@ -1,0 +1,28 @@
+:root{--bg:#0a0a0b;--ink:#f2f4f5;--dim:#8a8f98;--line:#23272d;--fill:#ff6b60;--red:#f03a2e;--blue:#789cff;--mono:ui-monospace,Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+html{background:radial-gradient(ellipse 70% 60% at 10% 105%,rgba(240,58,46,.22),transparent 70%),radial-gradient(ellipse 50% 40% at 100% -5%,rgba(240,58,46,.09),transparent 70%),var(--bg)}
+html,body{margin:0;height:100%;color:var(--ink);font-family:Montserrat,system-ui,sans-serif;overflow:hidden}
+/* шестикутна сітка на фоні */
+html::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cpath d='M28 0 56 16.17V48.5L28 64.67 0 48.5V16.17ZM28 64.67V97' fill='none' stroke='%23ffffff' stroke-opacity='.06' stroke-width='1'/%3E%3C/svg%3E");-webkit-mask-image:radial-gradient(ellipse 75% 70% at 50% 50%,transparent 20%,#000 100%);mask-image:radial-gradient(ellipse 75% 70% at 50% 50%,transparent 20%,#000 100%)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+
+/* Панель поверх 3D-сцени: спільна для вкладок і вікон меню */
+.view{position:fixed;top:calc(var(--hb,72px) + 16px);left:32px;right:32px;bottom:65px;z-index:5;background:rgba(10,10,11,.96);border:1px solid var(--line);border-radius:9px;padding:18px;display:flex;flex-direction:column;gap:12px;overflow:auto}
+.view button,.view select,.view input,.view textarea{background:rgba(10,10,11,.5);border:1px solid var(--line);color:var(--ink);font:inherit;font-size:12px;border-radius:7px;padding:9px 12px}
+.view button{cursor:pointer}
+.view button:hover:not(:disabled){border-color:var(--red)}
+.view button:disabled{opacity:.35;cursor:not-allowed}
+.view option{background:#0a0a0b}
+
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row span{color:var(--dim);font-size:11px}
+.muted{color:var(--dim);font-size:11px}
+
+/* Лог (консоль, оновлення) */
+.log{flex:1;min-height:200px;overflow:auto;font:12px/1.5 var(--mono);color:var(--dim);white-space:pre-wrap}
+.log .c{color:var(--ink)}
+.log .e{color:var(--red)}
+
+@media(max-width:900px){
+  .view{left:10px;right:10px;bottom:112px;padding:12px}
+}
