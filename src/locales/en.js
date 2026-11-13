@@ -1,0 +1,111 @@
+export default {
+  'nav.main': 'Control', 'nav.tools': 'Tools', 'nav.console': 'Console', 'nav.mesh': 'Bed mesh',
+  'nav.hist': 'History', 'nav.eng': 'Engineering', 'nav.cfg': 'Config',
+
+  'common.set': 'Set', 'common.off': 'Turn off', 'common.cancel': 'Cancel', 'common.save': 'Save', 'common.ok': 'OK',
+  'fmt.hm': '{h} h {m} min', 'fmt.m': '{m} min',
+  'unit.mm': '{v} mm', 'unit.m': '{v} m',
+  'eta.left': '{t} left',
+
+  'menu.label': 'Menu', 'menu.settings': 'Settings', 'menu.updates': 'Updates', 'menu.net': 'Network and Wi‑Fi',
+  'menu.restartMoonraker': 'Restart Moonraker', 'menu.reboot': 'Reboot host', 'menu.shutdown': 'Shut down host',
+  'confirm.restartMoonraker': 'Restart Moonraker?', 'confirm.reboot': 'Reboot the host?',
+  'confirm.shutdown': 'Shut down the host? Power is needed to start it again.',
+
+  'estop.label': 'Emergency stop', 'estop.title': 'Emergency stop (M112)',
+  'estop.confirm': 'Emergency stop? Klipper will enter an error state and needs a firmware restart afterwards.',
+
+  'state.printing': 'Printing', 'state.paused': 'Pause', 'state.standby': 'Standby', 'state.complete': 'Done',
+  'state.cancelled': 'Cancelled', 'state.error': 'Error', 'state.connecting': 'Connecting…', 'state.connected': 'Connected',
+  'state.ready': 'Ready', 'state.klipperError': 'Klipper error', 'state.lost': 'No connection', 'state.demo': 'Demo',
+
+  'conn.placeholder': 'printer address', 'conn.aria': 'Printer address', 'conn.connect': 'Connect', 'conn.demo': 'Demo',
+  'conn.connectingTo': 'Connecting to {host}…', 'conn.connectedTo': 'Connected · {host}',
+  'conn.wsError': 'WebSocket error · check the address and access', 'conn.lost': 'Connection lost · reconnecting…',
+  'conn.addrError': 'Address error: {msg}',
+
+  'meta.notConnected': 'Not connected', 'meta.noFile': 'No active file',
+  'meta.gcodeError': 'Could not load G-code: {msg}', 'meta.demo': 'Demo · simulated print',
+
+  'status.nozzle': 'Active nozzle', 'status.bed': 'Bed', 'status.chamber': 'Chamber', 'status.speed': 'Speed',
+  'status.fan': 'Fan', 'status.z': 'Z height', 'status.layer': 'Layer', 'status.qgl': 'QGL',
+  'status.setNozzle': 'Set nozzle temperature', 'status.setBed': 'Set bed temperature',
+  'status.qglDone': 'leveled', 'status.qglNot': 'not done',
+
+  'jog.home': 'Home all axes', 'jog.motorsOff': 'Disable motors (M84)', 'jog.motorsOffAria': 'Disable motors',
+  'jog.badDistance': 'Enter a valid distance greater than 0',
+
+  'msg.demoNoExec': 'Demo: command not executed', 'msg.notConnected': 'Not connected',
+  'msg.notConnectedPrinter': 'Not connected to the printer', 'msg.notWhilePrinting': 'Not while printing',
+  'msg.invalidWs': 'Invalid WebSocket response',
+
+  'tools.title': 'Six tools', 'tools.waiting': 'Waiting for Klipper configuration',
+  'tools.hintSummary': 'How to show EBB36 board temperatures', 'tools.hintMcu': '# name of this board’s [mcu …]',
+  'tools.hintSame': '# same for ebb_t1 … ebb_t5',
+  'tools.hintText': 'The sensor name must contain ebb, can, board, head or tool and end with the tool number 0–5 (for example, ebb_t3).',
+  'tools.selectHint': 'Tool selection sends T0–T5',
+  'tools.footer': 'Extruder names come from printer.objects.list. T0–T5 need matching extruders and tool-select commands in Klipper.',
+  'tools.found': '{n} / 6 extruders found',
+  'tools.notEnough': 'Klipper has {n} extruder(s). Six tools need six extruder sections.',
+  'tools.demoMode': 'Demo mode · no commands are sent to the printer',
+  'tools.notFoundCfg': 'Tool T{i} not found in the Klipper configuration', 'tools.demoSelected': 'Demo · selected T{i}',
+  'tools.sent': 'Tool selection sent: T{i}', 'tools.notFoundTitle': 'Extruder not found', 'tools.cardNotFound': 'not found',
+  'tools.tempOf': 'Temperature {name}', 'tools.addSection': 'Add {sec} in printer.cfg', 'tools.board': 'EBB36 board ·',
+  'tools.noSensor': 'sensor not found', 'tools.placeholder': 'Target temperature', 'tools.aria': 'Temperature T{i}',
+  'tools.activate': 'Activate', 'tools.badTemp': 'Enter a temperature 0–320 °C',
+
+  'console.placeholder': 'G-code, e.g. G28', 'console.send': 'Send',
+
+  'mesh.calibrate': 'Calibrate', 'mesh.none': 'No bed mesh yet.', 'mesh.front': 'Front of the bed at the bottom.',
+  'mesh.calSent': 'Command sent. Calibration progress is in the console.',
+  'mesh.info': '{name}{saved} · {lo}…{hi} mm · range {range} mm · ×{k}', 'mesh.savedSuffix': ' · saved profile',
+
+  'hist.refresh': 'Refresh', 'hist.prevTitle': 'Previous prints', 'hist.empty': 'No history yet',
+  'hist.completed': 'Completed', 'hist.interrupted': 'Interrupted', 'hist.inProgress': 'Printing',
+  'hist.started': 'Started', 'hist.duration': 'Duration', 'hist.total': 'Total time', 'hist.filament': 'Filament',
+  'hist.layers': 'Layers', 'hist.height': 'Height',
+  'hist.totals': 'Total prints: {n} · Print time: {time} · Filament: {fil} m',
+  'hist.unavailable': 'History unavailable: {msg} (needs [history] in moonraker.conf)',
+
+  'eng.klipper': 'Klipper', 'eng.host': 'Host', 'eng.state': 'State', 'eng.cpu': 'CPU', 'eng.cpuTemp': 'CPU temperature',
+  'eng.mem': 'Memory', 'eng.uptime': 'Uptime', 'eng.memVal': '{p}% of {gb} GB', 'eng.demoUptime': '3 days',
+  'eng.confirmRestart': 'Restart Klipper?', 'eng.confirmFw': 'Run firmware restart?',
+
+  'cfg.search': 'Search files', 'cfg.new': '+ New', 'cfg.unsaved': '● unsaved', 'cfg.find': 'Find',
+  'cfg.saveRestart': 'Save and restart', 'cfg.replaceWith': 'Replace with', 'cfg.replace': 'Replace', 'cfg.all': 'All',
+  'cfg.prev': 'Back', 'cfg.next': 'Next', 'cfg.editor': 'Config editor',
+  'cfg.stat': 'Line {l}, column {c} · {n} lines', 'cfg.matches': '{n} matches', 'cfg.noChanges': 'No changes',
+  'cfg.saved': 'Saved (a copy of the previous version is kept in backups/)', 'cfg.discard': 'You have unsaved changes. Discard them?',
+  'cfg.newName': 'File name (for example, macros.cfg)', 'cfg.saveError': 'Could not save: {msg}',
+  'cfg.connect': 'Connect the printer', 'cfg.connectToEdit': 'Connect the printer to edit the configuration',
+  'cfg.badName': 'The name must end in .cfg or .conf', 'cfg.listError': 'Could not get the file list: {msg}',
+  'cfg.openError': 'Could not open: {msg}', 'cfg.confirmSaveRestart': 'Save and restart Klipper?',
+
+  'upd.check': 'Check for updates', 'upd.all': 'Update all', 'upd.update': 'Update', 'upd.available': 'Update available',
+  'upd.upToDate': 'Up to date', 'upd.dirty': 'has local changes', 'upd.invalid': 'invalid configuration',
+  'upd.packages': '{n} packages to update', 'upd.finished': 'Update finished',
+  'upd.confirmOne': 'Update {name}? Klipper and Moonraker restart during the update.',
+  'upd.confirmAll': 'Update all? Klipper and Moonraker restart during the update.',
+  'upd.updating': 'Updating {name}…', 'upd.updatingAll': 'Updating everything…',
+
+  'net.interfaces': 'Host network interfaces', 'net.scan': 'Scan networks', 'net.scanning': 'Scanning…',
+  'net.none': 'No networks found. Check the WIFI_SCAN setup (see below).',
+  'net.found': 'Networks found: {n}. Tap a network to fill in its name.', 'net.open': 'open',
+  'net.ssid': 'Network name (SSID)', 'net.ssidAria': 'Network name', 'net.pass': 'Password', 'net.passAria': 'Wi-Fi password',
+  'net.needBoth': 'Enter a network name and password',
+  'net.badChars': 'Quotes, curly braces and backslashes are not supported in the name or password',
+  'net.confirm': 'Connect the printer to network {ssid}? If the details are wrong, Wi-Fi access to the printer may be lost.',
+  'net.sent': 'Command sent. If it connects, this page will lose connection: open the printer at its new IP address.',
+  'net.setupSummary': 'One-time setup for connecting',
+  'net.setupNote': 'The gcode_shell_command extension is required (install via KIAUH). This is an example, not tested on your printer; if nmcli asks for permissions, sudo or polkit setup will be needed.',
+  'net.demoIface': 'wlan0 · 192.168.0.232 (demo)',
+
+  'set.lang': 'Language', 'set.cEstop': 'Confirm emergency stop',
+  'set.cSys': 'Confirm system actions (restart, shutdown)',
+  'set.invX': 'Invert X direction', 'set.invY': 'Invert Y direction', 'set.invZ': 'Invert Z direction',
+  'set.fxy': 'X/Y move speed, mm/min', 'set.fz': 'Z move speed, mm/min',
+  'set.note': 'Settings are stored in this browser.',
+
+  'temp.nozzle': 'Nozzle temperature', 'temp.bed': 'Bed temperature', 'temp.now': 'Now', 'temp.target': 'target',
+  'temp.aria': 'Target temperature', 'temp.range': 'Enter a temperature 0–{max} °C'
+}
