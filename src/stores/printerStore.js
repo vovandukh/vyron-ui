@@ -3,10 +3,11 @@ import { ref, shallowReactive, computed } from 'vue'
 import { MoonrakerClient, normalizeHost } from '../services/moonrakerClient'
 import { fetchGcode } from '../services/moonrakerApi'
 import { discoverTools, subscriptionObjects, STATE_KEYS, MAX_TOOLS } from '../services/klipper'
+import { detectToolheads, toolheadObjects } from '../services/toolheads'
 import { parseGcode } from '../services/gcodeParser'
 import { model, loadModel, indexForPos, segEnd, layerLabel } from '../services/gcodeModel'
 import {
-  DEMO_TOOLS, DEMO_BOARDS, DEMO_STEP, DEMO_INTERVAL,
+  DEMO_TOOLS, DEMO_STEP, DEMO_INTERVAL, DEMO_TOOLHEADS,
   demoGcode, demoStaticStatus, demoTickStatus
 } from '../services/demo'
 
@@ -31,6 +32,8 @@ export const usePrinterStore = defineStore('printer', () => {
   const objectList = ref([])
   const toolObjects = ref([])
   const boardObjects = ref([])
+  /** Плата голови для кожного екструдера: { extruder: Toolhead | null } (див. services/toolheads.js) */
+  const toolheads = ref({})
   const activeTool = ref(0)
   const toolStatus = ref({ key: 'tools.waiting' })
   const ctlMsg = ref(null)
@@ -138,6 +141,7 @@ export const usePrinterStore = defineStore('printer', () => {
     objectList.value = []
     toolObjects.value = []
     boardObjects.value = []
+    toolheads.value = {}
     loadedName = null
     loading = false
     gcodeError.value = null
@@ -195,7 +199,15 @@ export const usePrinterStore = defineStore('printer', () => {
       boardObjects.value = boards
       toolStatus.value = { key: 'tools.found', params: { n: tools.length } }
       if (tools.length < MAX_TOOLS) log({ key: 'tools.notEnough', params: { n: tools.length } }, 'e')
-      const s = await client.call('printer.objects.subscribe', { objects: subscriptionObjects(objectList.value, tools, boards) })
+      // Плати голів: читаємо налаштування printer.cfg (тільки читання) і шукаємо MCU за пінами екструдерів.
+      let extra = []
+      try {
+        const q = await client.call('printer.objects.query', { objects: { configfile: ['settings'] } })
+        const settings = (((q || {}).status || {}).configfile || {}).settings || {}
+        toolheads.value = detectToolheads(settings, tools, objectList.value)
+        extra = toolheadObjects(toolheads.value)
+      } catch { toolheads.value = {} }
+      const s = await client.call('printer.objects.subscribe', { objects: subscriptionObjects(objectList.value, tools, boards, extra) })
       if (s && s.status) mergeStatus(s.status)
     } catch { /* помилку вже записано в консоль */ }
   }
@@ -240,7 +252,8 @@ export const usePrinterStore = defineStore('printer', () => {
     demoMode.value = true
     link.value = 'demo'
     toolObjects.value = [...DEMO_TOOLS]
-    boardObjects.value = [...DEMO_BOARDS]
+    boardObjects.value = []
+    toolheads.value = DEMO_TOOLHEADS
     activeTool.value = 0
     toolStatus.value = { key: 'tools.demoMode' }
     applyModel(demoGcode())
@@ -334,7 +347,7 @@ export const usePrinterStore = defineStore('printer', () => {
 
   return {
     // state
-    host, demoMode, link, st, objectList, toolObjects, boardObjects, activeTool, toolStatus, ctlMsg,
+    host, demoMode, link, st, objectList, toolObjects, boardObjects, toolheads, activeTool, toolStatus, ctlMsg,
     consoleLines, cmdHistory, modelVersion, done,
     // getters
     connected, isPrinting, printState, stateLabel, meta, activeToolName, nozzleTemp, bedTemp, chamberTemp,
