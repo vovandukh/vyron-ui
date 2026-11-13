@@ -46,6 +46,9 @@ jobs:
           # Старі бандли з іншими хешами видаляємо повністю.
           rm -rf assets
           cp -R dist/. .
+          # voron.html створює і сам vite build (плагін html-aliases у vite.config.js),
+          # явна копія — на випадок, якщо плагін вимкнуть.
+          cp dist/index.html voron.html
           # Стара адреса однофайлового інтерфейсу веде на той самий зібраний Vue-застосунок.
           # Шляхи в index.html відносні (./assets/...), тому копія в корені працює без змін.
           cp dist/index.html voron_2_4_six_tool_ui.html
@@ -54,7 +57,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A index.html voron_2_4_six_tool_ui.html assets
+          git add -A index.html voron.html voron_2_4_six_tool_ui.html assets
           if git diff --cached --quiet; then
             echo "Build output unchanged, nothing to commit."
             exit 0
