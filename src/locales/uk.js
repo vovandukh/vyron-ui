@@ -1,5 +1,5 @@
 export default {
-  'nav.main': 'Керування', 'nav.tools': 'Головки', 'nav.console': 'Консоль', 'nav.mesh': 'Карта столу',
+  'nav.main': 'Керування', 'nav.console': 'Консоль', 'nav.mesh': 'Карта столу',
   'nav.hist': 'Історія', 'nav.eng': 'Інженерне', 'nav.cfg': 'Конфіг',
 
   'common.set': 'Задати', 'common.off': 'Вимкнути', 'common.cancel': 'Скасувати', 'common.save': 'Зберегти', 'common.ok': 'Так',
@@ -39,19 +39,15 @@ export default {
   'msg.notConnectedPrinter': 'Немає підключення до принтера', 'msg.notWhilePrinting': 'Не під час друку',
   'msg.invalidWs': 'Некоректна відповідь WebSocket',
 
-  'tools.title': 'Друкуючі головки', 'tools.waiting': 'Очікування конфігурації Klipper',
-  'tools.hintSummary': 'Як визначається плата голови (CAN / USB)', 'tools.hintMcu': '# назва з [mcu EBBCan]',
-  'tools.hintText': 'Плата голови визначається автоматично за пінами екструдера (наприклад, EBBCan: PD0 → [mcu EBBCan]). Датчики, вентилятори та драйвер на тій самій платі підхоплюються з printer.cfg. Щоб бачити температуру чипа плати, додай датчик temperature_mcu:',
-  'tools.selectHint': 'Активація головки надсилає команду T<номер>',
-  'tools.footer': 'Головки визначаються автоматично за секціями [extruder], [extruder1], … у Klipper. Для перемикання між головками мають бути налаштовані макроси T0, T1, ….',
+  'tools.waiting': 'Очікування конфігурації Klipper',
+
   'tools.found': 'Знайдено головок: {n}',
   'tools.none': 'Головки ще не знайдені',
-  'tools.noneConnected': 'Klipper не повідомив жодної секції [extruder]. Перевір printer.cfg.',
-  'tools.noneOffline': 'Головки з’являться автоматично, щойно принтер підключиться і Klipper поверне список екструдерів.',
+
   'tools.demoMode': 'Демо-режим · команди до принтера не надсилаються',
   'tools.demoSelected': 'Демо · вибрано T{i}',
   'tools.sent': 'Надіслано вибір T{i}', 'tools.board': 'Плата голови ·',
-  'tools.placeholder': 'Цільова температура', 'tools.aria': 'Температура T{i}',
+  'tools.aria': 'Температура T{i}',
   'tools.activate': 'Активувати', 'tools.badTemp': 'Вкажи температуру 0–320 °C',
   'tools.can.uuidTitle': 'CAN UUID: {id} · шина {iface}', 'tools.can.serialTitle': 'USB: {id}',
   'tools.can.boardTemp': 'Температура плати ({name})', 'tools.can.versionTitle': 'Прошивка MCU: {v}',
@@ -103,7 +99,7 @@ export default {
   'net.sent': 'Команду надіслано. Якщо підключення вдасться, сторінка втратить зв’язок: відкрий принтер за новою IP-адресою.',
   'net.setupSummary': 'Одноразове налаштування для підключення',
   'net.setupNote': 'Потрібне розширення gcode_shell_command (ставиться через KIAUH). Це приклад, його не перевірено на твоєму принтері; якщо nmcli попросить права, знадобиться налаштування sudo або polkit.',
-  'net.demoIface': 'wlan0 · 192.168.0.232 (демо)',
+  'net.demoIface': 'wlan0 · 192.168.1.50 (демо)',
 
   'set.lang': 'Мова', 'set.cEstop': 'Запитувати підтвердження аварійної зупинки',
   'set.cSys': 'Запитувати підтвердження системних дій (перезапуск, вимкнення)',
@@ -112,5 +108,25 @@ export default {
   'set.note': 'Налаштування зберігаються в цьому браузері.',
 
   'temp.nozzle': 'Температура сопла', 'temp.bed': 'Температура столу', 'temp.now': 'Зараз', 'temp.target': 'ціль',
-  'temp.aria': 'Цільова температура', 'temp.range': 'Вкажи температуру 0–{max} °C'
+  'temp.aria': 'Цільова температура', 'temp.range': 'Вкажи температуру 0–{max} °C',
+  'tools.statusActive': 'Активна', 'tools.statusIdle': 'Очікування',
+
+  'eddy.shared': 'на платі', 'eddy.onBoard': 'Eddy підключений до I²C плати голови {mcu}',
+  'eddy.coil': 'Температура котушки Eddy', 'eddy.chip': 'Температура чипа MCU Eddy',
+  'eddy.busActive': 'шина активна', 'eddy.busState': 'шина: {s}', 'eddy.online': 'на зв’язку',
+  'eddy.comp': 'компенсація', 'eddy.on': 'увімк.', 'eddy.off': 'вимк.',
+
+  'files.title': 'Файли на принтері · {n}', 'files.search': 'Пошук файлу', 'files.more': 'Показати ще ({n})',
+  'files.empty': 'На принтері немає G-code файлів', 'files.kb': 'КБ', 'files.mb': 'МБ',
+  'files.preview': '3D', 'files.previewTitle': 'Відкрити 3D-перегляд моделі',
+  'files.delete': 'Видалити', 'files.deleteTitle': 'Видалити файл з пам’яті принтера',
+  'files.busy': 'Файл друкується або на паузі — видалення недоступне', 'files.printing': 'друкується',
+  'files.confirmDelete': 'Видалити «{name}» з пам’яті принтера? Цю дію не можна скасувати.',
+  'files.deleted': 'Файл «{name}» видалено', 'files.deleteError': 'Не вдалося видалити: {msg}',
+  'files.listError': 'Не вдалося отримати список файлів: {msg}', 'files.removed': 'файл видалено',
+  'files.print': 'Друкувати', 'files.reprint': 'Повторити друк', 'files.printTitle': 'Запустити друк цього файлу',
+  'files.printBusy': 'Принтер зайнятий: друк триває або на паузі',
+  'files.confirmPrint': 'Запустити друк «{name}»? Переконайся, що стіл чистий і філамент заправлений.',
+  'files.printStarted': 'Друк «{name}» запущено', 'files.printError': 'Не вдалося запустити друк: {msg}',
+  'preview.loading': 'завантаження…', 'preview.error': 'не вдалося відкрити: {msg}', 'preview.close': 'До поточного друку'
 }

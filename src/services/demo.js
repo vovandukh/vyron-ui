@@ -28,6 +28,29 @@ export function demoToolheads(tools) {
     }]
   }))
 }
+/**
+ * BTT Eddy у демо: на T0 — окремий CAN-вузол [mcu eddy] (як на реальному Voron),
+ * на T1 (якщо є і має плату) — Eddy на I²C самої плати голови (прив'язка «shared»).
+ */
+export function demoEddies(tools, heads) {
+  const out = {}
+  if (!tools.length) return out
+  out[tools[0]] = [{
+    name: 'btt_eddy', probeObj: 'probe_eddy_current btt_eddy', tempProbeObj: 'temperature_probe btt_eddy',
+    chipObj: 'temperature_sensor btt_eddy_mcu', canStatsObj: 'canbus_stats eddy', mcu: 'eddy', mcuObj: 'mcu eddy',
+    link: 'can', canbusUuid: '9cd6391e8623', canbusInterface: 'can0', serial: null, sensorType: 'ldc1612', frequency: 12000000
+  }]
+  const t1 = tools[1], h1 = t1 && heads[t1]
+  if (h1) {
+    out[t1] = [{
+      name: 'eddy_t1', probeObj: 'probe_eddy_current eddy_t1', tempProbeObj: 'temperature_probe eddy_t1',
+      chipObj: null, canStatsObj: null, mcu: h1.mcu, mcuObj: h1.mcuObj, link: 'shared',
+      canbusUuid: h1.canbusUuid, canbusInterface: h1.canbusInterface, serial: h1.serial, sensorType: 'ldc1612', frequency: 12000000
+    }]
+  }
+  return out
+}
+
 export const DEMO_PRINT_SECONDS = 5400
 export const DEMO_STEP = 35
 export const DEMO_INTERVAL = 40
@@ -54,7 +77,7 @@ export function demoMesh() {
   }
 }
 
-export function demoStaticStatus(toolheads) {
+export function demoStaticStatus(toolheads, eddies = {}) {
   const st = {
     heater_bed: { temperature: 110, target: 110 },
     'temperature_sensor chamber': { temperature: 45 },
@@ -70,16 +93,25 @@ export function demoStaticStatus(toolheads) {
       last_stats: { mcu_task_avg: 0.000012 + i * 0.000004, mcu_task_stddev: 0.000014, freq: th.link === 'usb' ? 133000000 : 63999071 }
     }
   })
+  for (const list of Object.values(eddies)) for (const e of list) {
+    st[e.probeObj] = { name: e.probeObj, last_query: false, last_z_result: 0 }
+    if (e.link === 'can') {
+      st[e.mcuObj] = { mcu_version: 'v0.13.0-656-g4cc47cf56', last_stats: { mcu_task_avg: 0.000007, mcu_task_stddev: 0.000012, freq: 133000000 } }
+      if (e.canStatsObj) st[e.canStatsObj] = { bus_state: 'active', rx_error: 0, tx_error: 0 }
+    }
+  }
   return st
 }
 
 /** Патч статусу для одного кроку симуляції. */
-export function demoTickStatus({ pos, progress, activeTool, tools, toolheads }) {
+export function demoTickStatus({ pos, progress, activeTool, tools, toolheads, eddies = {}, state = 'printing', filename = DEMO_PRINTING_FILE }) {
   const z = pos ? pos[2] : 0
   const patch = {
     toolhead: { position: pos ? [pos[0], pos[1], z, 0] : [0, 0, 0, 0], extruder: tools[activeTool] },
     virtual_sdcard: { progress },
-    print_stats: { state: 'printing', print_duration: progress * DEMO_PRINT_SECONDS, info: { current_layer: Math.round(z / 0.8), total_layer: 120 } }
+    // Для спіральної вази шар рахується за висотою витка (0.8 мм); для інших файлів — із моделі (layerLabel).
+    print_stats: { state, filename, print_duration: progress * DEMO_PRINT_SECONDS,
+      info: filename === DEMO_PRINTING_FILE ? { current_layer: Math.round(z / 0.8), total_layer: 120 } : {} }
   }
   tools.forEach((n, i) => { patch[n] = { temperature: i === activeTool ? 205 : 25, target: i === activeTool ? 205 : 0 } })
   tools.forEach((tool, i) => {
@@ -91,6 +123,11 @@ export function demoTickStatus({ pos, progress, activeTool, tools, toolheads }) 
     patch[th.fans[1].obj] = { speed: hot ? 0.4 : 0, rpm: null }
     patch[th.drivers[0].obj] = { temperature: th.drivers[0].name === 'TMC2240' ? 41 : null }
   })
+  tools.forEach((tool, i) => (eddies[tool] || []).forEach(e => {
+    const warm = i === activeTool ? 8 : 0
+    if (e.tempProbeObj) patch[e.tempProbeObj] = { temperature: 41.5 + warm + progress * 3, compensation_enabled: true }
+    if (e.chipObj) patch[e.chipObj] = { temperature: 46.8 + warm / 2 }
+  }))
   return patch
 }
 
@@ -113,12 +150,94 @@ export const demoUpdates = {
 
 export function demoHistory() {
   const n = Date.now() / 1000
+  const exists = name => demoFiles.some(f => f.path === name)
   return {
     jobs: [
       { filename: 'voron_cube.gcode', status: 'completed', start_time: n - 7200, print_duration: 5400, total_duration: 5500, filament_used: 18250, metadata: { layer_count: 300, object_height: 60 } },
       { filename: 'bracket.gcode', status: 'cancelled', start_time: n - 90000, print_duration: 1200, total_duration: 1300, filament_used: 2100, metadata: {} },
-      { filename: 'fan_duct.gcode', status: 'klippy_shutdown', start_time: n - 180000, print_duration: 600, total_duration: 650, filament_used: 800, metadata: {} }
-    ],
+      { filename: 'fan_duct.gcode', status: 'klippy_shutdown', start_time: n - 180000, print_duration: 600, total_duration: 650, filament_used: 800, metadata: {} },
+      { filename: 'old_part.gcode', status: 'completed', start_time: n - 400000, print_duration: 3000, total_duration: 3100, filament_used: 6000, metadata: {} }
+    ].map(j => ({ ...j, exists: exists(j.filename) })),
     totals: { total_jobs: 12, total_print_time: 150000, total_filament_used: 210000 }
   }
+}
+
+// ---------- G-code файли демо-принтера: список, метадані, 3D-моделі, видалення ----------
+
+/** Файл, який «друкується» в демо: його видалення має бути заблоковане. */
+export const DEMO_PRINTING_FILE = 'demo_vase.gcode'
+
+const svgThumb = (color, shape) => 'data:image/svg+xml,' + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#15171a"/>${shape.replace(/C/g, color)}</svg>`)
+const SHAPES = {
+  vase: '<path d="M22 54h20l-3-16c6-6 6-14 2-22H23c-4 8-4 16 2 22z" fill="C"/>',
+  cube: '<path d="M32 10 52 20v24L32 54 12 44V20z" fill="C"/><path d="M32 10 52 20 32 30 12 20z" fill="#fff" fill-opacity=".25"/>',
+  bracket: '<path d="M12 50V14h12v26h28v10z" fill="C"/>',
+  cylinder: '<ellipse cx="32" cy="18" rx="16" ry="6" fill="#fff" fill-opacity=".3"/><path d="M16 18v28c0 8 32 8 32 0V18c0 8-32 8-32 0z" fill="C"/>',
+  tower: '<path d="M24 54V10h16v44z" fill="C"/><path d="M24 20h16M24 30h16M24 40h16" stroke="#000" stroke-opacity=".35" stroke-width="2"/>'
+}
+const DEMO_FILE_DEFS = [
+  ['demo_vase.gcode', 'vase', '#f03a2e', 5400, 0.8, 'PETG', 0],
+  ['voron_cube.gcode', 'cube', '#ff6b60', 2700, 0.2, 'ABS', 7200],
+  ['bracket.gcode', 'bracket', '#789cff', 1900, 0.25, 'ASA', 90000],
+  ['fan_duct.gcode', 'cylinder', '#7ddc9a', 3100, 0.2, 'ASA', 180000],
+  ['calibration/temp_tower.gcode', 'tower', '#ffb4ad', 2200, 0.2, 'PLA', 260000]
+]
+/** Робочий список файлів демо (видалення змінює його до наступного запуску демо). */
+export let demoFiles = []
+const demoMeta = {}
+
+export function resetDemoFiles() {
+  const now = Date.now() / 1000
+  demoFiles = DEMO_FILE_DEFS.map(([path, shape, color, est, lh, type, age], i) => {
+    demoMeta[path] = { estimated_time: est, layer_height: lh, filament_type: type, slicer: 'OrcaSlicer', __thumb: svgThumb(color, SHAPES[shape]), __shape: shape }
+    return { path, modified: now - age - i * 60, size: 400000 + i * 173000 }
+  })
+}
+resetDemoFiles()
+
+export const demoFileList = () => demoFiles.map(f => ({ ...f }))
+export const demoFileMeta = path => ({ ...(demoMeta[path] || {}) })
+/** Блокування файлу, що друкується, перевіряє HistoryTab за print_stats (як і для реального принтера). */
+export function demoDeleteFile(path) {
+  demoFiles = demoFiles.filter(f => f.path !== path)
+}
+
+/** Процедурна модель для 3D-перегляду демо-файлу: стінки (3 периметри) + заповнення. */
+export function demoPreviewModel(path) {
+  const meta = demoMeta[path] || {}
+  if (meta.__shape === 'vase' || !meta.__shape) return demoGcode()
+  const lh = meta.layer_height || 0.2, out = [], off = [], tools = []
+  let tool = 0
+  const seg = (a, b, z) => { out.push(a[0], a[1], z, b[0], b[1], z); off.push(off.length); tools.push(tool) }
+  const loop = (pts, z) => pts.forEach((p, i) => seg(p, pts[(i + 1) % pts.length], z))
+  const rect = (x0, y0, x1, y1) => [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]
+  const circle = (cx, cy, r, n = 72) => Array.from({ length: n }, (_, i) => [cx + r * Math.cos(i / n * 2 * Math.PI), cy + r * Math.sin(i / n * 2 * Math.PI)])
+  const hatch = (x0, y0, x1, y1, z, step, dir) => {
+    if (dir) for (let x = x0; x <= x1; x += step) seg([x, y0], [x, y1], z)
+    else for (let y = y0; y <= y1; y += step) seg([x0, y], [x1, y], z)
+  }
+  const C = 175, H = { cube: 20, bracket: 18, cylinder: 30, tower: 40 }[meta.__shape]
+  const layers = Math.round(H / lh)
+  for (let l = 0; l < layers; l++) {
+    const z = +(lh * (l + 1)).toFixed(3), solid = l < 3 || l >= layers - 3, step = solid ? 0.45 : 3, dir = l & 1
+    if (meta.__shape === 'cube') {
+      for (let k = 0; k < 3; k++) loop(rect(C - 10 + k * 0.45, C - 10 + k * 0.45, C + 10 - k * 0.45, C + 10 - k * 0.45), z)
+      hatch(C - 8.6, C - 8.6, C + 8.6, C + 8.6, z, step, dir)
+    } else if (meta.__shape === 'bracket') {
+      const w = z < 4 ? 40 : 10
+      for (let k = 0; k < 3; k++) loop(rect(C - 20 + k * 0.45, C - 10 + k * 0.45, C - 20 + w - k * 0.45, C + 10 - k * 0.45), z)
+      hatch(C - 18.6, C - 8.6, C - 21.4 + w, C + 8.6, z, step, dir)
+    } else if (meta.__shape === 'cylinder') {
+      const r = 14 - 5 * (z / H)
+      for (let k = 0; k < 3; k++) loop(circle(C, C, r - k * 0.45), z)
+    } else {
+      // температурна вежа: кожен блок 10 мм — інша голова (T0…T3), як у багатоголовому друці
+      tool = Math.floor(z / 10) % 4
+      const w = 10 - Math.floor(z / 10) * 1.5
+      for (let k = 0; k < 3; k++) loop(rect(C - w + k * 0.45, C - 6 + k * 0.45, C + w - k * 0.45, C + 6 - k * 0.45), z)
+      hatch(C - w + 1.4, C - 4.6, C + w - 1.4, C + 4.6, z, step, dir)
+    }
+  }
+  return { P: Float32Array.from(out), F: off, T: Uint8Array.from(tools), total: off.length }
 }

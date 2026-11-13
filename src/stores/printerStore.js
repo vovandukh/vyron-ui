@@ -1,13 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref, shallowReactive, computed } from 'vue'
-import { MoonrakerClient, normalizeHost } from '../services/moonrakerClient'
-import { fetchGcode } from '../services/moonrakerApi'
+import { MoonrakerClient, normalizeHost, resolveHost, rememberHost } from '../services/moonrakerClient'
+import { fetchGcode, startPrintFile } from '../services/moonrakerApi'
 import { discoverTools, subscriptionObjects, STATE_KEYS, toolNum } from '../services/klipper'
 import { detectToolheads, toolheadObjects } from '../services/toolheads'
+import { detectEddy, eddyObjects } from '../services/eddy'
 import { parseGcode } from '../services/gcodeParser'
 import { model, loadModel, indexForPos, segEnd, layerLabel } from '../services/gcodeModel'
 import {
-  DEMO_DEFAULT_TOOLS, DEMO_MAX_TOOLS, DEMO_STEP, DEMO_INTERVAL, demoTools, demoToolheads,
+  DEMO_DEFAULT_TOOLS, DEMO_MAX_TOOLS, DEMO_STEP, DEMO_INTERVAL, demoTools, demoToolheads, demoEddies, demoPreviewModel, resetDemoFiles, DEMO_PRINTING_FILE,
   demoGcode, demoStaticStatus, demoTickStatus
 } from '../services/demo'
 
@@ -33,9 +34,10 @@ export const usePrinterStore = defineStore('printer', () => {
   const toolObjects = ref([])
   /** Запасні датчики плат за назвою: { номер голови: об'єкт } */
   const boardObjects = ref({})
-  const hostname = ref(null)
   /** Плата голови для кожного екструдера: { extruder: Toolhead | null } (див. services/toolheads.js) */
   const toolheads = ref({})
+  /** Датчики BTT Eddy, прив'язані до голів: { extruder: Eddy[] } (див. services/eddy.js) */
+  const eddies = ref({})
   const activeTool = ref(0)
   const toolStatus = ref({ key: 'tools.waiting' })
   const ctlMsg = ref(null)
@@ -49,6 +51,10 @@ export const usePrinterStore = defineStore('printer', () => {
   const modelVersion = ref(0)
   const done = ref(0)
   let loadedName = null, loading = false, demoTimer = null
+  /** 3D-перегляд файлу з історії/списку: { name, loading?, error? } або null (показується поточний друк). */
+  const preview = ref(null)
+  /** Модель поточного друку, відкладена на час перегляду файлу. */
+  let savedPrint = null
 
   // ---------- шина подій для компонентів ----------
   const listeners = new Map()
@@ -101,8 +107,6 @@ export const usePrinterStore = defineStore('printer', () => {
   })
   /** Перемикання голів має сенс лише коли їх більше однієї. */
   const canSwitchTools = computed(() => toolObjects.value.length > 1)
-  /** Назва для шапки/вкладки: hostname з printer.info. */
-  const printerName = computed(() => (demoMode.value ? null : hostname.value))
   const nozzleTemp = computed(() => (activeToolName.value ? (st[activeToolName.value] || {}).temperature : null))
   const bedTemp = computed(() => (st.heater_bed || {}).temperature)
   const chamberTemp = computed(() => (st['temperature_sensor chamber'] || st['heater_generic chamber'] || {}).temperature)
@@ -112,6 +116,8 @@ export const usePrinterStore = defineStore('printer', () => {
   const qgl = computed(() => (st.quad_gantry_level || {}).applied)
 
   const progressPct = computed(() => {
+    // Під час 3D-перегляду файлу модель — не поточний друк; прогрес друку беремо з virtual_sdcard.
+    if (preview.value) return Math.floor(((st.virtual_sdcard || {}).progress || 0) * 100)
     modelVersion.value
     return model.N ? Math.floor((done.value / model.N) * 100) : 0
   })
@@ -127,6 +133,7 @@ export const usePrinterStore = defineStore('printer', () => {
   const layerText = computed(() => {
     const info = (st.print_stats || {}).info || {}
     if (info.current_layer) return info.current_layer + ' / ' + (info.total_layer || '–')
+    if (preview.value) return '–'
     modelVersion.value
     return layerLabel(done.value)
   })
@@ -155,11 +162,13 @@ export const usePrinterStore = defineStore('printer', () => {
     toolObjects.value = []
     boardObjects.value = {}
     toolheads.value = {}
-    hostname.value = null
+    eddies.value = {}
     loadedName = null
     loading = false
     gcodeError.value = null
     metaOverride.value = null
+    preview.value = null
+    savedPrint = null
   }
 
   function stopDemo() {
@@ -167,9 +176,11 @@ export const usePrinterStore = defineStore('printer', () => {
     demoTimer = null
   }
 
-  function connect(rawHost) {
+  /** remember: хост введено вручну — запам'ятати для наступних відкриттів сторінки. */
+  function connect(rawHost, { remember = false } = {}) {
     const h = normalizeHost(rawHost)
     if (!h) return
+    if (remember) rememberHost(h)
     stopDemo()
     demoMode.value = false
     clearState()
@@ -199,6 +210,7 @@ export const usePrinterStore = defineStore('printer', () => {
       case 'notify_klippy_ready': link.value = 'ready'; initObjects(); break
       case 'notify_klippy_shutdown': link.value = 'shutdown'; break
       case 'notify_history_changed': emit('history_changed'); break
+      case 'notify_filelist_changed': emit('filelist_changed', params[0] || {}); break
       case 'notify_update_response': emit('update_response', params[0]); break
       case 'notify_update_refreshed': emit('update_refreshed', params[0] || {}); break
     }
@@ -213,16 +225,15 @@ export const usePrinterStore = defineStore('printer', () => {
       boardObjects.value = boards
       if (activeTool.value >= tools.length) activeTool.value = 0
       toolStatus.value = { key: 'tools.found', params: { n: tools.length } }
-      // Назва принтера для шапки (тільки читання).
-      client.call('printer.info').then(i => { hostname.value = (i && i.hostname) || null }).catch(() => {})
       // Плати голів: читаємо налаштування printer.cfg (тільки читання) і шукаємо MCU за пінами екструдерів.
       let extra = []
       try {
         const q = await client.call('printer.objects.query', { objects: { configfile: ['settings'] } })
         const settings = (((q || {}).status || {}).configfile || {}).settings || {}
         toolheads.value = detectToolheads(settings, tools, objectList.value)
-        extra = toolheadObjects(toolheads.value)
-      } catch { toolheads.value = {} }
+        eddies.value = detectEddy(settings, tools, toolheads.value, objectList.value)
+        extra = [...toolheadObjects(toolheads.value), ...eddyObjects(eddies.value)]
+      } catch { toolheads.value = {}; eddies.value = {} }
       const s = await client.call('printer.objects.subscribe', { objects: subscriptionObjects(objectList.value, tools, boards, extra) })
       if (s && s.status) mergeStatus(s.status)
     } catch { /* помилку вже записано в консоль */ }
@@ -234,18 +245,19 @@ export const usePrinterStore = defineStore('printer', () => {
     metaOverride.value = null
     maybeLoadGcode()
     const pos = (st.virtual_sdcard || {}).file_position
-    if (model.P && pos != null && !loading) done.value = indexForPos(pos)
+    if (model.P && pos != null && !loading && !preview.value) done.value = indexForPos(pos)
   }
 
-  function applyModel({ P, F }) {
-    loadModel(P, F)
+  function applyModel({ P, F, T }) {
+    loadModel(P, F, T)
     done.value = 0
     modelVersion.value++
   }
 
   async function maybeLoadGcode() {
     const fn = (st.print_stats || {}).filename
-    if (!fn || fn === loadedName || loading || !host.value) return
+    // Під час перегляду іншого файлу новий друк підвантажиться після закриття перегляду.
+    if (!fn || fn === loadedName || loading || !host.value || preview.value) return
     loading = true
     loadedName = fn
     gcodeError.value = null
@@ -270,26 +282,88 @@ export const usePrinterStore = defineStore('printer', () => {
     host.value = null
     demoMode.value = true
     link.value = 'demo'
-    const tools = demoTools(n), heads = demoToolheads(tools)
+    const tools = demoTools(n), heads = demoToolheads(tools), eds = demoEddies(tools, heads)
     toolObjects.value = tools
     boardObjects.value = {}
     toolheads.value = heads
+    eddies.value = eds
     activeTool.value = 0
     toolStatus.value = { key: 'tools.demoMode' }
-    applyModel(demoGcode())
-    mergeStatus(demoStaticStatus(heads))
-    let k = 0
+    resetDemoFiles()
+    mergeStatus(demoStaticStatus(heads, eds))
+    demoBeginPrint(DEMO_PRINTING_FILE)
     demoTimer = setInterval(() => {
-      k += DEMO_STEP
-      if (k > model.N) k = 0
-      done.value = indexForPos(k)
+      // Під час перегляду файлу модель на екрані інша — «друк» на паузі, щоб не малювати прогрес по чужій моделі.
+      if (!preview.value && demoJob.state === 'printing') {
+        // кожен демо-друк триває ~15 с незалежно від розміру моделі
+        demoJob.k = Math.min(model.N, demoJob.k + Math.max(DEMO_STEP, Math.ceil(model.N / 400)))
+        done.value = indexForPos(demoJob.k)
+        demoJob.pos = done.value ? segEnd(done.value - 1) : null
+        demoJob.progress = model.N ? done.value / model.N : 0
+        if (demoJob.k >= model.N) demoJob.state = 'complete'
+      }
       mergeStatus(demoTickStatus({
-        pos: done.value ? segEnd(done.value - 1) : null,
-        progress: model.N ? done.value / model.N : 0,
-        activeTool: activeTool.value,
-        tools, toolheads: heads
+        pos: demoJob.pos, progress: demoJob.progress, state: demoJob.state, filename: demoJob.file,
+        activeTool: activeTool.value, tools, toolheads: heads, eddies: eds
       }))
     }, DEMO_INTERVAL)
+  }
+
+  /** Поточне демо-завдання: файл, стан, позиція в моделі. */
+  const demoJob = { file: null, state: 'standby', k: 0, pos: null, progress: 0 }
+
+  function demoBeginPrint(file) {
+    applyModel(file === DEMO_PRINTING_FILE ? demoGcode() : demoPreviewModel(file))
+    Object.assign(demoJob, { file, state: 'printing', k: 0, pos: null, progress: 0 })
+  }
+
+  /** Принтер зайнятий завданням: новий друк запускати не можна. */
+  const printBusy = computed(() => ['printing', 'paused'].includes(printState.value))
+
+  /**
+   * Запуск друку файлу з пам'яті принтера (POST /printer/print/start).
+   * Перевірки стану тут, а підтвердження користувача — в компоненті (useConfirm).
+   * У демо — імітація: принтер переходить у printing з моделлю цього файлу.
+   */
+  async function startPrint(filename) {
+    if (printBusy.value) throw new Error('busy')
+    if (preview.value) closePreview()
+    if (demoMode.value) { demoBeginPrint(filename); return }
+    if (!connected.value || !host.value) throw new Error('not connected')
+    await startPrintFile(host.value, filename)
+  }
+
+  /**
+   * 3D-перегляд G-code файлу з пам'яті принтера (тільки читання: GET /server/files/gcodes/…).
+   * Модель поточного друку відкладається й повертається після closePreview().
+   */
+  async function openPreview(filename) {
+    if (!preview.value) savedPrint = model.P ? { P: model.P, F: model.F, T: model.T, done: done.value } : null
+    preview.value = { name: filename, loading: true }
+    try {
+      const parsed = demoMode.value ? demoPreviewModel(filename) : parseGcode(await fetchGcode(host.value, filename))
+      if (!preview.value || preview.value.name !== filename) return   // закрили або відкрили інший файл
+      applyModel(parsed)
+      done.value = model.N            // показуємо модель повністю «надрукованою»
+      preview.value = { name: filename }
+    } catch (e) {
+      if (preview.value && preview.value.name === filename) preview.value = { name: filename, error: e.message }
+    }
+  }
+
+  function closePreview() {
+    if (!preview.value) return
+    preview.value = null
+    if (savedPrint) {
+      const s = savedPrint
+      applyModel(s)
+      const pos = (st.virtual_sdcard || {}).file_position
+      done.value = !demoMode.value && pos != null ? indexForPos(pos) : s.done
+    } else if (model.P) {
+      applyModel({ P: new Float32Array(0), F: [] })
+    }
+    savedPrint = null
+    if (!demoMode.value) maybeLoadGcode()
   }
 
   /**
@@ -299,10 +373,9 @@ export const usePrinterStore = defineStore('printer', () => {
    * лишається непідключеним, з 0 голів, доки користувач не введе адресу принтера.
    */
   function autoStart() {
-    const envHost = import.meta.env.VITE_PRINTER_HOST
-    if (new URLSearchParams(location.search).has('demo')) startDemo()
-    else if (envHost) connect(envHost)
-    else if (location.protocol.startsWith('http') && location.host) connect(location.host)
+    if (new URLSearchParams(location.search).has('demo')) { startDemo(); return }
+    const h = resolveHost()   // ?host= → localStorage → VITE_PRINTER_HOST → хост сторінки
+    if (h) connect(h)
   }
 
   /** G-code від кнопок керування. Повертає false і пише причину в ctlMsg, якщо команда не пішла. */
@@ -369,12 +442,13 @@ export const usePrinterStore = defineStore('printer', () => {
 
   return {
     // state
-    host, demoMode, link, st, objectList, toolObjects, boardObjects, toolheads, activeTool, toolStatus, ctlMsg,
+    host, demoMode, link, st, objectList, toolObjects, boardObjects, toolheads, eddies, activeTool, toolStatus, ctlMsg,
     consoleLines, cmdHistory, modelVersion, done,
     // getters
-    connected, isPrinting, printState, stateLabel, meta, activeToolName, canSwitchTools, toolCount, printerName, nozzleTemp, bedTemp, chamberTemp,
+    connected, isPrinting, printState, stateLabel, meta, activeToolName, canSwitchTools, toolCount, nozzleTemp, bedTemp, chamberTemp,
     speedFactor, fanSpeed, position, qgl, progressPct, etaSeconds, layerText, nozzleHeater,
     // actions
+    preview, openPreview, closePreview, printBusy, startPrint,
     on, log, connect, startDemo, autoStart, rpc, sendRaw, consoleSend, call, selectTool, setToolTarget,
     setHeater, emergencyStop, mergeStatus
   }

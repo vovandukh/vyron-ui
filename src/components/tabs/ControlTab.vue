@@ -7,11 +7,19 @@ import JogControls from './control/JogControls.vue'
 import ToolStrip from './control/ToolStrip.vue'
 
 const printer = usePrinterStore()
-const { tm } = useI18n()
+const { t, tm } = useI18n()
 </script>
 
 <template>
   <div class="control">
+    <!-- 3D-перегляд файлу з історії: на сцені не поточний друк -->
+    <div v-if="printer.preview" class="pv" role="status">
+      <span class="pv-tag">3D</span>
+      <span class="pv-name" :title="printer.preview.name">{{ printer.preview.name }}</span>
+      <span v-if="printer.preview.loading" class="pv-dim">{{ t('preview.loading') }}</span>
+      <span v-else-if="printer.preview.error" class="pv-err">{{ t('preview.error', { msg: printer.preview.error }) }}</span>
+      <button @click="printer.closePreview()">{{ t('preview.close') }}</button>
+    </div>
     <StatusPanel />
     <JogControls />
     <div class="pct"><span>{{ printer.progressPct }}</span><small>%</small></div>
@@ -30,4 +38,12 @@ const { tm } = useI18n()
 @media(max-width:1100px){.meta{max-width:40vw}}
 @media(max-width:900px){.pct{left:16px;bottom:24px;font-size:70px}.meta{display:none}}
 @media(max-width:560px){.pct{bottom:12px;font-size:54px}}
+.pv{position:fixed;top:calc(var(--hb,72px) + 12px);left:50%;transform:translateX(-50%);z-index:4;display:flex;align-items:center;gap:10px;max-width:min(560px,calc(100vw - 32px));padding:6px 6px 6px 10px;background:rgba(10,10,11,.88);border:1px solid var(--line);border-radius:9px;backdrop-filter:blur(10px);font-size:12px}
+.pv-tag{flex:none;font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--red);border:1px solid rgba(240,58,46,.6);border-radius:4px;padding:1px 5px}
+.pv-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.pv-dim{color:var(--dim);white-space:nowrap}
+.pv-err{color:var(--red);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.pv button{flex:none;background:rgba(10,10,11,.5);border:1px solid var(--line);color:var(--ink);font:inherit;font-size:12px;border-radius:7px;padding:6px 10px;cursor:pointer}
+.pv button:hover{border-color:var(--red)}
+@media(max-width:700px){.pv{top:calc(var(--hb,72px) + 6px)}}
 </style>

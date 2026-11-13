@@ -8,9 +8,9 @@ npm run dev      # dev-сервер з проксі на принтер
 npm run build    # збірка в dist/
 ```
 
-- У dev-режимі Vite проксіює `/websocket`, `/printer`, `/server`, `/machine`, `/api` на `http://192.168.0.232:7125`, і застосунок підключається до принтера через цей проксі. Інший принтер можна задати так: `PRINTER_URL=http://host:7125 npm run dev`.
+- У dev-режимі Vite проксіює `/websocket`, `/printer`, `/server`, `/machine`, `/api` на принтер з `PRINTER_URL` (за замовчуванням `http://localhost:7125`), і застосунок підключається через цей проксі: `PRINTER_URL=http://<ip-принтера>:7125 npm run dev`.
+- Хост принтера визначається автоматично, без захардкоджених адрес: `?host=<ip:порт>` в адресі → хост, збережений після ручного підключення (`localStorage`) → `VITE_PRINTER_HOST` → хост, з якого відкрито сторінку. Протокол береться від сторінки (`https` → `wss`/`https`).
 - Демо без принтера відкривається за адресою `http://localhost:5173/?demo`, з потрібною кількістю голів: `?demo=1`, `?demo=4` (1–12, за замовчуванням 6).
-- Збірку з `dist/` можна віддавати з того самого хоста, що й Moonraker. Тоді інтерфейс сам підключиться до `location.host`.
 - Вихідний `index.html` для Vite лежить у `src/`, корінь Vite теж `src/`. Корінь репозиторію в `main` зайнятий готовою статикою: після кожного push у `main` workflow [build-to-main](.github/workflows/build-to-main.yml) збирає проєкт і комітить у корінь `index.html`, `voron.html` та `voron_2_4_six_tool_ui.html`.
 - Збірка однофайлова (`vite-plugin-singlefile`): увесь JS, CSS і картинки вшиті в HTML, тож веб-серверу досить віддати один файл без теки `assets/`. Ззовні вантажиться лише шрифт Montserrat (Google Fonts); без інтернету використовується системний шрифт.
 

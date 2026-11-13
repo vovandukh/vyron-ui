@@ -14,7 +14,7 @@ function go() {
   const h = normalizeHost(host.value)
   if (!h) return
   host.value = h
-  printer.connect(h)
+  printer.connect(h, { remember: true })
 }
 </script>
 

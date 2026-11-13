@@ -40,11 +40,48 @@ export async function fetchGcode(host, filename) {
   return (await ok(await fetch(url(host, '/server/files/gcodes/' + encPath(filename))))).text()
 }
 
-/** URL найбільшої мініатюри завдання з історії, або null. */
-export function jobThumbUrl(host, job) {
-  const th = (job.metadata && job.metadata.thumbnails) || []
+/**
+ * URL мініатюри G-code файлу (шляхи мініатюр у метаданих — відносно теки файлу).
+ * minWidth: найменша мініатюра не вужча за minWidth (для списків), інакше — найбільша.
+ */
+export function thumbUrl(host, filename, metadata, minWidth = 0) {
+  const th = ((metadata && metadata.thumbnails) || []).filter(t => t && t.relative_path)
   if (!th.length || !host) return null
-  const b = th.reduce((a, c) => (c.width > a.width ? c : a))
-  const f = String(job.filename || ''), dir = f.includes('/') ? f.slice(0, f.lastIndexOf('/') + 1) : ''
+  const sorted = th.slice().sort((a, b) => a.width - b.width)
+  const b = minWidth ? sorted.find(t => t.width >= minWidth) || sorted[sorted.length - 1] : sorted[sorted.length - 1]
+  const f = String(filename || ''), dir = f.includes('/') ? f.slice(0, f.lastIndexOf('/') + 1) : ''
   return url(host, '/server/files/gcodes/' + encPath(dir + b.relative_path))
+}
+
+/** URL найбільшої мініатюри завдання з історії, або null. */
+export const jobThumbUrl = (host, job) => thumbUrl(host, job.filename, job.metadata)
+
+const GCODE_EXT = /\.(gcode|g|gco|gc)$/i
+
+/** Список G-code файлів у пам'яті принтера (новіші першими). */
+export async function listGcodeFiles(host) {
+  const r = await (await ok(await fetch(url(host, '/server/files/list?root=gcodes')))).json()
+  return (r.result || []).filter(f => GCODE_EXT.test(f.path)).sort((a, b) => (b.modified || 0) - (a.modified || 0))
+}
+
+/** Метадані файлу (слайсер, час, висота шару, мініатюри…). */
+export async function fileMetadata(host, filename) {
+  const r = await (await ok(await fetch(url(host, '/server/files/metadata?filename=' + encodeURIComponent(filename))))).json()
+  return r.result || {}
+}
+
+/**
+ * Запуск друку файлу з пам'яті принтера. Ім'я передається в query-параметрі,
+ * тому кодується цілком (encodeURIComponent), включно з «/» для файлів у підтеках.
+ */
+export async function startPrintFile(host, filename) {
+  await ok(await fetch(url(host, '/printer/print/start?filename=' + encodeURIComponent(filename)), { method: 'POST' }))
+}
+
+/**
+ * Видалення G-code з пам'яті принтера. Сегменти шляху кодуються окремо, щоб файли
+ * в підтеках (calibration/x.gcode) теж видалялись коректно.
+ */
+export async function deleteGcodeFile(host, filename) {
+  await ok(await fetch(url(host, '/server/files/gcodes/' + encPath(filename)), { method: 'DELETE' }))
 }

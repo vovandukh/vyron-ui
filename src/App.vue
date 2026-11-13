@@ -9,7 +9,6 @@ import ConnectionBar from './components/layout/ConnectionBar.vue'
 import ProgressBar from './components/layout/ProgressBar.vue'
 
 import ControlTab from './components/tabs/ControlTab.vue'
-import ToolsTab from './components/tabs/ToolsTab.vue'
 import ConsoleTab from './components/tabs/ConsoleTab.vue'
 import BedMeshTab from './components/tabs/BedMeshTab.vue'
 import HistoryTab from './components/tabs/HistoryTab.vue'
@@ -27,7 +26,7 @@ const ui = useUiStore()
 
 // Панелі поверх 3D-сцени. «Керування» (main) — сама сцена з елементами керування.
 const panels = {
-  tools: ToolsTab, console: ConsoleTab, mesh: BedMeshTab, hist: HistoryTab, eng: EngineeringTab, cfg: ConfigTab,
+  console: ConsoleTab, mesh: BedMeshTab, hist: HistoryTab, eng: EngineeringTab, cfg: ConfigTab,
   set: SettingsModal, upd: UpdatesModal, net: WifiModal
 }
 const panel = computed(() => panels[ui.view] || null)

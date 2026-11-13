@@ -67,7 +67,8 @@ const deg = v => (v == null ? '–' : v.toFixed(1) + '°')
       <span class="sp"></span>
       <span v-if="board" class="temp" :class="{ hot: board.temp != null && board.temp >= BOARD_HOT }" :title="t('tools.can.boardTemp', { name: board.name })">{{ deg(board.temp) }}</span>
     </div>
-    <div class="row2">
+    <!-- .ver: прошивка/навантаження; на низьких екранах ховається, якщо MCU на зв'язку (див. ToolPopover) -->
+    <div class="row2" :class="{ ver: online }">
       <span v-if="!online" class="off">{{ t('tools.can.noData') }}</span>
       <template v-else>
         <span v-if="version" :title="t('tools.can.versionTitle', { v: version.full })">Klipper {{ version.short }}</span>

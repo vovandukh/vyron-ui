@@ -1,15 +1,25 @@
 // Парсер G-code для 3D-перегляду.
-// Повертає сегменти екструзії P (x0,y0,z0,x1,y1,z1 на сегмент) та F — UTF-8 байтові
-// зміщення кінця рядка кожного сегмента, що відповідає virtual_sdcard.file_position у Moonraker.
+// Повертає сегменти екструзії P (x0,y0,z0,x1,y1,z1 на сегмент), F — UTF-8 байтові зміщення кінця
+// рядка кожного сегмента (відповідає virtual_sdcard.file_position у Moonraker) і T — номер
+// інструмента кожного сегмента (T0…TN або ACTIVATE_EXTRUDER EXTRUDER=extruderN).
+
+const NON_ASCII = /[^\x00-\x7f]/
 
 export function parseGcode(text) {
-  const out = [], off = [], enc = new TextEncoder()
-  let x = 0, y = 0, z = 0, e = 0, abs = true, eabs = true, byteOff = 0
+  const out = [], off = [], tools = [], enc = new TextEncoder()
+  let x = 0, y = 0, z = 0, e = 0, abs = true, eabs = true, byteOff = 0, tool = 0
   for (const ln of text.split('\n')) {
-    byteOff += enc.encode(ln).length + 1
+    // Байтова довжина: для ASCII-рядків (майже всі) — без дорогого TextEncoder.
+    byteOff += (NON_ASCII.test(ln) ? enc.encode(ln).length : ln.length) + 1
     const c = ln.split(';')[0].trim()
     if (!c) continue
     const w = c.split(/\s+/), g = w[0].toUpperCase()
+    if (g[0] === 'T' && /^T\d+$/.test(g)) { tool = Number(g.slice(1)); continue }
+    if (g === 'ACTIVATE_EXTRUDER') {
+      const m = c.match(/EXTRUDER=extruder(\d*)/i)
+      if (m) tool = Number(m[1] || 0)
+      continue
+    }
     if (g === 'G90') { abs = true; continue }
     if (g === 'G91') { abs = false; continue }
     if (g === 'M82') { eabs = true; continue }
@@ -29,8 +39,8 @@ export function parseGcode(text) {
       else if (k === 'Z') nz = abs ? v : z + v
       else if (k === 'E') ne = eabs ? v : e + v
     }
-    if (ne > e && (nx !== x || ny !== y)) { out.push(x, y, z, nx, ny, nz); off.push(byteOff) }
+    if (ne > e && (nx !== x || ny !== y)) { out.push(x, y, z, nx, ny, nz); off.push(byteOff); tools.push(tool) }
     x = nx; y = ny; z = nz; e = ne
   }
-  return { P: Float32Array.from(out), F: off, total: byteOff }
+  return { P: Float32Array.from(out), F: off, T: Uint8Array.from(tools), total: byteOff }
 }

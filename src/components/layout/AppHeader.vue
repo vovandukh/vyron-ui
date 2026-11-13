@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { usePrinterStore } from '../../stores/printerStore'
 import { useUiStore } from '../../stores/uiStore'
 import { useI18n } from '../../composables/useI18n'
@@ -12,9 +12,10 @@ const printer = usePrinterStore()
 const ui = useUiStore()
 const { t, tm } = useI18n()
 
-const tabs = ['main', 'tools', 'console', 'mesh', 'hist', 'eng', 'cfg']
-// Заголовок вкладки браузера: «<hostname> · Voron UI» або «Voron UI».
-watch(() => printer.printerName, n => { document.title = n ? n + ' · Voron UI' : 'Voron UI' }, { immediate: true })
+// Головки окремої вкладки не мають: деталі голови відкриваються кліком по T0…TN у смузі на «Керуванні».
+const tabs = ['main', 'console', 'mesh', 'hist', 'eng', 'cfg']
+// Назва принтера в шапці та вкладці браузера — завжди «Voron 2.4» (hostname хоста, напр. bigtreetech-cb1, не показуємо).
+document.title = 'Voron 2.4'
 
 const eta = computed(() => (printer.etaSeconds == null ? '' : t('eta.left', { t: fmtDuration(printer.etaSeconds, t) })))
 
@@ -32,7 +33,7 @@ onBeforeUnmount(() => { removeEventListener('resize', fit); ro?.disconnect() })
 
 <template>
   <header ref="hd" class="hd">
-    <span class="wm"><img :src="logo" width="30" height="30" alt="Voron"><b>VORON</b><i :title="printer.printerName || ''">{{ printer.printerName || '2.4' }}</i></span>
+    <span class="wm"><img :src="logo" width="30" height="30" alt="Voron"><b>VORON</b><i>2.4</i></span>
     <nav class="nav">
       <button v-for="v in tabs" :key="v" :class="{ on: ui.view === v }" @click="ui.go(v)">{{ t('nav.' + v) }}</button>
     </nav>

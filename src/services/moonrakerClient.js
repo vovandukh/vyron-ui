@@ -4,9 +4,41 @@ export function normalizeHost(v) {
   return String(v || '').trim().replace(/^https?:\/\//i, '').replace(/^wss?:\/\//i, '').replace(/\/.*$/, '')
 }
 
+// Протокол — як у сторінки: https → wss/https, http → ws/http (без змішаного контенту).
 const secure = () => typeof location !== 'undefined' && location.protocol === 'https:'
 export const socketUrl = host => (secure() ? 'wss://' : 'ws://') + host + '/websocket'
 export const httpBase = host => (secure() ? 'https://' : 'http://') + host
+
+// ---------- вибір хоста принтера (жодних захардкоджених IP) ----------
+const HOST_KEY = 'voronui.host'
+
+/** Хост, збережений після ручного підключення (порожній — підключатися до хоста сторінки). */
+export function savedHost() {
+  try { return localStorage.getItem(HOST_KEY) || '' } catch { return '' }
+}
+
+/** Запам'ятати хост ручного підключення; хост самої сторінки не зберігаємо (він і так за замовчуванням). */
+export function rememberHost(host) {
+  try {
+    if (host && host !== location.host) localStorage.setItem(HOST_KEY, host)
+    else localStorage.removeItem(HOST_KEY)
+  } catch { /* приватний режим */ }
+}
+
+/**
+ * Хост для автопідключення:
+ *   ?host=ip:port → збережений у localStorage → VITE_PRINTER_HOST → хост, з якого відкрито сторінку
+ *   (на принтері це сам nginx/Moonraker, у dev — проксі Vite). Порожній рядок — підключатися нікуди.
+ */
+export function resolveHost() {
+  const q = new URLSearchParams(location.search).get('host')
+  if (q) return normalizeHost(q)
+  const s = savedHost()
+  if (s) return normalizeHost(s)
+  const env = import.meta.env.VITE_PRINTER_HOST
+  if (env) return normalizeHost(env)
+  return location.protocol.startsWith('http') && location.host ? location.host : ''
+}
 
 export class RpcError extends Error {}
 

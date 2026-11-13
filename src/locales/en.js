@@ -1,5 +1,5 @@
 export default {
-  'nav.main': 'Control', 'nav.tools': 'Tools', 'nav.console': 'Console', 'nav.mesh': 'Bed mesh',
+  'nav.main': 'Control', 'nav.console': 'Console', 'nav.mesh': 'Bed mesh',
   'nav.hist': 'History', 'nav.eng': 'Engineering', 'nav.cfg': 'Config',
 
   'common.set': 'Set', 'common.off': 'Turn off', 'common.cancel': 'Cancel', 'common.save': 'Save', 'common.ok': 'OK',
@@ -39,19 +39,15 @@ export default {
   'msg.notConnectedPrinter': 'Not connected to the printer', 'msg.notWhilePrinting': 'Not while printing',
   'msg.invalidWs': 'Invalid WebSocket response',
 
-  'tools.title': 'Toolheads', 'tools.waiting': 'Waiting for Klipper configuration',
-  'tools.hintSummary': 'How the toolhead board is detected (CAN / USB)', 'tools.hintMcu': '# name from [mcu EBBCan]',
-  'tools.hintText': 'The toolhead board is detected automatically from the extruder pins (for example, EBBCan: PD0 → [mcu EBBCan]). Sensors, fans and the driver on the same board are picked up from printer.cfg. To see the board chip temperature, add a temperature_mcu sensor:',
-  'tools.selectHint': 'Activating a toolhead sends T<number>',
-  'tools.footer': 'Toolheads are detected automatically from the [extruder], [extruder1], … sections in Klipper. Switching between them needs T0, T1, … macros.',
+  'tools.waiting': 'Waiting for Klipper configuration',
+
   'tools.found': 'Toolheads found: {n}',
   'tools.none': 'No toolheads yet',
-  'tools.noneConnected': 'Klipper reported no [extruder] sections. Check printer.cfg.',
-  'tools.noneOffline': 'Toolheads appear automatically once the printer connects and Klipper returns its extruders.',
+
   'tools.demoMode': 'Demo mode · no commands are sent to the printer',
   'tools.demoSelected': 'Demo · selected T{i}',
   'tools.sent': 'Tool selection sent: T{i}', 'tools.board': 'Toolhead board ·',
-  'tools.placeholder': 'Target temperature', 'tools.aria': 'Temperature T{i}',
+  'tools.aria': 'Temperature T{i}',
   'tools.activate': 'Activate', 'tools.badTemp': 'Enter a temperature 0–320 °C',
   'tools.can.uuidTitle': 'CAN UUID: {id} · bus {iface}', 'tools.can.serialTitle': 'USB: {id}',
   'tools.can.boardTemp': 'Board temperature ({name})', 'tools.can.versionTitle': 'MCU firmware: {v}',
@@ -103,7 +99,7 @@ export default {
   'net.sent': 'Command sent. If it connects, this page will lose connection: open the printer at its new IP address.',
   'net.setupSummary': 'One-time setup for connecting',
   'net.setupNote': 'The gcode_shell_command extension is required (install via KIAUH). This is an example, not tested on your printer; if nmcli asks for permissions, sudo or polkit setup will be needed.',
-  'net.demoIface': 'wlan0 · 192.168.0.232 (demo)',
+  'net.demoIface': 'wlan0 · 192.168.1.50 (demo)',
 
   'set.lang': 'Language', 'set.cEstop': 'Confirm emergency stop',
   'set.cSys': 'Confirm system actions (restart, shutdown)',
@@ -112,5 +108,25 @@ export default {
   'set.note': 'Settings are stored in this browser.',
 
   'temp.nozzle': 'Nozzle temperature', 'temp.bed': 'Bed temperature', 'temp.now': 'Now', 'temp.target': 'target',
-  'temp.aria': 'Target temperature', 'temp.range': 'Enter a temperature 0–{max} °C'
+  'temp.aria': 'Target temperature', 'temp.range': 'Enter a temperature 0–{max} °C',
+  'tools.statusActive': 'Active', 'tools.statusIdle': 'Idle',
+
+  'eddy.shared': 'on board', 'eddy.onBoard': 'Eddy is connected to the I²C of toolhead board {mcu}',
+  'eddy.coil': 'Eddy coil temperature', 'eddy.chip': 'Eddy MCU chip temperature',
+  'eddy.busActive': 'bus active', 'eddy.busState': 'bus: {s}', 'eddy.online': 'online',
+  'eddy.comp': 'compensation', 'eddy.on': 'on', 'eddy.off': 'off',
+
+  'files.title': 'Files on printer · {n}', 'files.search': 'Search files', 'files.more': 'Show more ({n})',
+  'files.empty': 'No G-code files on the printer', 'files.kb': 'KB', 'files.mb': 'MB',
+  'files.preview': '3D', 'files.previewTitle': 'Open 3D model preview',
+  'files.delete': 'Delete', 'files.deleteTitle': 'Delete file from printer storage',
+  'files.busy': 'File is printing or paused — cannot delete', 'files.printing': 'printing',
+  'files.confirmDelete': 'Delete “{name}” from printer storage? This cannot be undone.',
+  'files.deleted': 'File “{name}” deleted', 'files.deleteError': 'Could not delete: {msg}',
+  'files.listError': 'Could not get the file list: {msg}', 'files.removed': 'file deleted',
+  'files.print': 'Print', 'files.reprint': 'Print again', 'files.printTitle': 'Start printing this file',
+  'files.printBusy': 'Printer is busy: printing or paused',
+  'files.confirmPrint': 'Start printing “{name}”? Make sure the bed is clear and filament is loaded.',
+  'files.printStarted': 'Print of “{name}” started', 'files.printError': 'Could not start the print: {msg}',
+  'preview.loading': 'loading…', 'preview.error': 'could not open: {msg}', 'preview.close': 'Back to current print'
 }
