@@ -42,7 +42,8 @@ onBeforeUnmount(() => { removeEventListener('resize', fit); ro?.disconnect() })
 </template>
 
 <style scoped>
-.hd{position:fixed;top:20px;left:32px;right:32px;display:flex;flex-wrap:wrap;row-gap:8px;align-items:center;justify-content:space-between;gap:20px;font-size:12px;color:var(--dim);pointer-events:none;z-index:8}
+/* row-gap після gap: шорткат gap інакше скидає row-gap до 20px */
+.hd{position:fixed;top:20px;left:32px;right:32px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:20px;row-gap:8px;font-size:12px;color:var(--dim);pointer-events:none;z-index:8}
 .wm{display:flex;align-items:center;gap:12px;font-weight:600;color:var(--ink);letter-spacing:.15em;white-space:nowrap}
 .wm b{color:var(--red);font-weight:600}
 .wm i{font-style:normal;font-weight:200;color:var(--dim)}

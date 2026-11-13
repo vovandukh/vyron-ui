@@ -21,9 +21,13 @@ const { tm } = useI18n()
 </template>
 
 <style scoped>
-.pct{position:fixed;left:32px;bottom:55px;font-size:min(16vw,130px);font-weight:200;line-height:1;letter-spacing:-.04em;pointer-events:none}
+/* Розмір і ширина обмежені відстанню до центрованої смуги T0–T5 (~450px), щоб «100%»
+   і довга назва файлу не заходили під неї. */
+.pct{position:fixed;left:32px;bottom:55px;font-size:clamp(70px,min(16vw,calc((50vw - 270px) / 2)),130px);font-weight:200;line-height:1;letter-spacing:-.04em;pointer-events:none}
 .pct small{font-size:.3em;color:var(--red);margin-left:5px}
-.meta{position:fixed;left:36px;bottom:24px;color:var(--dim);font-size:12px;pointer-events:none;max-width:40vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{position:fixed;left:36px;bottom:24px;color:var(--dim);font-size:12px;pointer-events:none;max-width:min(40vw,calc(50vw - 280px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* ≤1100px смуга T0–T5 піднята над рядком підключення — назва файлу може займати 40vw */
+@media(max-width:1100px){.meta{max-width:40vw}}
 @media(max-width:900px){.pct{left:16px;bottom:24px;font-size:70px}.meta{display:none}}
 @media(max-width:560px){.pct{bottom:12px;font-size:54px}}
 </style>
