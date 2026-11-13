@@ -40,9 +40,8 @@ export default {
   'msg.invalidWs': 'Invalid WebSocket response',
 
   'tools.title': 'Six tools', 'tools.waiting': 'Waiting for Klipper configuration',
-  'tools.hintSummary': 'How to show EBB36 board temperatures', 'tools.hintMcu': '# name of this board’s [mcu …]',
-  'tools.hintSame': '# same for ebb_t1 … ebb_t5',
-  'tools.hintText': 'The sensor name must contain ebb, can, board, head or tool and end with the tool number 0–5 (for example, ebb_t3).',
+  'tools.hintSummary': 'How the toolhead board is detected (CAN / USB)', 'tools.hintMcu': '# name from [mcu EBBCan]',
+  'tools.hintText': 'The toolhead board is detected automatically from the extruder pins (for example, EBBCan: PD0 → [mcu EBBCan]). Sensors, fans and the driver on the same board are picked up from printer.cfg. To see the board chip temperature, add a temperature_mcu sensor:',
   'tools.selectHint': 'Tool selection sends T0–T5',
   'tools.footer': 'Extruder names come from printer.objects.list. T0–T5 need matching extruders and tool-select commands in Klipper.',
   'tools.found': '{n} / 6 extruders found',
@@ -50,9 +49,14 @@ export default {
   'tools.demoMode': 'Demo mode · no commands are sent to the printer',
   'tools.notFoundCfg': 'Tool T{i} not found in the Klipper configuration', 'tools.demoSelected': 'Demo · selected T{i}',
   'tools.sent': 'Tool selection sent: T{i}', 'tools.notFoundTitle': 'Extruder not found', 'tools.cardNotFound': 'not found',
-  'tools.tempOf': 'Temperature {name}', 'tools.addSection': 'Add {sec} in printer.cfg', 'tools.board': 'EBB36 board ·',
-  'tools.noSensor': 'sensor not found', 'tools.placeholder': 'Target temperature', 'tools.aria': 'Temperature T{i}',
+  'tools.tempOf': 'Temperature {name}', 'tools.addSection': 'Add {sec} in printer.cfg', 'tools.board': 'Toolhead board ·',
+  'tools.placeholder': 'Target temperature', 'tools.aria': 'Temperature T{i}',
   'tools.activate': 'Activate', 'tools.badTemp': 'Enter a temperature 0–320 °C',
+  'tools.can.uuidTitle': 'CAN UUID: {id} · bus {iface}', 'tools.can.serialTitle': 'USB: {id}',
+  'tools.can.boardTemp': 'Board temperature ({name})', 'tools.can.versionTitle': 'MCU firmware: {v}',
+  'tools.can.load': 'load {v}%', 'tools.can.mhz': 'MHz', 'tools.can.noData': 'MCU not responding',
+  'tools.can.fanHotend': 'Hotend', 'tools.can.fanPart': 'Part fan', 'tools.can.fanGeneric': 'Fan',
+  'tools.can.fanController': 'Board', 'tools.can.rpm': '{v} rpm',
 
   'console.placeholder': 'G-code, e.g. G28', 'console.send': 'Send',
 

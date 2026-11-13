@@ -14,11 +14,10 @@ const { t, tm } = useI18n()
       <span>{{ tm(printer.toolStatus) }}</span>
       <details class="hint">
         <summary>{{ t('tools.hintSummary') }}</summary>
-        <pre>[temperature_sensor ebb_t0]
-sensor_type: temperature_mcu
-sensor_mcu: ebb0   {{ t('tools.hintMcu') }}
-{{ t('tools.hintSame') }}</pre>
         <p>{{ t('tools.hintText') }}</p>
+        <pre>[temperature_sensor EBBCan_mcu]
+sensor_type: temperature_mcu
+sensor_mcu: EBBCan   {{ t('tools.hintMcu') }}</pre>
       </details>
       <span class="muted">{{ t('tools.selectHint') }}</span>
     </div>

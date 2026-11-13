@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { usePrinterStore } from '../../../stores/printerStore'
 import { useI18n } from '../../../composables/useI18n'
+import ToolBoardInfo from './ToolBoardInfo.vue'
 
 const props = defineProps({ index: { type: Number, required: true } })
 const MAX_T = 320
@@ -15,10 +16,15 @@ const ob = computed(() => (name.value ? printer.st[name.value] || {} : {}))
 const temp = computed(() => ob.value.temperature)
 const target = computed(() => ob.value.target)
 
-const board = computed(() => {
+/** Плата голови, визначена з printer.cfg (null — голова на материнській платі). */
+const th = computed(() => (name.value ? printer.toolheads[name.value] || null : null))
+
+/** Запасний варіант для старих конфігів: датчик з назвою на кшталт ebb_t0 без прив'язки пінів. */
+const legacyBoard = computed(() => {
   const n = printer.boardObjects[props.index]
-  const v = n ? (printer.st[n] || {}).temperature : null
-  return { found: printer.demoMode || !!n, v: v == null ? null : Number(v) }
+  if (th.value || !n) return null
+  const v = (printer.st[n] || {}).temperature
+  return { v: v == null ? null : Number(v) }
 })
 
 // Поле вводу підхоплює ціль із принтера, але не перезаписується під час набору.
@@ -37,9 +43,9 @@ function heat() {
     <div class="toolhead"><strong>TOOL {{ index }}</strong><span class="muted">{{ name || t('tools.cardNotFound') }}</span></div>
     <div class="temp">{{ temp == null ? '–' : Number(temp).toFixed(1) + '°' }} <small>/ {{ target == null ? '–' : Math.round(target) + '°C' }}</small></div>
     <div class="muted">{{ name ? t('tools.tempOf', { name }) : t('tools.addSection', { sec: index === 0 ? '[extruder]' : '[extruder' + index + ']' }) }}</div>
-    <div class="muted">{{ t('tools.board') }}
-      <span v-if="!board.found">{{ t('tools.noSensor') }}</span>
-      <span v-else :class="{ hot: board.v != null && board.v >= BOARD_HOT }">{{ board.v == null ? '–' : board.v.toFixed(1) + '°' }}</span>
+    <ToolBoardInfo v-if="th" :th="th" />
+    <div v-else-if="legacyBoard" class="muted">{{ t('tools.board') }}
+      <span :class="{ hot: legacyBoard.v != null && legacyBoard.v >= BOARD_HOT }">{{ legacyBoard.v == null ? '–' : legacyBoard.v.toFixed(1) + '°' }}</span>
     </div>
     <input v-model="input" type="number" min="0" :max="MAX_T" step="1" :placeholder="t('tools.placeholder')" :aria-label="t('tools.aria', { i: index })" :disabled="!name" @keydown.enter="heat">
     <div class="actions">
@@ -51,7 +57,7 @@ function heat() {
 </template>
 
 <style scoped>
-.toolcard{border:1px solid var(--line);border-radius:8px;padding:13px;display:grid;gap:9px;background:rgba(255,255,255,.015)}
+.toolcard{border:1px solid var(--line);border-radius:8px;padding:13px;display:grid;gap:9px;align-content:start;background:rgba(255,255,255,.015);min-width:0}
 .toolcard.selected{border-color:rgba(240,58,46,.7)}
 .toolhead{display:flex;justify-content:space-between;align-items:center}
 .toolhead strong{font-size:14px;font-weight:500}

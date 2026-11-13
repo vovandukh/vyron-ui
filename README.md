@@ -16,6 +16,6 @@ npm run build    # збірка в dist/
 ## Структура
 
 - `src/stores/`: `printerStore` (з'єднання, статус Klipper, головки, консоль, прогрес), `settingsStore` (localStorage `voronui`), `uiStore` (вкладка, модалки)
-- `src/services/`: WebSocket-клієнт Moonraker, HTTP API, Klipper, парсер G-code, модель друку, демо
+- `src/services/`: WebSocket-клієнт Moonraker, HTTP API, Klipper, плати голів (`toolheads.js`: CAN/USB MCU, датчики, вентилятори за пінами екструдера), парсер G-code, модель друку, демо
 - `src/components/layout|tabs|modals|viz/`: компоненти інтерфейсу
 - `src/locales/`: словники UA / EN
