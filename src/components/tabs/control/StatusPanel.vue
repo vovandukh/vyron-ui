@@ -47,6 +47,6 @@ dd{margin:0;font-size:16px;font-weight:300;white-space:nowrap}
 .st .tt:focus-visible{outline:2px solid var(--red);outline-offset:2px}
 @media(max-width:700px){.st{top:auto;bottom:140px;right:14px;width:min(240px,62vw)}}
 @media(max-width:560px){.st>div{min-width:65px}}
-/* Низькі екрани (800×480): компактні рядки, щоб блок не заходив під смугу T0–T5 */
+/* Низькі екрани (800×480): компактні рядки, щоб блок не заходив під смугу голів */
 @media(max-height:540px){.st{padding:4px 12px}.st>div,.st .tt{padding:5px 6px}dd{font-size:14px}dt{font-size:11px}}
 </style>

@@ -7,6 +7,10 @@ import { useOrbitCamera } from '../../composables/useOrbitCamera'
 import { model, BED } from '../../services/gcodeModel'
 
 const GRAY = [0.24, 0.26, 0.29], A = [0.93, 0.28, 0.23], B = [1, 0.68, 0.62]
+// Яскравість парних шарів відносно непарних: чергування робить межі шарів помітними
+// (раніше було 0.8 — тонкі шари зливались у суцільну масу).
+const LAY_DIM = 0.62
+const shade = lay => (lay & 1 ? 1 : LAY_DIM)
 
 const printer = usePrinterStore()
 const cv = ref(null)
@@ -30,14 +34,15 @@ function loop() {
 
 function build() {
   if (lines) { scene.remove(lines); lines.geometry.dispose(); lines.material.dispose(); lines = null }
-  const { P, N, Lay } = model
+  const { P, N, Lay, zScale: zs } = model
   painted = 0
   if (!P) return
-  const GR = [GRAY.map(v => v * 0.8), GRAY]
+  const GR = [GRAY.map(v => v * LAY_DIM), GRAY]
   const pos = new Float32Array(N * 6), col = new Float32Array(N * 6)
   for (let i = 0; i < N; i++) {
     const o = i * 6
-    pos.set([P[o] - BED[0] / 2, P[o + 2], -(P[o + 1] - BED[1] / 2), P[o + 3] - BED[0] / 2, P[o + 5], -(P[o + 4] - BED[1] / 2)], o)
+    // Z множиться на zScale (візуальний крок шарів, див. gcodeModel.js); X/Y без змін.
+    pos.set([P[o] - BED[0] / 2, P[o + 2] * zs, -(P[o + 1] - BED[1] / 2), P[o + 3] - BED[0] / 2, P[o + 5] * zs, -(P[o + 4] - BED[1] / 2)], o)
     for (let k = 0; k < 6; k += 3) col.set(GR[Lay[i] & 1], o + k)
   }
   const g = new THREE.BufferGeometry()
@@ -48,15 +53,16 @@ function build() {
   scene.add(lines)
   const b = model.bounds
   if (b) {
-    target.set((b.x0 + b.x1) / 2 - BED[0] / 2, model.zmax / 2, -((b.y0 + b.y1) / 2 - BED[1] / 2))
-    orbit.dist = Math.max(b.x1 - b.x0, b.y1 - b.y0, model.zmax) * 2.1 + 25
+    const h = model.zmax * zs
+    target.set((b.x0 + b.x1) / 2 - BED[0] / 2, h / 2, -((b.y0 + b.y1) / 2 - BED[1] / 2))
+    orbit.dist = Math.max(b.x1 - b.x0, b.y1 - b.y0, h) * 2.1 + 25
   }
   paintTo(printer.done)
 }
 
 /** Фарбує надруковані сегменти градієнтом за висотою, решту — сірим (з чергуванням шарів). */
 function paint(i, on) {
-  const z = model.P[i * 6 + 2] / model.zmax, o = i * 6, k = 0.8 + 0.2 * (model.Lay[i] & 1), a = colAttr.array
+  const z = model.P[i * 6 + 2] / model.zmax, o = i * 6, k = shade(model.Lay[i]), a = colAttr.array
   for (let j = 0; j < 2; j++) {
     const q = o + j * 3
     if (on) {
@@ -79,7 +85,8 @@ function moveDot(p) {
   if (!dot) return
   if (!p) { dot.visible = false; return }
   dot.visible = true
-  dot.position.set(p[0] - BED[0] / 2, p[2], -(p[1] - BED[1] / 2))
+  // Та сама шкала Z, що й у моделі, — сопло стоїть точно на поточному шарі.
+  dot.position.set(p[0] - BED[0] / 2, p[2] * model.zScale, -(p[1] - BED[1] / 2))
 }
 
 onMounted(() => {

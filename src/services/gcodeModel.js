@@ -3,6 +3,12 @@
 
 export const BED = [350, 350]
 
+// Візуальний крок шарів: тонкі шари (0.2 мм) на прев'ю зливаються, тому вісь Z помірно
+// розтягується так, щоб видимий крок був ~LAYER_PITCH мм, але не більше ніж у Z_SCALE_MAX раз —
+// пропорції моделі лишаються впізнаваними. Для шарів ≥ LAYER_PITCH масштаб = 1.
+const LAYER_PITCH = 0.4
+const Z_SCALE_MAX = 1.5
+
 export const model = {
   P: null,       // Float32Array сегментів
   F: null,       // байтові зміщення кінця кожного сегмента
@@ -10,7 +16,21 @@ export const model = {
   Lay: null,     // індекс шару кожного сегмента
   layers: [],    // відсортовані унікальні висоти шарів (×100)
   zmax: 1,
+  zScale: 1,     // візуальний масштаб осі Z для 3D-прев'ю
+  layerHeight: 0,
   bounds: null   // {x0,x1,y0,y1}
+}
+
+/** Медіанна висота шару (мм) за відсортованими висотами ×100. */
+function medianLayerHeight(layers) {
+  const d = []
+  for (let i = 1; i < layers.length; i++) {
+    const h = (layers[i] - layers[i - 1]) / 100
+    if (h >= 0.02 && h <= 2) d.push(h)
+  }
+  if (!d.length) return 0
+  d.sort((a, b) => a - b)
+  return d[d.length >> 1]
 }
 
 export function loadModel(P, F) {
@@ -28,7 +48,9 @@ export function loadModel(P, F) {
   const map = new Map(layers.map((z, i) => [z, i]))
   const Lay = new Uint16Array(N)
   for (let i = 0; i < N; i++) Lay[i] = map.get(Math.round(P[i * 6 + 5] * 100))
-  Object.assign(model, { P, F, N, Lay, layers, zmax, bounds: N ? { x0, x1, y0, y1 } : null })
+  const layerHeight = medianLayerHeight(layers)
+  const zScale = layerHeight ? Math.min(Z_SCALE_MAX, Math.max(1, LAYER_PITCH / layerHeight)) : 1
+  Object.assign(model, { P, F, N, Lay, layers, zmax, zScale, layerHeight, bounds: N ? { x0, x1, y0, y1 } : null })
 }
 
 /** Кількість сегментів, надрукованих до байтового зміщення pos. */

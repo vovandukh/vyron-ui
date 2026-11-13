@@ -23,7 +23,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .log .c{color:var(--ink)}
 .log .e{color:var(--red)}
 
-/* Поки відкрита панель, смуга T0–T5 прихована, тож знизу лишається тільки рядок підключення (~50px).
+/* Поки відкрита панель, смуга голів прихована, тож знизу лишається тільки рядок підключення (~50px).
    В оригіналі тут було 112px, через що на 800×480 обрізався низ конфіг-редактора та карток головок. */
 @media(max-width:900px){
   .view{left:10px;right:10px;bottom:62px;padding:12px}

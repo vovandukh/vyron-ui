@@ -1,22 +1,24 @@
-// Розбір об'єктів Klipper: пошук екструдерів T0–T5 і датчиків плат EBB36.
+// Розбір об'єктів Klipper: пошук усіх екструдерів (будь-яка кількість) і датчиків плат голів.
 
-export const MAX_TOOLS = 6
+/** Номер інструмента з імені екструдера: extruder → 0, extruder3 → 3. */
+export const toolNum = name => (name === 'extruder' ? 0 : Number(String(name).slice(8)) || 0)
 
 export function discoverTools(objectList) {
   const tools = objectList
     .filter(n => /^extruder\d*$/.test(n))
-    .sort((a, b) => (a === 'extruder' ? -1 : b === 'extruder' ? 1 : a.localeCompare(b, undefined, { numeric: true })))
-    .slice(0, MAX_TOOLS)
+    .sort((a, b) => toolNum(a) - toolNum(b))
 
-  // Датчик плати: temperature_sensor <ім'я з ebb|can|board|head|tool> із номером 0–5 у кінці.
-  const boards = []
+  // Запасний варіант для конфігів без прив'язки пінів: датчик з назвою на кшталт ebb_t3,
+  // індексований номером голови.
+  const nums = new Set(tools.map(toolNum))
+  const boards = {}
   objectList.filter(n => /^temperature_sensor /.test(n)).forEach(n => {
     const s = n.slice(19).toLowerCase()
     if (!/ebb|can|board|head|tool/.test(s)) return
     const m = s.match(/(\d+)\D*$/)
     if (!m) return
     const i = Number(m[1])
-    if (i >= 0 && i < MAX_TOOLS && !boards[i]) boards[i] = n
+    if (nums.has(i) && !boards[i]) boards[i] = n
   })
   return { tools, boards }
 }
@@ -26,7 +28,7 @@ const BASE_OBJECTS = ['print_stats', 'virtual_sdcard', 'heater_bed', 'toolhead',
 
 /** Об'єкт для printer.objects.subscribe лише з тих об'єктів, що реально існують. */
 export function subscriptionObjects(objectList, tools, boards, extra = []) {
-  const names = [...BASE_OBJECTS, ...tools, ...boards.filter(Boolean), ...extra]
+  const names = [...BASE_OBJECTS, ...tools, ...Object.values(boards), ...extra]
   const objects = {}
   names.forEach(n => { if (objectList.includes(n)) objects[n] = null })
   return objects

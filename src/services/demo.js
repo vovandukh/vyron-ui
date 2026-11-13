@@ -1,27 +1,33 @@
 // Демо-режим: імітація друку і фейкові відповіді Moonraker. Команди нікуди не надсилаються.
 
-export const DEMO_TOOLS = ['extruder', 'extruder1', 'extruder2', 'extruder3', 'extruder4', 'extruder5']
+export const DEMO_DEFAULT_TOOLS = 6
+export const DEMO_MAX_TOOLS = 12
 
-// Плати голів у демо: T0–T3 — CAN (EBB36/SB2209), T4 — USB-плата, T5 — напряму на материнській платі
-// (щоб було видно і картку без блоку плати).
-const DEMO_UUIDS = ['5bff930ca785', 'c2a91f04be13', '7e4d02aa9c51', '1f88c3d07b26']
-export const DEMO_TOOLHEADS = Object.fromEntries(DEMO_TOOLS.map((tool, i) => {
-  if (i === 5) return [tool, null]
-  const can = i < 4
-  const mcu = can ? (i % 2 ? 'SB2209_' : 'EBBCan') + i : 'Nitehawk' + i
-  return [tool, {
-    mcu, mcuObj: 'mcu ' + mcu, link: can ? 'can' : 'usb',
-    canbusUuid: can ? DEMO_UUIDS[i] : null, canbusInterface: can ? 'can0' : null,
-    serial: can ? null : '/dev/serial/by-id/usb-Klipper_rp2040_4E363334320E1A3C-if00',
-    sensors: [{ obj: 'temperature_sensor ' + mcu + '_mcu', name: mcu + '_mcu', chip: true }],
-    fans: [
-      { obj: 'heater_fan hotend_fan' + (i ? '_t' + i : ''), name: 'hotend_fan' + (i ? '_t' + i : ''), kind: 'hotend' },
-      i ? { obj: 'fan_generic part_fan_t' + i, name: 'part_fan_t' + i, kind: 'generic' } : { obj: 'fan', name: 'fan', kind: 'part' }
-    ],
-    drivers: [{ obj: (i === 1 ? 'tmc2240 ' : 'tmc2209 ') + tool, name: i === 1 ? 'TMC2240' : 'TMC2209' }]
-  }]
-}))
-const demoHeads = () => Object.values(DEMO_TOOLHEADS).filter(Boolean)
+/** Список екструдерів демо-принтера: extruder, extruder1, … */
+export const demoTools = n => Array.from({ length: n }, (_, i) => (i ? 'extruder' + i : 'extruder'))
+
+// Плати голів у демо: усі на CAN (EBB36 / SB2209), T4 — USB-плата, а остання голова
+// (якщо голів більше однієї) — напряму на материнській платі, щоб було видно картку без блоку плати.
+const uuid = i => ((0x5bff930ca785 + i * 0x9e3779b1) % 0xffffffffffff).toString(16).padStart(12, '0')
+export function demoToolheads(tools) {
+  const n = tools.length
+  return Object.fromEntries(tools.map((tool, i) => {
+    if (n > 1 && i === n - 1) return [tool, null]
+    const can = !(i === 4 && n > 5)
+    const mcu = can ? (i % 2 ? 'SB2209_' : 'EBBCan') + i : 'Nitehawk' + i
+    return [tool, {
+      mcu, mcuObj: 'mcu ' + mcu, link: can ? 'can' : 'usb',
+      canbusUuid: can ? uuid(i) : null, canbusInterface: can ? 'can0' : null,
+      serial: can ? null : '/dev/serial/by-id/usb-Klipper_rp2040_4E363334320E1A3C-if00',
+      sensors: [{ obj: 'temperature_sensor ' + mcu + '_mcu', name: mcu + '_mcu', chip: true }],
+      fans: [
+        { obj: 'heater_fan hotend_fan' + (i ? '_t' + i : ''), name: 'hotend_fan' + (i ? '_t' + i : ''), kind: 'hotend' },
+        i ? { obj: 'fan_generic part_fan_t' + i, name: 'part_fan_t' + i, kind: 'generic' } : { obj: 'fan', name: 'fan', kind: 'part' }
+      ],
+      drivers: [{ obj: (i === 1 ? 'tmc2240 ' : 'tmc2209 ') + tool, name: i === 1 ? 'TMC2240' : 'TMC2209' }]
+    }]
+  }))
+}
 export const DEMO_PRINT_SECONDS = 5400
 export const DEMO_STEP = 35
 export const DEMO_INTERVAL = 40
@@ -48,7 +54,7 @@ export function demoMesh() {
   }
 }
 
-export function demoStaticStatus() {
+export function demoStaticStatus(toolheads) {
   const st = {
     heater_bed: { temperature: 110, target: 110 },
     'temperature_sensor chamber': { temperature: 45 },
@@ -58,7 +64,7 @@ export function demoStaticStatus() {
     bed_mesh: demoMesh(),
     mcu: { mcu_version: 'v0.13.0-573-g644cda5e', last_stats: { mcu_task_avg: 0.000066, mcu_task_stddev: 0.000057, freq: 63998525 } }
   }
-  demoHeads().forEach((th, i) => {
+  Object.values(toolheads).filter(Boolean).forEach((th, i) => {
     st[th.mcuObj] = {
       mcu_version: 'v0.13.0-' + (560 + i * 7) + '-g' + (0xaea1bcf56 + i).toString(16).slice(0, 9),
       last_stats: { mcu_task_avg: 0.000012 + i * 0.000004, mcu_task_stddev: 0.000014, freq: th.link === 'usb' ? 133000000 : 63999071 }
@@ -68,16 +74,16 @@ export function demoStaticStatus() {
 }
 
 /** Патч статусу для одного кроку симуляції. */
-export function demoTickStatus({ pos, progress, activeTool }) {
+export function demoTickStatus({ pos, progress, activeTool, tools, toolheads }) {
   const z = pos ? pos[2] : 0
   const patch = {
-    toolhead: { position: pos ? [pos[0], pos[1], z, 0] : [0, 0, 0, 0], extruder: DEMO_TOOLS[activeTool] },
+    toolhead: { position: pos ? [pos[0], pos[1], z, 0] : [0, 0, 0, 0], extruder: tools[activeTool] },
     virtual_sdcard: { progress },
     print_stats: { state: 'printing', print_duration: progress * DEMO_PRINT_SECONDS, info: { current_layer: Math.round(z / 0.8), total_layer: 120 } }
   }
-  DEMO_TOOLS.forEach((n, i) => { patch[n] = { temperature: i === activeTool ? 205 : 25, target: i === activeTool ? 205 : 0 } })
-  DEMO_TOOLS.forEach((tool, i) => {
-    const th = DEMO_TOOLHEADS[tool]
+  tools.forEach((n, i) => { patch[n] = { temperature: i === activeTool ? 205 : 25, target: i === activeTool ? 205 : 0 } })
+  tools.forEach((tool, i) => {
+    const th = toolheads[tool]
     if (!th) return
     const hot = i === activeTool
     patch[th.sensors[0].obj] = { temperature: (hot ? 52 : 34) + i * 1.5 }

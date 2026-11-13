@@ -2,12 +2,12 @@ import { defineStore } from 'pinia'
 import { ref, shallowReactive, computed } from 'vue'
 import { MoonrakerClient, normalizeHost } from '../services/moonrakerClient'
 import { fetchGcode } from '../services/moonrakerApi'
-import { discoverTools, subscriptionObjects, STATE_KEYS, MAX_TOOLS } from '../services/klipper'
+import { discoverTools, subscriptionObjects, STATE_KEYS, toolNum } from '../services/klipper'
 import { detectToolheads, toolheadObjects } from '../services/toolheads'
 import { parseGcode } from '../services/gcodeParser'
 import { model, loadModel, indexForPos, segEnd, layerLabel } from '../services/gcodeModel'
 import {
-  DEMO_TOOLS, DEMO_STEP, DEMO_INTERVAL, DEMO_TOOLHEADS,
+  DEMO_DEFAULT_TOOLS, DEMO_MAX_TOOLS, DEMO_STEP, DEMO_INTERVAL, demoTools, demoToolheads,
   demoGcode, demoStaticStatus, demoTickStatus
 } from '../services/demo'
 
@@ -31,7 +31,9 @@ export const usePrinterStore = defineStore('printer', () => {
   const st = shallowReactive({})
   const objectList = ref([])
   const toolObjects = ref([])
-  const boardObjects = ref([])
+  /** Запасні датчики плат за назвою: { номер голови: об'єкт } */
+  const boardObjects = ref({})
+  const hostname = ref(null)
   /** Плата голови для кожного екструдера: { extruder: Toolhead | null } (див. services/toolheads.js) */
   const toolheads = ref({})
   const activeTool = ref(0)
@@ -92,7 +94,15 @@ export const usePrinterStore = defineStore('printer', () => {
     return { key: 'meta.notConnected' }
   })
 
-  const activeToolName = computed(() => toolObjects.value[activeTool.value] || null)
+  /** Активна голова: реальний toolhead.extruder з Klipper, інакше останній вибір у UI. */
+  const activeToolName = computed(() => {
+    const ex = (st.toolhead || {}).extruder
+    return ex && toolObjects.value.includes(ex) ? ex : toolObjects.value[activeTool.value] || null
+  })
+  /** Перемикання голів має сенс лише коли їх більше однієї. */
+  const canSwitchTools = computed(() => toolObjects.value.length > 1)
+  /** Назва для шапки/вкладки: hostname з printer.info. */
+  const printerName = computed(() => (demoMode.value ? null : hostname.value))
   const nozzleTemp = computed(() => (activeToolName.value ? (st[activeToolName.value] || {}).temperature : null))
   const bedTemp = computed(() => (st.heater_bed || {}).temperature)
   const chamberTemp = computed(() => (st['temperature_sensor chamber'] || st['heater_generic chamber'] || {}).temperature)
@@ -140,8 +150,9 @@ export const usePrinterStore = defineStore('printer', () => {
     for (const k of Object.keys(st)) delete st[k]
     objectList.value = []
     toolObjects.value = []
-    boardObjects.value = []
+    boardObjects.value = {}
     toolheads.value = {}
+    hostname.value = null
     loadedName = null
     loading = false
     gcodeError.value = null
@@ -197,8 +208,10 @@ export const usePrinterStore = defineStore('printer', () => {
       const { tools, boards } = discoverTools(objectList.value)
       toolObjects.value = tools
       boardObjects.value = boards
+      if (activeTool.value >= tools.length) activeTool.value = 0
       toolStatus.value = { key: 'tools.found', params: { n: tools.length } }
-      if (tools.length < MAX_TOOLS) log({ key: 'tools.notEnough', params: { n: tools.length } }, 'e')
+      // Назва принтера для шапки (тільки читання).
+      client.call('printer.info').then(i => { hostname.value = (i && i.hostname) || null }).catch(() => {})
       // Плати голів: читаємо налаштування printer.cfg (тільки читання) і шукаємо MCU за пінами екструдерів.
       let extra = []
       try {
@@ -244,20 +257,24 @@ export const usePrinterStore = defineStore('printer', () => {
     if (model.P && pos != null) done.value = indexForPos(pos)
   }
 
-  function startDemo() {
+  /** Демо з n головами (1…DEMO_MAX_TOOLS). Без аргументу — ?demo=N з адреси або DEMO_DEFAULT_TOOLS. */
+  function startDemo(n) {
+    if (!(n >= 1)) n = Number(new URLSearchParams(location.search).get('demo')) || DEMO_DEFAULT_TOOLS
+    n = Math.min(DEMO_MAX_TOOLS, Math.max(1, Math.round(n)))
     client.close()
     stopDemo()
     clearState()
     host.value = null
     demoMode.value = true
     link.value = 'demo'
-    toolObjects.value = [...DEMO_TOOLS]
-    boardObjects.value = []
-    toolheads.value = DEMO_TOOLHEADS
+    const tools = demoTools(n), heads = demoToolheads(tools)
+    toolObjects.value = tools
+    boardObjects.value = {}
+    toolheads.value = heads
     activeTool.value = 0
     toolStatus.value = { key: 'tools.demoMode' }
     applyModel(demoGcode())
-    mergeStatus(demoStaticStatus())
+    mergeStatus(demoStaticStatus(heads))
     let k = 0
     demoTimer = setInterval(() => {
       k += DEMO_STEP
@@ -266,7 +283,8 @@ export const usePrinterStore = defineStore('printer', () => {
       mergeStatus(demoTickStatus({
         pos: done.value ? segEnd(done.value - 1) : null,
         progress: model.N ? done.value / model.N : 0,
-        activeTool: activeTool.value
+        activeTool: activeTool.value,
+        tools, toolheads: heads
       }))
     }, DEMO_INTERVAL)
   }
@@ -316,25 +334,25 @@ export const usePrinterStore = defineStore('printer', () => {
     return client.call(method, params)
   }
 
+  /** Вибір голови за позицією у toolObjects; надсилає T<номер з імені екструдера>. */
   function selectTool(i) {
-    if (i < 0 || i >= MAX_TOOLS) return
-    if (!toolObjects.value[i] && !demoMode.value) {
-      toolStatus.value = { key: 'tools.notFoundCfg', params: { i } }
-      return
-    }
+    const name = toolObjects.value[i]
+    if (!name || !canSwitchTools.value) return
+    const n = toolNum(name)
     if (demoMode.value) {
       activeTool.value = i
-      toolStatus.value = { key: 'tools.demoSelected', params: { i } }
+      toolStatus.value = { key: 'tools.demoSelected', params: { i: n } }
       return
     }
-    if (rpc('T' + i)) {
+    if (rpc('T' + n)) {
       activeTool.value = i
-      toolStatus.value = { key: 'tools.sent', params: { i } }
+      toolStatus.value = { key: 'tools.sent', params: { i: n } }
     }
   }
 
-  function setToolTarget(i, v) {
-    return rpc('M104 T' + i + ' S' + v)
+  /** Ціль нагріву конкретного екструдера — працює з будь-якою кількістю голів без макросів T<n>. */
+  function setToolTarget(name, v) {
+    return rpc('SET_HEATER_TEMPERATURE HEATER=' + name + ' TARGET=' + v)
   }
 
   function setHeater(heater, v) {
@@ -350,7 +368,7 @@ export const usePrinterStore = defineStore('printer', () => {
     host, demoMode, link, st, objectList, toolObjects, boardObjects, toolheads, activeTool, toolStatus, ctlMsg,
     consoleLines, cmdHistory, modelVersion, done,
     // getters
-    connected, isPrinting, printState, stateLabel, meta, activeToolName, nozzleTemp, bedTemp, chamberTemp,
+    connected, isPrinting, printState, stateLabel, meta, activeToolName, canSwitchTools, printerName, nozzleTemp, bedTemp, chamberTemp,
     speedFactor, fanSpeed, position, qgl, progressPct, etaSeconds, layerText, nozzleHeater,
     // actions
     on, log, connect, startDemo, autoStart, rpc, sendRaw, consoleSend, call, selectTool, setToolTarget,

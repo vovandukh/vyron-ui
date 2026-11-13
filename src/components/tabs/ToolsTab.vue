@@ -19,21 +19,21 @@ const { t, tm } = useI18n()
 sensor_type: temperature_mcu
 sensor_mcu: EBBCan   {{ t('tools.hintMcu') }}</pre>
       </details>
-      <span class="muted">{{ t('tools.selectHint') }}</span>
+      <span v-if="printer.canSwitchTools" class="muted">{{ t('tools.selectHint') }}</span>
     </div>
+    <!-- Рівно стільки карток, скільки екструдерів знайдено (1…N) -->
     <div class="toolgrid">
-      <ToolCard v-for="i in 6" :key="i" :index="i - 1" />
+      <ToolCard v-for="(name, i) in printer.toolObjects" :key="name" :name="name" :index="i" />
     </div>
-    <div class="muted">{{ t('tools.footer') }}</div>
+    <div v-if="printer.canSwitchTools" class="muted">{{ t('tools.footer') }}</div>
   </section>
 </template>
 
 <style scoped>
-.toolgrid{display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:10px}
+/* auto-fill: одна голова не розтягується на всю ширину, 2/4/6 розкладаються рівною сіткою */
+.toolgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:10px}
 .hint{margin-top:8px}
 .hint summary{cursor:pointer;color:var(--dim);font-size:13px}
 .hint pre{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:7px;padding:12px;overflow:auto;font:12px/1.5 var(--mono)}
 .hint p{color:var(--dim);font-size:12px}
-@media(max-width:900px){.toolgrid{grid-template-columns:repeat(2,minmax(140px,1fr))}}
-@media(max-width:560px){.toolgrid{grid-template-columns:1fr 1fr}}
 </style>
