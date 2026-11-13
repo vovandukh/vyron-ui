@@ -132,7 +132,10 @@ export const usePrinterStore = defineStore('printer', () => {
   })
 
   /** Тип нагрівача для вікна температур сопла: активний екструдер з toolhead. */
-  const nozzleHeater = computed(() => (st.toolhead || {}).extruder || 'extruder')
+  /** Нагрівач активного сопла; null, доки Klipper не повідомив жодного екструдера (без заглушки 'extruder'). */
+  const nozzleHeater = computed(() => activeToolName.value)
+  /** Кількість знайдених голів: 0 до відповіді Klipper (objects.list), далі — рівно стільки, скільки є. */
+  const toolCount = computed(() => toolObjects.value.length)
 
   // ================= actions =================
   function log(t, cls) {
@@ -292,13 +295,14 @@ export const usePrinterStore = defineStore('printer', () => {
   /**
    * Автостарт: ?demo → демо; VITE_PRINTER_HOST → напряму до принтера;
    * інакше до хоста сторінки (на принтері це сам Moonraker/nginx, у dev — проксі Vite).
+   * Демо вмикається ТІЛЬКИ явно (?demo або кнопка «Демо»): відкритий як файл застосунок
+   * лишається непідключеним, з 0 голів, доки користувач не введе адресу принтера.
    */
   function autoStart() {
     const envHost = import.meta.env.VITE_PRINTER_HOST
     if (new URLSearchParams(location.search).has('demo')) startDemo()
     else if (envHost) connect(envHost)
     else if (location.protocol.startsWith('http') && location.host) connect(location.host)
-    else startDemo()
   }
 
   /** G-code від кнопок керування. Повертає false і пише причину в ctlMsg, якщо команда не пішла. */
@@ -368,7 +372,7 @@ export const usePrinterStore = defineStore('printer', () => {
     host, demoMode, link, st, objectList, toolObjects, boardObjects, toolheads, activeTool, toolStatus, ctlMsg,
     consoleLines, cmdHistory, modelVersion, done,
     // getters
-    connected, isPrinting, printState, stateLabel, meta, activeToolName, canSwitchTools, printerName, nozzleTemp, bedTemp, chamberTemp,
+    connected, isPrinting, printState, stateLabel, meta, activeToolName, canSwitchTools, toolCount, printerName, nozzleTemp, bedTemp, chamberTemp,
     speedFactor, fanSpeed, position, qgl, progressPct, etaSeconds, layerText, nozzleHeater,
     // actions
     on, log, connect, startDemo, autoStart, rpc, sendRaw, consoleSend, call, selectTool, setToolTarget,

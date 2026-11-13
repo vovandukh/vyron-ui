@@ -23,6 +23,8 @@ const cfg = computed(() => TP[ui.tempModal] || null)
 const tool = ref(null)
 const tools = computed(() => printer.toolObjects)
 const heater = computed(() => (ui.tempModal === 'bed' ? 'heater_bed' : tool.value || printer.nozzleHeater))
+/** Вікно сопла, але Klipper ще не повідомив жодної голови — поля не показуємо. */
+const noTools = computed(() => ui.tempModal === 'nozzle' && !tools.value.length)
 const h = computed(() => printer.st[heater.value] || {})
 const deg = v => (v != null ? Math.round(v) + '°' : '–')
 
@@ -50,6 +52,7 @@ function send(v) {
   const c = cfg.value
   const empty = value.value === '' || value.value == null
   v = Number(v)
+  if (!heater.value) return
   if ((empty && v !== 0) || !(v >= 0 && v <= c.max)) { msg.value = { key: 'temp.range', params: { max: c.max } }; return }
   if (printer.demoMode) { close(); return }
   if (!printer.connected) { msg.value = { key: 'msg.notConnectedPrinter' }; return }
@@ -72,15 +75,21 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
           T{{ toolNum(n) }}<small>{{ deg((printer.st[n] || {}).temperature) }}</small>
         </button>
       </div>
-      <div class="tpcur">{{ t('temp.now') }} <b>{{ deg(h.temperature) }}</b> · {{ t('temp.target') }} <b>{{ deg(h.target) }}</b></div>
-      <input ref="inp" v-model="value" class="tpin" type="number" min="0" :max="cfg.max" step="1" inputmode="numeric" :aria-label="t('temp.aria')" @keydown.enter="send(value)">
-      <div class="tpp"><button v-for="p in cfg.pre" :key="p" @click="value = p">{{ p }}°</button></div>
-      <div class="tpmsg">{{ tm(msg) }}</div>
-      <div class="tpa">
-        <button @click="off">{{ t('common.off') }}</button>
-        <button @click="close">{{ t('common.cancel') }}</button>
-        <button class="tpset" @click="send(value)">{{ t('common.set') }}</button>
-      </div>
+      <template v-if="noTools">
+        <div class="tpempty">{{ t('tools.none') }}</div>
+        <div class="tpa one"><button @click="close">{{ t('common.cancel') }}</button></div>
+      </template>
+      <template v-else>
+        <div class="tpcur">{{ t('temp.now') }} <b>{{ deg(h.temperature) }}</b> · {{ t('temp.target') }} <b>{{ deg(h.target) }}</b></div>
+        <input ref="inp" v-model="value" class="tpin" type="number" min="0" :max="cfg.max" step="1" inputmode="numeric" :aria-label="t('temp.aria')" @keydown.enter="send(value)">
+        <div class="tpp"><button v-for="p in cfg.pre" :key="p" @click="value = p">{{ p }}°</button></div>
+        <div class="tpmsg">{{ tm(msg) }}</div>
+        <div class="tpa">
+          <button @click="off">{{ t('common.off') }}</button>
+          <button @click="close">{{ t('common.cancel') }}</button>
+          <button class="tpset" @click="send(value)">{{ t('common.set') }}</button>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -105,5 +114,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 .tpb .tpset{background:#d42a20;border-color:#d42a20;color:#fff;font-weight:600}
 .tpa{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:8px}
 .tpmsg{color:var(--red);font-size:12px;min-height:14px}
+.tpempty{color:var(--dim);font-size:13px;line-height:1.5}
+.tpa.one{grid-template-columns:1fr}
 .tpb :focus-visible{outline:2px solid var(--red);outline-offset:2px}
 </style>
