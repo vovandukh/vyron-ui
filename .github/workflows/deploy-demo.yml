@@ -4,7 +4,7 @@ name: Deploy demo to GitHub Pages
 # ПУБЛІЧНИЙ репозиторій, з якого GitHub Pages віддає сайт. Код цього репозиторію лишається приватним.
 #
 # Одноразове налаштування:
-#   1. Публічний репозиторій для демо (за замовчуванням vovandukh/voron_ui-demo; інший — змінна DEMO_REPO
+#   1. Публічний репозиторій для демо (за замовчуванням vovandukh/voron_ui_demo; інший — змінна DEMO_REPO
 #      у Settings → Secrets and variables → Actions → Variables).
 #   2. Fine-grained токен з доступом лише до цього репозиторію, Contents: Read and write →
 #      секрет DEMO_DEPLOY_TOKEN у цьому (приватному) репозиторії.
@@ -32,7 +32,7 @@ jobs:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     env:
-      DEMO_REPO: ${{ vars.DEMO_REPO || 'vovandukh/voron_ui-demo' }}
+      DEMO_REPO: ${{ vars.DEMO_REPO || 'vovandukh/voron_ui_demo' }}
       TOKEN: ${{ secrets.DEMO_DEPLOY_TOKEN }}
     steps:
       - name: Check deploy token
