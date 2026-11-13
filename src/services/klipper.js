@@ -25,8 +25,8 @@ const BASE_OBJECTS = ['print_stats', 'virtual_sdcard', 'heater_bed', 'toolhead',
   'quad_gantry_level', 'bed_mesh', 'temperature_sensor chamber', 'heater_generic chamber']
 
 /** Об'єкт для printer.objects.subscribe лише з тих об'єктів, що реально існують. */
-export function subscriptionObjects(objectList, tools, boards) {
-  const names = [...BASE_OBJECTS, ...tools, ...boards.filter(Boolean)]
+export function subscriptionObjects(objectList, tools, boards, extra = []) {
+  const names = [...BASE_OBJECTS, ...tools, ...boards.filter(Boolean), ...extra]
   const objects = {}
   names.forEach(n => { if (objectList.includes(n)) objects[n] = null })
   return objects

@@ -40,9 +40,8 @@ export default {
   'msg.invalidWs': 'Некоректна відповідь WebSocket',
 
   'tools.title': 'Шість інструментів', 'tools.waiting': 'Очікування конфігурації Klipper',
-  'tools.hintSummary': 'Як показати температуру плат EBB36', 'tools.hintMcu': '# назва [mcu …] цієї плати',
-  'tools.hintSame': '# те саме для ebb_t1 … ebb_t5',
-  'tools.hintText': 'Назва датчика має містити ebb, can, board, head або tool і закінчуватись номером голови 0–5 (наприклад, ebb_t3).',
+  'tools.hintSummary': 'Як визначається плата голови (CAN / USB)', 'tools.hintMcu': '# назва з [mcu EBBCan]',
+  'tools.hintText': 'Плата голови визначається автоматично за пінами екструдера (наприклад, EBBCan: PD0 → [mcu EBBCan]). Датчики, вентилятори та драйвер на тій самій платі підхоплюються з printer.cfg. Щоб бачити температуру чипа плати, додай датчик temperature_mcu:',
   'tools.selectHint': 'Вибір головки надсилає T0–T5',
   'tools.footer': 'Назви екструдерів визначаються через printer.objects.list. Для T0–T5 мають бути налаштовані відповідні екструдери та команди вибору інструмента у Klipper.',
   'tools.found': '{n} / 6 екструдерів знайдено',
@@ -50,9 +49,14 @@ export default {
   'tools.demoMode': 'Демо-режим · команди до принтера не надсилаються',
   'tools.notFoundCfg': 'Головка T{i} не знайдена в конфігурації Klipper', 'tools.demoSelected': 'Демо · вибрано T{i}',
   'tools.sent': 'Надіслано вибір T{i}', 'tools.notFoundTitle': 'Екструдер не знайдений', 'tools.cardNotFound': 'не знайдено',
-  'tools.tempOf': 'Температура {name}', 'tools.addSection': 'Додай {sec} у printer.cfg', 'tools.board': 'Плата EBB36 ·',
-  'tools.noSensor': 'датчик не знайдено', 'tools.placeholder': 'Цільова температура', 'tools.aria': 'Температура T{i}',
+  'tools.tempOf': 'Температура {name}', 'tools.addSection': 'Додай {sec} у printer.cfg', 'tools.board': 'Плата голови ·',
+  'tools.placeholder': 'Цільова температура', 'tools.aria': 'Температура T{i}',
   'tools.activate': 'Активувати', 'tools.badTemp': 'Вкажи температуру 0–320 °C',
+  'tools.can.uuidTitle': 'CAN UUID: {id} · шина {iface}', 'tools.can.serialTitle': 'USB: {id}',
+  'tools.can.boardTemp': 'Температура плати ({name})', 'tools.can.versionTitle': 'Прошивка MCU: {v}',
+  'tools.can.load': 'навантаження {v}%', 'tools.can.mhz': 'МГц', 'tools.can.noData': 'MCU не відповідає',
+  'tools.can.fanHotend': 'Хотенд', 'tools.can.fanPart': 'Обдув', 'tools.can.fanGeneric': 'Вентилятор',
+  'tools.can.fanController': 'Плата', 'tools.can.rpm': '{v} об/хв',
 
   'console.placeholder': 'G-code, наприклад G28', 'console.send': 'Надіслати',
 

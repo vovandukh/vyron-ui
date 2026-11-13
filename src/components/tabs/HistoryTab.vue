@@ -30,8 +30,18 @@ const date = ts => (ts ? new Date(ts * 1000).toLocaleString(settings.lang === 'e
 const fname = j => String(j.filename || '–').split('/').pop()
 const meters = (mm, d) => (mm ? t('unit.m', { v: (mm / 1000).toFixed(d) }) : '–')
 
+/**
+ * Moonraker заповнює тривалість і філамент у history лише після завершення завдання,
+ * тож для поточного друку беремо живі значення з print_stats.
+ */
+function withLive(j) {
+  const ps = printer.st.print_stats || {}
+  if (j.status !== 'in_progress' || !ps.filename || j.filename !== ps.filename) return j
+  return { ...j, print_duration: ps.print_duration, total_duration: ps.total_duration, filament_used: ps.filament_used }
+}
+
 const last = computed(() => {
-  const j = jobs.value[0]
+  const j = jobs.value[0] && withLive(jobs.value[0])
   if (!j) return null
   const md = j.metadata || {}
   return {

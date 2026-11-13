@@ -31,6 +31,8 @@ const temp = i => {
 .tool.active{border-color:rgba(240,58,46,.7);background:rgba(240,58,46,.10);color:var(--red)}
 .tool.active b{color:var(--ink)}
 .tool.missing{opacity:.35}
-@media(max-width:900px){.tools{bottom:62px;max-width:94vw;overflow:auto}.tool{min-width:52px;padding:6px}}
+/* ≤1100px (екран принтера 1024×600) смуга і рядок підключення не вміщаються в один ряд — піднімаємо смугу */
+@media(max-width:1100px){.tools{bottom:62px}}
+@media(max-width:900px){.tools{max-width:94vw;overflow:auto}.tool{min-width:52px;padding:6px}}
 @media(max-width:560px){.tools{bottom:55px}}
 </style>

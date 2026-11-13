@@ -68,5 +68,8 @@ function calibrate() {
 <style scoped>
 .meshwrap{display:grid;grid-template-columns:1fr minmax(280px,400px);gap:18px;flex:1;min-height:0}
 .empty{font-size:11px}
-@media(max-width:900px){.meshwrap{grid-template-columns:1fr}}
+/* Ландшафтні екрани принтера (800×480, 1024×600): дві колонки, щоб і 3D, і таблиця були видні без прокрутки.
+   Вузькі (портретні) екрани: одна колонка, панель прокручується, блок не стискається поверх підпису. */
+@media(max-width:900px){.meshwrap{grid-template-columns:1fr minmax(220px,320px);gap:12px}}
+@media(max-width:700px){.meshwrap{grid-template-columns:1fr;flex:none}}
 </style>
