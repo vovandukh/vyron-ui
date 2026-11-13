@@ -1,0 +1,62 @@
+name: Build to main
+
+# Збирає Vue-застосунок і кладе готову статику (index.html, assets/) у корінь main,
+# звідки її забирають nginx на принтері та Moonraker Update Manager.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-to-main
+  cancel-in-progress: true
+
+jobs:
+  build:
+    # Захист від циклу: не реагуємо на власні коміти бота.
+    # (Пуші через GITHUB_TOKEN і так не запускають workflow, а [skip ci] — додатковий запобіжник.)
+    if: >-
+      github.actor != 'github-actions[bot]' &&
+      !contains(github.event.head_commit.message, '[skip ci]')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Copy build to repository root
+        run: |
+          # Старі бандли з іншими хешами видаляємо повністю.
+          rm -rf assets
+          cp -R dist/. .
+
+      - name: Commit and push build
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A index.html assets
+          if git diff --cached --quiet; then
+            echo "Build output unchanged, nothing to commit."
+            exit 0
+          fi
+          git commit -m "chore: build production assets [skip ci]"
+          # Якщо за час збірки в main з'явились нові коміти — підтягуємо їх і пушимо ще раз.
+          git pull --rebase origin main
+          git push origin HEAD:main
