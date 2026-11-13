@@ -58,7 +58,10 @@ const posText = i => (printer.position ? Number(printer.position[i]).toFixed(1) 
 .seg button{width:38px;height:38px;font-size:18px}
 .seg button:first-child{border-right:1px solid var(--line)}
 .seg button:last-child{border-left:1px solid var(--line)}
-.seg input{width:48px;background:none;border:0;color:var(--ink);text-align:center;font:inherit}
+/* Chrome резервує в type=number місце під невидимі стрілки-спінери (~15px праворуч),
+   через що число зсувалось на ~8px ліворуч від центру. Ховаємо спінери й обнуляємо відступи. */
+.seg input{width:48px;padding:0;margin:0;background:none;border:0;color:var(--ink);text-align:center;font:inherit;-moz-appearance:textfield;appearance:textfield}
+.seg input::-webkit-inner-spin-button,.seg input::-webkit-outer-spin-button{-webkit-appearance:none;appearance:none;margin:0}
 .al{width:12px;color:var(--red);font-weight:600}
 .pos{width:44px;color:var(--dim);font-size:11px}
 .cmsg{color:var(--red);font-size:11px;max-width:220px;min-height:14px}
