@@ -373,7 +373,10 @@ export const usePrinterStore = defineStore('printer', () => {
    * лишається непідключеним, з 0 голів, доки користувач не введе адресу принтера.
    */
   function autoStart() {
-    if (new URLSearchParams(location.search).has('demo')) { startDemo(); return }
+    const q = new URLSearchParams(location.search)
+    if (q.has('demo')) { startDemo(); return }
+    // Демо-збірка (GitHub Pages, .env.demo): демо за замовчуванням; підключення — лише явно через ?host=.
+    if (import.meta.env.VITE_DEMO_DEFAULT === '1' && !q.has('host')) { startDemo(); return }
     const h = resolveHost()   // ?host= → localStorage → VITE_PRINTER_HOST → хост сторінки
     if (h) connect(h)
   }

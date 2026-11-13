@@ -14,6 +14,10 @@ npm run build    # збірка в dist/
 - Вихідний `index.html` для Vite лежить у `src/`, корінь Vite теж `src/`. Корінь репозиторію в `main` зайнятий готовою статикою: після кожного push у `main` workflow [build-to-main](.github/workflows/build-to-main.yml) збирає проєкт і комітить у корінь `index.html`, `voron.html` та `voron_2_4_six_tool_ui.html`.
 - Збірка однофайлова (`vite-plugin-singlefile`): увесь JS, CSS і картинки вшиті в HTML, тож веб-серверу досить віддати один файл без теки `assets/`. Ззовні вантажиться лише шрифт Montserrat (Google Fonts); без інтернету використовується системний шрифт.
 
+## Демо на GitHub Pages
+
+`npm run build:demo` збирає в `dist-demo/` версію, що одразу стартує в демо-режимі (`.env.demo`); реальний принтер у ній можна відкрити через `?host=ip:порт`. Workflow [deploy-demo](.github/workflows/deploy-demo.yml) після кожного push у `main` публікує її в окремий публічний репозиторій (код цього лишається приватним) — налаштування описане в самому workflow.
+
 ## Структура
 
 - `src/stores/`: `printerStore` (з'єднання, статус Klipper, головки, консоль, прогрес), `settingsStore` (localStorage `voronui`), `uiStore` (вкладка, модалки)

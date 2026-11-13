@@ -1,0 +1,79 @@
+name: Deploy demo to GitHub Pages
+
+# Збирає демо-версію (npm run build:demo — одразу демо-режим) і публікує її в окремий
+# ПУБЛІЧНИЙ репозиторій, з якого GitHub Pages віддає сайт. Код цього репозиторію лишається приватним.
+#
+# Одноразове налаштування:
+#   1. Публічний репозиторій для демо (за замовчуванням vovandukh/voron_ui-demo; інший — змінна DEMO_REPO
+#      у Settings → Secrets and variables → Actions → Variables).
+#   2. Fine-grained токен з доступом лише до цього репозиторію, Contents: Read and write →
+#      секрет DEMO_DEPLOY_TOKEN у цьому (приватному) репозиторії.
+#   3. У демо-репозиторії: Settings → Pages → Deploy from a branch → main / (root).
+# Без секрету крок деплою пропускається (workflow не падає).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.js'
+      - '.env.demo'
+      - '.github/workflows/deploy-demo.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-demo
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    env:
+      DEMO_REPO: ${{ vars.DEMO_REPO || 'vovandukh/voron_ui-demo' }}
+      TOKEN: ${{ secrets.DEMO_DEPLOY_TOKEN }}
+    steps:
+      - name: Check deploy token
+        id: tok
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::notice::DEMO_DEPLOY_TOKEN is not set — demo deploy skipped"
+            echo "skip=1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        if: steps.tok.outputs.skip != '1'
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        if: steps.tok.outputs.skip != '1'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Build demo
+        if: steps.tok.outputs.skip != '1'
+        run: |
+          npm ci
+          npm run build:demo
+          if grep -qE '(src|href)="\./assets/' dist-demo/index.html; then
+            echo "dist-demo/index.html references ./assets/ — single-file build is broken"; exit 1
+          fi
+
+      - name: Publish to demo repository
+        if: steps.tok.outputs.skip != '1'
+        run: |
+          git clone --depth 1 "https://x-access-token:${TOKEN}@github.com/${DEMO_REPO}.git" site
+          cd site
+          git rm -rq --ignore-unmatch .
+          cp ../dist-demo/index.html index.html
+          touch .nojekyll
+          printf '# Voron UI — demo\n\nAuto-generated demo build of Voron UI (Vue 3, single-file).\nDo not edit: every push to the source repository overwrites this content.\n' > README.md
+          git add -A
+          if git diff --cached --quiet; then echo "Demo unchanged."; exit 0; fi
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "deploy demo from ${GITHUB_SHA::7}"
+          git push origin HEAD:main

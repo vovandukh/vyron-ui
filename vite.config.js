@@ -41,7 +41,8 @@ const moonraker = {
 
 // Вихідний index.html лежить у src/, а не в корені: корінь репозиторію в main
 // зайнятий готовою статикою (index.html + assets/), яку CI копіює з dist/.
-export default defineConfig({
+// mode 'demo' (npm run build:demo): збірка для GitHub Pages у dist-demo/, стартує одразу в демо (.env.demo).
+export default defineConfig(({ mode }) => ({
   root: r('./src'),
   envDir: r('.'),          // .env.local і далі читається з кореня проєкту
   cacheDir: r('./node_modules/.vite'),
@@ -53,8 +54,8 @@ export default defineConfig({
     proxy: Object.fromEntries(['/websocket', '/printer', '/server', '/machine', '/api'].map(p => [p, moonraker]))
   },
   build: {
-    outDir: r('./dist'),
+    outDir: r(mode === 'demo' ? './dist-demo' : './dist'),
     emptyOutDir: true,
     chunkSizeWarningLimit: 800
   }
-})
+}))
