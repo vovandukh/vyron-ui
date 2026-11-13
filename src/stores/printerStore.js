@@ -258,11 +258,15 @@ export const usePrinterStore = defineStore('printer', () => {
     }, DEMO_INTERVAL)
   }
 
-  /** Автостарт: якщо сторінку віддає сам принтер — підключитись до нього, інакше демо. */
+  /**
+   * Автостарт: ?demo → демо; VITE_PRINTER_HOST → напряму до принтера;
+   * інакше до хоста сторінки (на принтері це сам Moonraker/nginx, у dev — проксі Vite).
+   */
   function autoStart() {
     const envHost = import.meta.env.VITE_PRINTER_HOST
-    if (envHost) connect(envHost)
-    else if (!import.meta.env.DEV && location.protocol.startsWith('http') && location.host) connect(location.host)
+    if (new URLSearchParams(location.search).has('demo')) startDemo()
+    else if (envHost) connect(envHost)
+    else if (location.protocol.startsWith('http') && location.host) connect(location.host)
     else startDemo()
   }
 

@@ -70,5 +70,5 @@ async function restart(fw) {
 .sys dt{font-size:11px;color:var(--dim)}
 .sys dd{margin:0;font-size:18px;font-weight:200}
 .btns{display:grid;gap:7px;margin-top:16px}
-@media(max-width:900px){.eng{grid-template-columns:1fr}.sys dl{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){.sys dl{grid-template-columns:repeat(2,1fr)}}
 </style>

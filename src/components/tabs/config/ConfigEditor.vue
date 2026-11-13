@@ -96,7 +96,8 @@ function onFindKey(e) {
 }
 
 function reset() {
-  nextTick(() => { if (ta.value) { ta.value.scrollTop = 0; syncScroll(); emitCursor() } })
+  // Після програмної заміни value курсор стоїть у кінці файлу — повертаємо його на початок.
+  nextTick(() => { if (ta.value) { ta.value.setSelectionRange(0, 0); ta.value.scrollTop = 0; syncScroll(); emitCursor() } })
 }
 
 defineExpose({ toggleFind, focus: () => ta.value?.focus(), reset })

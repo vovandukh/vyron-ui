@@ -97,5 +97,7 @@ watch(() => props.active, a => { if (a) resize() })
 
 <style scoped>
 .m3{position:relative;min-height:280px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+@media(max-width:900px){.m3{min-height:180px}}
+@media(max-width:700px){.m3{min-height:260px}}
 canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
 </style>
