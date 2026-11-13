@@ -41,23 +41,31 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Check build is a single file
+        run: |
+          # vite-plugin-singlefile вшиває JS/CSS/картинки в index.html. Nginx на принтері
+          # віддає лише HTML-файл, тож будь-яке посилання на ./assets/ дасть білий екран.
+          if grep -qE '(src|href)="\./assets/' dist/index.html; then
+            echo "dist/index.html still references ./assets/ — single-file build is broken"
+            exit 1
+          fi
+
       - name: Copy build to repository root
         run: |
-          # Старі бандли з іншими хешами видаляємо повністю.
+          # Збірка — один автономний HTML; тека assets/ у корені більше не потрібна.
           rm -rf assets
-          cp -R dist/. .
-          # voron.html створює і сам vite build (плагін html-aliases у vite.config.js),
-          # явна копія — на випадок, якщо плагін вимкнуть.
+          cp dist/index.html index.html
           cp dist/index.html voron.html
-          # Стара адреса однофайлового інтерфейсу веде на той самий зібраний Vue-застосунок.
-          # Шляхи в index.html відносні (./assets/...), тому копія в корені працює без змін.
+          # Стара адреса однофайлового інтерфейсу веде на той самий застосунок.
           cp dist/index.html voron_2_4_six_tool_ui.html
 
       - name: Commit and push build
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A index.html voron.html voron_2_4_six_tool_ui.html assets
+          git add -A index.html voron.html voron_2_4_six_tool_ui.html
+          # Прибрати старі бандли з репозиторію; --ignore-unmatch — щоб крок не падав, коли assets/ вже немає.
+          git rm -r -q --cached --ignore-unmatch assets
           if git diff --cached --quiet; then
             echo "Build output unchanged, nothing to commit."
             exit 0

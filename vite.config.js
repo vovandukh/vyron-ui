@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { viteSingleFile } from 'vite-plugin-singlefile'
 import { fileURLToPath } from 'node:url'
 import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -44,7 +45,9 @@ export default defineConfig({
   envDir: r('.'),          // .env.local і далі читається з кореня проєкту
   cacheDir: r('./node_modules/.vite'),
   base: './',              // відносні шляхи: статику можна віддавати з будь-якої теки nginx
-  plugins: [vue(), htmlAliases(['voron.html'])],
+  // viteSingleFile: увесь JS, CSS і картинки вшиваються в один index.html — nginx на принтері
+  // може віддавати лише цей файл, без теки assets/. htmlAliases іде після нього й копіює вже готовий файл.
+  plugins: [vue(), viteSingleFile(), htmlAliases(['voron.html'])],
   server: {
     proxy: Object.fromEntries(['/websocket', '/printer', '/server', '/machine', '/api'].map(p => [p, moonraker]))
   },
