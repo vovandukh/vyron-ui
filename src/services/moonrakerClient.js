@@ -13,7 +13,8 @@ export const httpBase = host => (secure() ? 'https://' : 'http://') + host
 const HOST_KEY = 'voronui.host'
 
 /** Принтер за замовчуванням — останній запасний варіант, коли адресу не задано ніде інде. */
-export const DEFAULT_PRINTER_HOST = '192.168.0.232'
+// У публічній демо-збірці (GitHub Pages) — порожньо: локальна адреса принтера там не потрібна й не публікується.
+export const DEFAULT_PRINTER_HOST = import.meta.env.MODE === 'demo' ? '' : '192.168.0.232'
 
 /** Хост, збережений після ручного підключення (порожній — підключатися до хоста сторінки). */
 export function savedHost() {

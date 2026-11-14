@@ -11,6 +11,7 @@ import {
   DEMO_DEFAULT_TOOLS, DEMO_MAX_TOOLS, DEMO_STEP, DEMO_INTERVAL, demoTools, demoToolheads, demoEddies, demoPreviewModel, resetDemoFiles, DEMO_PRINTING_FILE,
   demoGcode, demoStaticStatus, demoTickStatus, demoHwSensors, demoHostInfo, demoMcuConn
 } from '../services/demo'
+import { DEMO_BUILD } from '../config'
 
 const LOG_MAX = 500
 
@@ -360,6 +361,7 @@ export const usePrinterStore = defineStore('printer', () => {
 
   /** Демо з n головами (1…DEMO_MAX_TOOLS). Без аргументу — ?demo=N з адреси або DEMO_DEFAULT_TOOLS. */
   function startDemo(n) {
+    if (!DEMO_BUILD) return   // у збірці для принтера демо немає (див. config.js)
     if (!(n >= 1)) n = Number(new URLSearchParams(location.search).get('demo')) || DEMO_DEFAULT_TOOLS
     n = Math.min(DEMO_MAX_TOOLS, Math.max(1, Math.round(n)))
     client.close()
@@ -467,7 +469,7 @@ export const usePrinterStore = defineStore('printer', () => {
   async function startPrint(filename) {
     if (printBusy.value) throw new Error('busy')
     if (preview.value) closePreview()
-    if (demoMode.value) { demoBeginPrint(filename); return }
+    if (DEMO_BUILD && demoMode.value) { demoBeginPrint(filename); return }
     if (!connected.value || !host.value) throw new Error('not connected')
     await startPrintFile(host.value, filename)
   }
@@ -480,7 +482,7 @@ export const usePrinterStore = defineStore('printer', () => {
     if (!preview.value) savedPrint = model.P ? { P: model.P, F: model.F, T: model.T, done: done.value } : null
     preview.value = { name: filename, loading: true }
     try {
-      const parsed = demoMode.value ? demoPreviewModel(filename) : parseGcode(await fetchGcode(host.value, filename))
+      const parsed = DEMO_BUILD && demoMode.value ? demoPreviewModel(filename) : parseGcode(await fetchGcode(host.value, filename))
       if (!preview.value || preview.value.name !== filename) return   // закрили або відкрили інший файл
       applyModel(parsed)
       done.value = model.N            // показуємо модель повністю «надрукованою»
@@ -506,16 +508,12 @@ export const usePrinterStore = defineStore('printer', () => {
   }
 
   /**
-   * Автостарт: ?demo → демо; VITE_PRINTER_HOST → напряму до принтера;
-   * інакше до хоста сторінки (на принтері це сам Moonraker/nginx, у dev — проксі Vite).
-   * Демо вмикається ТІЛЬКИ явно (?demo або кнопка «Демо»): відкритий як файл застосунок
-   * лишається непідключеним, з 0 голів, доки користувач не введе адресу принтера.
+   * Автостарт: підключення до принтера (?host= → localStorage → VITE_PRINTER_HOST → хост сторінки → адреса за замовчуванням).
+   * Демо — лише в демо-збірці (npm run build:demo / dev:demo): там воно стартує одразу, підключення — через ?host=.
    */
   function autoStart() {
     const q = new URLSearchParams(location.search)
-    if (q.has('demo')) { startDemo(); return }
-    // Демо-збірка (GitHub Pages, .env.demo): демо за замовчуванням; підключення — лише явно через ?host=.
-    if (import.meta.env.VITE_DEMO_DEFAULT === '1' && !q.has('host')) { startDemo(); return }
+    if (DEMO_BUILD && (q.has('demo') || (import.meta.env.VITE_DEMO_DEFAULT === '1' && !q.has('host')))) { startDemo(); return }
     const h = resolveHost()   // ?host= → localStorage → VITE_PRINTER_HOST → хост сторінки
     if (h) connect(h)
   }

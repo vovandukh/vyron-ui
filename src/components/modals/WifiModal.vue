@@ -4,6 +4,7 @@ import { usePrinterStore } from '../../stores/printerStore'
 import { useConfirm } from '../../composables/useConfirm'
 import { useI18n } from '../../composables/useI18n'
 import { demoNetworks } from '../../services/demo'
+import { DEMO_BUILD } from '../../config'
 
 const SCAN_TIMEOUT = 25000
 const SCAN_IDLE = 1500
@@ -22,7 +23,7 @@ const msg = ref(null)
 const passEl = ref(null)
 
 function loadNet() {
-  if (printer.demoMode) { ifaceDemo.value = true; ifaces.value = []; return }
+  if ((DEMO_BUILD && printer.demoMode)) { ifaceDemo.value = true; ifaces.value = []; return }
   ifaceDemo.value = false
   printer.call('machine.system_info', {}).then(r => {
     const n = ((r.system_info || {}).network) || {}
@@ -59,7 +60,7 @@ function finish() {
 }
 
 function scan() {
-  if (printer.demoMode) { showNets(demoNetworks); return }
+  if ((DEMO_BUILD && printer.demoMode)) { showNets(demoNetworks); return }
   if (!printer.connected) { scanMsg.value = { key: 'msg.notConnectedPrinter' }; return }
   if (printer.isPrinting) { scanMsg.value = { key: 'msg.notWhilePrinting' }; return }
   buf = []
@@ -77,7 +78,7 @@ async function connectWifi() {
   const s = ssid.value.trim(), p = pass.value
   if (!s || !p) { msg.value = { key: 'net.needBoth' }; return }
   if (/["'\\{}]/.test(s + p)) { msg.value = { key: 'net.badChars' }; return }
-  if (printer.demoMode || !printer.connected) { msg.value = { key: 'msg.notConnectedPrinter' }; return }
+  if ((DEMO_BUILD && printer.demoMode) || !printer.connected) { msg.value = { key: 'msg.notConnectedPrinter' }; return }
   if (printer.isPrinting) { msg.value = { key: 'msg.notWhilePrinting' }; return }
   if (!(await confirm({ key: 'net.confirm', params: { ssid: s } }))) return
   printer.sendRaw('WIFI_CONNECT SSID="' + s + '" PASS="' + p + '"')
