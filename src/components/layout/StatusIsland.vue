@@ -5,11 +5,13 @@
 // адресою хоста, за 1.2 с згортається сам (центр керування відкривається лише кнопкою «…»).
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { usePrinterStore } from '../../stores/printerStore'
+import { useUiStore } from '../../stores/uiStore'
 import { useI18n } from '../../composables/useI18n'
 import { fmtDuration } from '../../utils/format'
 import { resolveHost } from '../../services/moonrakerClient'
 
 const printer = usePrinterStore()
+const ui = useUiStore()
 const { t, tm } = useI18n()
 
 // У капсулі — лише тривалість («Друк · 1 г 15 хв»), повний текст «залишилось …» — у підказці.
@@ -43,10 +45,12 @@ function push(key, tone = 'info', params) {
   }
 }
 
-// ---------- розкриття по кліку: «Підключено · 192.168.0.232:7125» ----------
+// ---------- розкриття по кліку: «Підключено · 192.168.1.100:7125» ----------
 const PEEK = 1200
 const PEEK_TONE = { ready: 'ok', open: 'ok', lost: 'warn', shutdown: 'err' }
 function peek() {
+  // Klipper у стані помилки: капсула повертає сховану картку з причиною і кнопками перезапуску
+  if (klippyBad.value && ui.klippyHidden) { ui.klippyHidden = false; return }
   clearTimeout(timer)
   // Системну подію, яку перервав клік, покажемо одразу після розкриття
   if (ev.value && !ev.value.peek) queue.unshift(ev.value)
@@ -66,7 +70,14 @@ watch(() => printer.link, (l, o) => {
   // Лише втрата живого з'єднання. Невдалі спроби перепідключення (connecting → lost кожні 1.5–15 с)
   // не анонсуємо — стан і так видно червоною крапкою в капсулі.
   else if (l === 'lost' && o !== 'connecting') push('island.lost', 'warn')
-  else if (l === 'shutdown') push('island.klipperError', 'err')
+})
+// Помилка Klipper (і в демо-імітації): shutdown / помилка конфігурації; повернення до ready після неї — окрема подія
+const klippyBad = computed(() => ['shutdown', 'error'].includes(printer.klippy.state))
+watch(() => printer.klippy.state, (s, o) => {
+  if (s === o) return
+  if (s === 'shutdown') push('island.klipperError', 'err')
+  else if (s === 'error') push('island.klipperConfig', 'err')
+  else if (s === 'ready' && ['shutdown', 'error', 'startup', 'disconnected'].includes(o)) push('island.ready', 'ok')
 })
 // Тільки реальний перехід false → true: початкове завантаження стану (null → true) — не подія.
 watch(() => printer.qgl, (v, o) => {
@@ -104,8 +115,8 @@ onBeforeUnmount(() => { ro?.disconnect(); clearTimeout(timer) })
 
 <template>
   <span class="islot" :style="slotW ? { width: slotW + 'px' } : null">
-  <button class="isl" :class="[ev ? 'ex t-' + ev.tone : '', { live: printing }]" :style="w ? { width: w + 'px' } : null"
-          :title="t('island.peekTitle')" @click="peek">
+  <button class="isl" :class="[ev ? 'ex t-' + ev.tone : '', { live: printing, kbad: klippyBad }]" :style="w ? { width: w + 'px' } : null"
+          :title="t(klippyBad && ui.klippyHidden ? 'island.klippyShow' : 'island.peekTitle')" @click="peek">
     <span ref="inner" class="in">
       <Transition name="sw">
         <span v-if="ev" :key="'e' + ev.id" class="irow" role="status">
@@ -161,6 +172,10 @@ onBeforeUnmount(() => { ro?.disconnect(); clearTimeout(timer) })
 .dot.l-demo{background:var(--blue);box-shadow:0 0 7px rgba(120,156,255,.7)}
 .dot.l-connecting{background:#ff9f0a;animation:pulse 1.1s cubic-bezier(.45,0,.55,1) infinite}
 .dot.l-lost,.dot.l-shutdown{background:var(--red);box-shadow:0 0 7px rgba(240,58,46,.7)}
+/* Klipper у помилці: червона крапка пульсує світінням, рамка капсули ледь червона — «тут щось не так, натисни» */
+.kbad:not(.ex){border-color:rgba(240,58,46,.38)}
+.kbad .dot{background:var(--red);animation:kbad 1.6s cubic-bezier(.45,0,.55,1) infinite}
+@keyframes kbad{50%{box-shadow:0 0 0 4px rgba(240,58,46,.18),0 0 10px rgba(240,58,46,.9)}}
 .live .dot{background:var(--coral);animation:pulse 2.4s cubic-bezier(.45,0,.55,1) infinite}
 @keyframes pulse{50%{opacity:.35;box-shadow:none}}
 

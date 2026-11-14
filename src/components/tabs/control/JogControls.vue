@@ -1,8 +1,9 @@
 <script setup>
-import { reactive } from 'vue'
+import { reactive, computed } from 'vue'
 import { usePrinterStore } from '../../../stores/printerStore'
 import { useSettingsStore } from '../../../stores/settingsStore'
 import { useI18n } from '../../../composables/useI18n'
+import Spinner from '../../ui/Spinner.vue'
 
 const printer = usePrinterStore()
 const settings = useSettingsStore()
@@ -18,6 +19,14 @@ function jog(a, dir) {
   printer.rpc('G91\nG1 ' + a + d + ' F' + (a === 'Z' ? settings.fz : settings.fxy) + '\nG90')
 }
 
+// ---------- вирівнювання порталу ----------
+const lvlName = computed(() => (printer.leveling && printer.leveling.kind === 'ztilt' ? 'Z-Tilt' : 'QGL'))
+const lvlTitle = computed(() => t(printer.levelingBusy ? 'jog.levelRunning' : printer.qgl ? 'jog.levelDone' : 'jog.levelRun', { n: lvlName.value }))
+async function level() {
+  printer.ctlMsg = null
+  try { await printer.levelGantry() } catch (e) { printer.ctlMsg = { key: 'jog.levelFailed', params: { msg: (e && e.message) || '' } } }
+}
+
 const posText = i => (printer.position ? Number(printer.position[i]).toFixed(1) : '–')
 </script>
 
@@ -29,6 +38,14 @@ const posText = i => (printer.position ? Number(printer.position[i]).toFixed(1) 
       <div class="hrow">
         <button class="home" :title="t('jog.home')" aria-label="Home" :disabled="printer.isPrinting" @click="printer.rpc('G28')">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 10v10h13V10M10 20v-5.5h4V20" /></svg>
+        </button>
+        <!-- Вирівнювання порталу (QGL / Z-Tilt): стан видно на кнопці, під час виконання — індикатор активності -->
+        <button v-if="printer.leveling" class="home lvl" :class="{ ok: printer.qgl === true, need: printer.qgl === false, busy: printer.levelingBusy }"
+                :title="lvlTitle" :aria-label="lvlTitle" :aria-busy="String(printer.levelingBusy)" :disabled="printer.isPrinting || printer.levelingBusy" @click="level">
+          <Spinner v-if="printer.levelingBusy" :size="14" />
+          <svg v-else viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15h16M7 15V9M17 15V9" /><circle cx="7" cy="7" r="1.6" /><circle cx="17" cy="7" r="1.6" /><path d="M10 19h4" /></svg>
+          <span>{{ lvlName }}</span>
+          <i v-if="!printer.levelingBusy && printer.qgl != null" class="badge" aria-hidden="true"></i>
         </button>
         <button class="home" :title="t('jog.motorsOff')" :aria-label="t('jog.motorsOffAria')" :disabled="printer.isPrinting" @click="printer.rpc('M84')">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v8M6.3 6.8a8 8 0 1 0 11.4 0" /></svg>
@@ -63,6 +80,16 @@ const posText = i => (printer.position ? Number(printer.position[i]).toFixed(1) 
 .hrow{display:flex;gap:6px}
 .ctl .home{width:38px;height:34px;padding:0;border-radius:11px;display:grid;place-items:center}
 .ctl .home svg{width:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+/* Кнопка QGL / Z-Tilt: ширша, з підписом; кутова позначка стану — зелена (вирівняно) або коралова (треба вирівняти) */
+.ctl .lvl{position:relative;width:auto;display:inline-flex;gap:6px;padding:0 11px;font-size:11.5px;font-weight:600;letter-spacing:.02em}
+.ctl .lvl svg circle{fill:currentColor;stroke:none}
+.lvl .badge{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;border:2px solid #17171a}
+.lvl.ok .badge{background:#34c759;box-shadow:0 0 6px rgba(52,199,89,.7)}
+.lvl.need .badge{background:var(--coral);box-shadow:0 0 8px rgba(255,107,90,.9);animation:lvl-pulse 1.8s cubic-bezier(.45,0,.55,1) infinite}
+.ctl .lvl.need{border-color:rgba(255,107,90,.4)}
+.ctl .lvl.busy{color:var(--ink);border-color:rgba(255,107,90,.45);background-color:rgba(255,107,90,.12);cursor:progress}
+.ctl .lvl.busy:disabled{opacity:1}
+@keyframes lvl-pulse{50%{opacity:.4}}
 .ax{display:flex;align-items:center;gap:10px}
 /* Сегмент «− крок +»: одна поверхня з тонкими розділювачами */
 .seg{display:flex;border-radius:11px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.25)}

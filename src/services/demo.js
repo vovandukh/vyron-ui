@@ -8,7 +8,7 @@ export const demoTools = n => Array.from({ length: n }, (_, i) => (i ? 'extruder
 
 // Плати голів у демо: усі на CAN (EBB36 / SB2209), T4 — USB-плата, а остання голова
 // (якщо голів більше однієї) — напряму на материнській платі, щоб було видно картку без блоку плати.
-const uuid = i => ((0x5bff930ca785 + i * 0x9e3779b1) % 0xffffffffffff).toString(16).padStart(12, '0')
+const uuid = i => ((0xf3e9a0b47c21 + i * 0x9e3779b1) % 0xffffffffffff).toString(16).padStart(12, '0')
 export function demoToolheads(tools) {
   const n = tools.length
   return Object.fromEntries(tools.map((tool, i) => {
@@ -38,7 +38,7 @@ export function demoEddies(tools, heads) {
   out[tools[0]] = [{
     name: 'btt_eddy', probeObj: 'probe_eddy_current btt_eddy', tempProbeObj: 'temperature_probe btt_eddy',
     chipObj: 'temperature_sensor btt_eddy_mcu', canStatsObj: 'canbus_stats eddy', mcu: 'eddy', mcuObj: 'mcu eddy',
-    link: 'can', canbusUuid: '9cd6391e8623', canbusInterface: 'can0', serial: null, sensorType: 'ldc1612', frequency: 12000000
+    link: 'can', canbusUuid: '7d4c1b9e2a60', canbusInterface: 'can0', serial: null, sensorType: 'ldc1612', frequency: 12000000
   }]
   const t1 = tools[1], h1 = t1 && heads[t1]
   if (h1) {
@@ -302,10 +302,10 @@ function demoMcuStats(m) {
 }
 /** Підключення демо-плат: основна — USB, голови — CAN/USB, Eddy — CAN, host — процес Linux */
 export function demoMcuConn(toolheads, eddies) {
-  const out = { mcu: { kind: 'usb', id: 'usb-Klipper_stm32g0b1xx_0A002D0015504D5930313820-if00' }, 'mcu host': { kind: 'linux', id: '/tmp/klipper_host_mcu' } }
+  const out = { mcu: { kind: 'usb', id: 'usb-Klipper_stm32g0b1xx_1D0036001950434B37383120-if00' }, 'mcu host': { kind: 'linux', id: '/tmp/klipper_host_mcu' } }
   Object.values(toolheads).filter(Boolean).forEach((th, i) => {
-    out[th.mcuObj] = th.link === 'can' ? { kind: 'can', iface: 'can0', id: (0x5bff930ca785 + i * 0x1111).toString(16) } : { kind: 'usb', id: 'usb-Klipper_rp2040_E66138935F4B' + i + 'A28-if00' }
+    out[th.mcuObj] = th.link === 'can' ? { kind: 'can', iface: 'can0', id: (0xf3e9a0b47c21 + i * 0x1111).toString(16) } : { kind: 'usb', id: 'usb-Klipper_rp2040_E66138935F4B' + i + 'A28-if00' }
   })
-  for (const list of Object.values(eddies)) for (const e of list) if (e.link === 'can') out[e.mcuObj] = { kind: 'can', iface: 'can0', id: '9cd6391e8623' }
+  for (const list of Object.values(eddies)) for (const e of list) if (e.link === 'can') out[e.mcuObj] = { kind: 'can', iface: 'can0', id: '7d4c1b9e2a60' }
   return out
 }

@@ -6,7 +6,7 @@ import { usePrinterStore } from '../../stores/printerStore'
 import { useUiStore } from '../../stores/uiStore'
 import { useConfirm } from '../../composables/useConfirm'
 import { useI18n } from '../../composables/useI18n'
-import { normalizeHost, savedHost, resolveHost, DEFAULT_PRINTER_HOST } from '../../services/moonrakerClient'
+import { normalizeHost, savedHost, resolveHost } from '../../services/moonrakerClient'
 import { DEMO_BUILD } from '../../config'
 
 const printer = usePrinterStore()
@@ -25,7 +25,7 @@ onMounted(() => { document.addEventListener('click', onDoc); document.addEventLi
 onBeforeUnmount(() => { document.removeEventListener('click', onDoc); document.removeEventListener('keydown', onKey) })
 
 // ---------- підключення ----------
-const host = ref(printer.host || savedHost() || DEFAULT_PRINTER_HOST)
+const host = ref(printer.host || savedHost() || '')
 watch(() => printer.host, h => { if (h) host.value = h })
 
 function connect() {
@@ -40,6 +40,19 @@ const shownHost = computed(() => printer.host || resolveHost())
 const LINK_TITLE = { open: 'cc.connected', ready: 'cc.connected', shutdown: 'cc.connected', connecting: 'state.connecting', lost: 'state.lost' }
 const linkTitle = computed(() => (DEMO_BUILD ? 'cc.connection' : LINK_TITLE[printer.link] || 'cc.notConnected'))
 const toggleDemo = () => (printer.demoMode ? printer.exitDemo() : printer.startDemo())
+
+// ---------- демо: імітація помилок Klipper (лише в демо-збірці та в демо-режимі) ----------
+// Стан Klipper — картка з причиною й перезапуском; G-code — тости. Види — як у printer.demoError().
+const DEMO_ERR = [
+  { g: 'klippy', items: ['mcu', 'timer', 'heater', 'adc', 'estop', 'config', 'startup', 'offline'] },
+  { g: 'gcode', items: ['home', 'range', 'cold', 'probe', 'qgl', 'macro', 'unknown'] }
+]
+const errOpen = ref(false)
+function demoErr(kind) {
+  ui.closeCc()
+  ui.klippyHidden = false
+  printer.demoError(kind)
+}
 
 // ---------- меню ----------
 function nav(v) { ui.go(v) }
@@ -95,6 +108,23 @@ function onEnter(el) {
             <span class="tgl-tx"><b>{{ t('cc.demo') }}</b><small>{{ t('cc.demoHint') }}</small></span>
             <span class="sw" :class="{ on: printer.demoMode }" aria-hidden="true"><i></i></span>
           </button>
+          <!-- Імітація помилок: розкривається, щоб не роздувати центр керування -->
+          <template v-if="DEMO_BUILD && printer.demoMode">
+            <button type="button" class="tgl derr-hd" :aria-expanded="String(errOpen)" @click="errOpen = !errOpen">
+              <span class="tgl-tx"><b>{{ t('cc.demoErr') }}</b><small>{{ t('cc.demoErrHint') }}</small></span>
+              <span class="chev" :class="{ on: errOpen }" aria-hidden="true"></span>
+            </button>
+            <Transition name="derr">
+              <div v-if="errOpen" class="derr">
+                <div v-for="grp in DEMO_ERR" :key="grp.g" class="dg">
+                  <small>{{ t('demoErr.g.' + grp.g) }}</small>
+                  <div class="chips">
+                    <button v-for="k in grp.items" :key="k" type="button" :class="'c-' + grp.g" @click="demoErr(k)">{{ t('demoErr.' + k) }}</button>
+                  </div>
+                </div>
+              </div>
+            </Transition>
+          </template>
         </section>
 
         <div class="list" role="menu">
@@ -156,6 +186,28 @@ function onEnter(el) {
 .sw.on i{transform:translateX(18px)}
 .tgl:active .sw i{width:26px}
 .tgl:active .sw.on i{transform:translateX(14px)}
+
+/* Імітація помилок (демо): шеврон розкриття і «чипи» видів помилок */
+.derr-hd{padding-top:10px;border-top:1px solid rgba(255,255,255,.06);border-radius:0}
+.chev{flex:none;width:8px;height:8px;margin-right:8px;border-right:1.6px solid var(--dim);border-bottom:1.6px solid var(--dim);transform:rotate(45deg);
+  transition:transform var(--t-spring) var(--spring),border-color var(--t-fast) var(--ease-out)}
+.chev.on{transform:rotate(-135deg);border-color:var(--coral)}
+.derr{display:grid;gap:10px}
+.dg{display:grid;gap:6px}
+.dg small{color:var(--dim);font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chips button{font:inherit;font-size:11.5px;padding:6px 10px;border-radius:999px;cursor:pointer;color:var(--ink);
+  transition:transform var(--t-spring) var(--spring),background-color var(--t-fast) var(--ease-out),border-color var(--t-fast) var(--ease-out)}
+.chips .c-klippy{background:rgba(240,58,46,.1);border:1px solid rgba(240,58,46,.32)}
+.chips .c-klippy:hover{background:rgba(240,58,46,.2);border-color:rgba(240,58,46,.6)}
+.chips .c-gcode{background:rgba(255,159,10,.08);border:1px solid rgba(255,159,10,.3)}
+.chips .c-gcode:hover{background:rgba(255,159,10,.17);border-color:rgba(255,159,10,.6)}
+.chips button:active{transform:scale(.93)}
+.chips button:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
+.derr-enter-active{transition:opacity var(--t-mid) var(--ease-out),transform var(--t-spring) var(--spring)}
+.derr-leave-active{transition:opacity .14s var(--ease-out)}
+.derr-enter-from{opacity:0;transform:translateY(-6px)}
+.derr-leave-to{opacity:0}
 
 .list{display:grid;gap:1px;padding:2px}
 .list button{background:none;border:0;color:var(--ink);font:inherit;font-size:13px;text-align:left;padding:10px 12px;border-radius:11px;cursor:pointer;

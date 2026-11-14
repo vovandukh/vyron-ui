@@ -23,7 +23,7 @@ export function discoverTools(objectList) {
   return { tools, boards }
 }
 
-const BASE_OBJECTS = ['print_stats', 'virtual_sdcard', 'heater_bed', 'toolhead', 'gcode_move', 'fan',
+const BASE_OBJECTS = ['webhooks', 'print_stats', 'virtual_sdcard', 'heater_bed', 'toolhead', 'gcode_move', 'fan',
   'quad_gantry_level', 'z_tilt', 'bed_mesh']
 
 /**
@@ -76,7 +76,7 @@ export function findHwSensors(objectList, settings = null) {
 
 /**
  * Як підключено кожен MCU (з секцій [mcu …] printer.cfg):
- * { 'mcu EBBCan': { kind: 'can', iface: 'can0', id: '5bff930ca785' }, mcu: { kind: 'usb', id: 'usb-Klipper_stm32…-if00' }, … }
+ * { 'mcu EBBCan': { kind: 'can', iface: 'can0', id: 'f3e9a0b47c21' }, mcu: { kind: 'usb', id: 'usb-Klipper_stm32…-if00' }, … }
  */
 export function mcuConnections(settings, mcus) {
   const out = {}
