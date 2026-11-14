@@ -67,8 +67,9 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 </script>
 
 <template>
-  <div v-if="cfg" class="tp" @click.self="close">
-    <div class="tpb" role="dialog" aria-modal="true" aria-labelledby="tpt">
+  <Transition name="modal">
+  <div v-if="cfg" class="tp modal-back" @click.self="close">
+    <div class="tpb modal" role="dialog" aria-modal="true" aria-labelledby="tpt">
       <div id="tpt" class="tpt">{{ t(cfg.title) }}</div>
       <div v-if="ui.tempModal === 'nozzle' && tools.length > 1" class="tpt-tools" role="tablist" :style="{ '--n': Math.min(tools.length, 6) }">
         <button v-for="n in tools" :key="n" role="tab" :aria-selected="n === tool" :class="{ on: n === tool }" @click="pickTool(n)">
@@ -87,34 +88,30 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
         <div class="tpa">
           <button @click="off">{{ t('common.off') }}</button>
           <button @click="close">{{ t('common.cancel') }}</button>
-          <button class="tpset" @click="send(value)">{{ t('common.set') }}</button>
+          <button class="tpset primary" @click="send(value)">{{ t('common.set') }}</button>
         </div>
       </template>
     </div>
   </div>
+  </Transition>
 </template>
 
 <style scoped>
-.tp{position:fixed;inset:0;z-index:12;background:rgba(0,0,0,.6);display:grid;place-items:center}
-.tpb{width:min(340px,92vw);background:rgba(14,15,17,.98);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:12px}
+.tpb{width:min(340px,92vw);gap:12px}
 .tpt{font-size:15px;font-weight:500}
 /* Рівна сітка: до 6 голів в один ряд, далі — такими ж комірками в наступних рядах */
 .tpt-tools{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:6px}
-.tpb .tpt-tools button{min-width:0;min-height:0;padding:6px 2px;font-size:12px;line-height:1.2}
+.tpb .tpt-tools button{min-width:0;min-height:0;padding:7px 2px;font-size:12px;line-height:1.2}
 .tpt-tools button small{display:block;font-size:10px;color:var(--dim)}
-.tpb .tpt-tools button.on{border-color:rgba(240,58,46,.7);background:rgba(240,58,46,.10)}
+.tpb .tpt-tools button.on{border-color:rgba(255,107,90,.55);background:rgba(255,107,90,.14)}
 .tpcur{font-size:12px;color:var(--dim)}
 .tpcur b{color:var(--ink);font-weight:300;font-size:14px}
-.tpin{background:none;border:1px solid var(--line);color:var(--ink);font:inherit;font-size:26px;font-weight:200;text-align:center;border-radius:8px;padding:10px;-moz-appearance:textfield;appearance:textfield}
+.tpin{font-size:28px;font-weight:200;text-align:center;padding:10px;-moz-appearance:textfield;appearance:textfield}
 .tpin::-webkit-inner-spin-button,.tpin::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .tpp{display:flex;gap:8px}
-.tpp button{flex:1}
-.tpb button{background:none;border:1px solid var(--line);color:var(--ink);font:inherit;font-size:13px;border-radius:8px;padding:12px 10px;min-height:44px;cursor:pointer}
-.tpb button:hover{border-color:var(--red)}
-.tpb .tpset{background:#d42a20;border-color:#d42a20;color:#fff;font-weight:600}
+.tpp button{flex:1;border-radius:999px}
 .tpa{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:8px}
-.tpmsg{color:var(--red);font-size:12px;min-height:14px}
+.tpmsg{color:var(--coral);font-size:12px;min-height:14px}
 .tpempty{color:var(--dim);font-size:13px;line-height:1.5}
 .tpa.one{grid-template-columns:1fr}
-.tpb :focus-visible{outline:2px solid var(--red);outline-offset:2px}
 </style>

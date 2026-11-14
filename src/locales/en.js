@@ -1,6 +1,6 @@
 export default {
   'nav.main': 'Control', 'nav.console': 'Console', 'nav.mesh': 'Bed mesh',
-  'nav.hist': 'History', 'nav.eng': 'Engineering', 'nav.cfg': 'Config',
+  'nav.hist': 'History', 'nav.eng': 'Engineering',
 
   'common.set': 'Set', 'common.off': 'Turn off', 'common.cancel': 'Cancel', 'common.save': 'Save', 'common.ok': 'OK',
   'fmt.hm': '{h} h {m} min', 'fmt.m': '{m} min',
@@ -23,14 +23,27 @@ export default {
   'conn.connectingTo': 'Connecting to {host}…', 'conn.connectedTo': 'Connected · {host}',
   'conn.wsError': 'WebSocket error · check the address and access', 'conn.lost': 'Connection lost · reconnecting…',
   'conn.addrError': 'Address error: {msg}',
+  'cc.title': 'Control Center', 'cc.connection': 'Connection', 'cc.demo': 'Demo mode', 'cc.demoHint': 'Simulated print, no printer needed',
+  'cc.open': 'Control Center · connection',
+  'island.demo': 'Demo mode active', 'island.connected': 'Connected · {host}', 'island.lost': 'Connection lost',
+  'island.ready': 'Klipper ready', 'island.klipperError': 'Klipper error', 'island.qgl': 'Quad gantry level complete', 'island.ztilt': 'Z-Tilt adjust complete',
+  'view.reset': 'Reset view', 'nav.home': 'Home — Control',
+  'island.detail': '{state} · {host}', 'island.demoHost': 'local simulation', 'island.noHost': 'no host set', 'island.peekTitle': 'Printer status and address',
+  'island.printStart': 'Print started', 'island.printDone': 'Print complete', 'island.paused': 'Print paused',
+  'island.printError': 'Print error', 'island.cancelled': 'Print cancelled',
 
   'meta.notConnected': 'Not connected', 'meta.noFile': 'No active file',
   'meta.gcodeError': 'Could not load G-code: {msg}', 'meta.demo': 'Demo · simulated print',
 
+  'print.controls': 'Print controls', 'print.pause': 'Pause', 'print.resume': 'Resume', 'print.cancel': 'Cancel',
+  'print.pausing': 'Pausing…', 'print.resuming': 'Resuming…', 'print.cancelling': 'Cancelling…',
+  'print.cancelConfirm': 'Cancel the current print? It cannot be resumed afterwards.', 'print.failed': 'Command failed — check the connection and console',
+  'print.cancelOk': 'Cancel print', 'print.keep': 'Keep printing',
   'status.nozzle': 'Active nozzle', 'status.bed': 'Bed', 'status.chamber': 'Chamber', 'status.speed': 'Speed',
   'status.fan': 'Fan', 'status.z': 'Z height', 'status.layer': 'Layer', 'status.qgl': 'QGL',
   'status.setNozzle': 'Set nozzle temperature', 'status.setBed': 'Set bed temperature',
-  'status.qglDone': 'leveled', 'status.qglNot': 'not done',
+  'status.qglDone': 'leveled', 'status.qglNot': 'not leveled', 'status.ztilt': 'Z-Tilt',
+  'qs.now': 'Now', 'qs.target': 'Target', 'qs.off': 'Off', 'qs.exact': 'Exact value…', 'qs.adjust': 'Quick adjust: {name}',
 
   'jog.home': 'Home all axes', 'jog.motorsOff': 'Disable motors (M84)', 'jog.motorsOffAria': 'Disable motors',
   'jog.badDistance': 'Enter a valid distance greater than 0',
@@ -57,6 +70,9 @@ export default {
 
   'console.placeholder': 'G-code, e.g. G28', 'console.send': 'Send',
 
+  'console.macros': 'Quick macros',
+  'mesh.save': 'Save profile', 'mesh.saveConfirm': 'Save the mesh as profile default and run SAVE_CONFIG? Klipper will restart.',
+  'mesh.profile': 'Profile', 'mesh.savedShort': 'saved', 'mesh.min': 'Min, mm', 'mesh.max': 'Max, mm', 'mesh.range': 'Range, mm', 'mesh.exag': 'Scale',
   'mesh.calibrate': 'Calibrate', 'mesh.none': 'No bed mesh yet.', 'mesh.front': 'Front of the bed at the bottom.',
   'mesh.calSent': 'Command sent. Calibration progress is in the console.',
   'mesh.info': '{name}{saved} · {lo}…{hi} mm · range {range} mm · ×{k}', 'mesh.savedSuffix': ' · saved profile',
@@ -68,6 +84,14 @@ export default {
   'hist.totals': 'Total prints: {n} · Print time: {time} · Filament: {fil} m',
   'hist.unavailable': 'History unavailable: {msg} (needs [history] in moonraker.conf)',
 
+  'eng.secSys': 'Diagnostics & system', 'eng.secCfg': 'Configuration', 'eng.system': 'System',
+  'hw.title': 'Hardware & MCU', 'hw.host': 'Host', 'hw.mainBoard': 'Main board', 'hw.cores': '{n} cores', 'hw.ram': '{gb} GB RAM',
+  'hw.cpuLoad': 'CPU load', 'hw.ramUsed': 'Memory', 'hw.hostTemp': 'Temperature', 'hw.sysload': 'Load average',
+  'hw.hostMcu': 'Host (Linux)', 'hw.firmware': 'Klipper firmware', 'hw.link': 'Connection', 'hw.linuxProc': 'Linux process',
+  'hw.clock': 'Clock', 'hw.mcuLoad': 'Load', 'hw.latency': 'Latency (srtt)', 'hw.bandwidth': 'Traffic', 'hw.transferred': 'Transferred',
+  'hw.canBus': 'CAN bus', 'hw.temp.mcu': 'Chip temperature', 'hw.temp.board': 'Board temperature', 'hw.temp.host': 'Host temperature',
+  'hw.mhz': 'MHz', 'hw.retransmit': 'Retransmits', 'hw.invalid': 'Invalid',
+  'hw.bus.ok': 'Link stable', 'hw.bus.warn': 'Packet loss growing (retransmit / invalid)', 'hw.bus.off': 'MCU not responding',
   'eng.klipper': 'Klipper', 'eng.host': 'Host', 'eng.state': 'State', 'eng.cpu': 'CPU', 'eng.cpuTemp': 'CPU temperature',
   'eng.mem': 'Memory', 'eng.uptime': 'Uptime', 'eng.memVal': '{p}% of {gb} GB', 'eng.demoUptime': '3 days',
   'eng.confirmRestart': 'Restart Klipper?', 'eng.confirmFw': 'Run firmware restart?',

@@ -137,17 +137,15 @@ gcode:
 
 <style scoped>
 .lbl{font-size:12px;color:var(--dim)}
-.ifaces{font-size:16px;font-weight:200;line-height:1.8}
+.ifaces{font-size:16px;font-weight:300;line-height:1.8;background:var(--surface);border:1px solid var(--hair);border-radius:var(--r-lg);padding:10px 14px}
 .line{display:flex;gap:10px;align-items:center;margin-top:4px}
 .line.wrap{gap:8px;flex-wrap:wrap;margin-top:8px}
 .small{color:var(--dim);font-size:12px}
-.net input,.net button{background:none;border:1px solid var(--line);color:var(--ink);font:inherit;font-size:13px;border-radius:7px;padding:10px 14px}
+.net input,.net button{font-size:13px;padding:10px 14px}
 .net button{cursor:pointer;font-weight:500}
-.net button:hover:not(:disabled){border-color:var(--red)}
-.net :focus-visible{outline:2px solid var(--red);outline-offset:2px}
-.net pre{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:7px;padding:12px;overflow:auto;font:12px/1.5 var(--mono)}
-.net summary{cursor:pointer;color:var(--dim);font-size:13px}
-.wfl{display:grid;gap:6px;max-width:480px;max-height:240px;overflow:auto}
+
+.net pre{background:rgba(0,0,0,.32);border:1px solid var(--hair);border-radius:var(--r-md);padding:12px;overflow:auto;font:12px/1.5 var(--mono)}
+.wfl{display:grid;gap:4px;max-width:480px;max-height:240px;overflow:auto}
 .wfn{display:flex;justify-content:space-between;gap:12px;text-align:left}
 .wfn span:last-child{color:var(--dim);white-space:nowrap}
 </style>

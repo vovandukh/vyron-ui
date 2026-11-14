@@ -1,6 +1,6 @@
 export default {
   'nav.main': 'Керування', 'nav.console': 'Консоль', 'nav.mesh': 'Карта столу',
-  'nav.hist': 'Історія', 'nav.eng': 'Інженерне', 'nav.cfg': 'Конфіг',
+  'nav.hist': 'Історія', 'nav.eng': 'Інженерне меню',
 
   'common.set': 'Задати', 'common.off': 'Вимкнути', 'common.cancel': 'Скасувати', 'common.save': 'Зберегти', 'common.ok': 'Так',
   'fmt.hm': '{h} г {m} хв', 'fmt.m': '{m} хв',
@@ -23,14 +23,27 @@ export default {
   'conn.connectingTo': 'Підключення до {host}…', 'conn.connectedTo': 'Підключено · {host}',
   'conn.wsError': 'Помилка WebSocket · перевір адресу та доступ', 'conn.lost': 'Зв’язок втрачено · повторне підключення…',
   'conn.addrError': 'Помилка адреси: {msg}',
+  'cc.title': 'Центр керування', 'cc.connection': 'Підключення', 'cc.demo': 'Демо-режим', 'cc.demoHint': 'Імітація друку без принтера',
+  'cc.open': 'Центр керування · підключення',
+  'island.demo': 'Демо-режим активний', 'island.connected': 'Підключено · {host}', 'island.lost': 'Зв’язок втрачено',
+  'island.ready': 'Klipper готовий', 'island.klipperError': 'Помилка Klipper', 'island.qgl': 'Вирівнювання QGL завершено', 'island.ztilt': 'Вирівнювання Z-Tilt завершено',
+  'view.reset': 'Скинути ракурс', 'nav.home': 'На головну — Керування',
+  'island.detail': '{state} · {host}', 'island.demoHost': 'локальна імітація', 'island.noHost': 'хост не задано', 'island.peekTitle': 'Стан і адреса принтера',
+  'island.printStart': 'Друк розпочато', 'island.printDone': 'Друк завершено', 'island.paused': 'Друк на паузі',
+  'island.printError': 'Помилка друку', 'island.cancelled': 'Друк скасовано',
 
   'meta.notConnected': 'Не підключено', 'meta.noFile': 'Немає активного файлу',
   'meta.gcodeError': 'Не вдалося завантажити G-code: {msg}', 'meta.demo': 'Демо · імітація друку',
 
+  'print.controls': 'Керування друком', 'print.pause': 'Пауза', 'print.resume': 'Продовжити', 'print.cancel': 'Скасувати',
+  'print.pausing': 'Пауза…', 'print.resuming': 'Продовження…', 'print.cancelling': 'Скасування…',
+  'print.cancelConfirm': 'Скасувати поточний друк? Продовжити його вже не вийде.', 'print.failed': 'Команду не виконано — перевір підключення та консоль',
+  'print.cancelOk': 'Скасувати друк', 'print.keep': 'Залишити',
   'status.nozzle': 'Активне сопло', 'status.bed': 'Стіл', 'status.chamber': 'Камера', 'status.speed': 'Швидкість',
   'status.fan': 'Обдув', 'status.z': 'Висота Z', 'status.layer': 'Шар', 'status.qgl': 'QGL',
   'status.setNozzle': 'Задати температуру сопла', 'status.setBed': 'Задати температуру столу',
-  'status.qglDone': 'вирівняно', 'status.qglNot': 'не виконано',
+  'status.qglDone': 'вирівняно', 'status.qglNot': 'не вирівняно', 'status.ztilt': 'Z-Tilt',
+  'qs.now': 'Зараз', 'qs.target': 'Ціль', 'qs.off': 'Вимк.', 'qs.exact': 'Точне значення…', 'qs.adjust': 'Швидке налаштування: {name}',
 
   'jog.home': 'Home усіх осей', 'jog.motorsOff': 'Вимкнути мотори (M84)', 'jog.motorsOffAria': 'Вимкнути мотори',
   'jog.badDistance': 'Введи коректну відстань більше 0',
@@ -57,6 +70,9 @@ export default {
 
   'console.placeholder': 'G-code, наприклад G28', 'console.send': 'Надіслати',
 
+  'console.macros': 'Швидкі макроси',
+  'mesh.save': 'Зберегти профіль', 'mesh.saveConfirm': 'Зберегти карту як профіль default і виконати SAVE_CONFIG? Klipper перезапуститься.',
+  'mesh.profile': 'Профіль', 'mesh.savedShort': 'збережений', 'mesh.min': 'Мін, мм', 'mesh.max': 'Макс, мм', 'mesh.range': 'Розмах, мм', 'mesh.exag': 'Масштаб',
   'mesh.calibrate': 'Калібрувати', 'mesh.none': 'Карти столу ще немає.', 'mesh.front': 'Передня сторона столу знизу.',
   'mesh.calSent': 'Команду надіслано. Хід калібрування — у консолі.',
   'mesh.info': '{name}{saved} · {lo}…{hi} мм · розмах {range} мм · ×{k}', 'mesh.savedSuffix': ' · збережений профіль',
@@ -68,6 +84,14 @@ export default {
   'hist.totals': 'Всього друків: {n} · Час друку: {time} · Філамент: {fil} м',
   'hist.unavailable': 'Історія недоступна: {msg} (потрібен [history] у moonraker.conf)',
 
+  'eng.secSys': 'Діагностика та система', 'eng.secCfg': 'Конфігурація', 'eng.system': 'Система',
+  'hw.title': 'Апаратне забезпечення та MCU', 'hw.host': 'Хост', 'hw.mainBoard': 'Основна плата', 'hw.cores': '{n} ядра', 'hw.ram': '{gb} ГБ RAM',
+  'hw.cpuLoad': 'CPU', 'hw.ramUsed': 'Пам’ять', 'hw.hostTemp': 'Температура', 'hw.sysload': 'Load average',
+  'hw.hostMcu': 'Хост (Linux)', 'hw.firmware': 'Прошивка Klipper', 'hw.link': 'Підключення', 'hw.linuxProc': 'Процес Linux',
+  'hw.clock': 'Тактова частота', 'hw.mcuLoad': 'Навантаження', 'hw.latency': 'Затримка (srtt)', 'hw.bandwidth': 'Трафік', 'hw.transferred': 'Передано',
+  'hw.canBus': 'CAN-шина', 'hw.temp.mcu': 'Температура чипа', 'hw.temp.board': 'Температура плати', 'hw.temp.host': 'Температура хоста',
+  'hw.mhz': 'МГц', 'hw.retransmit': 'Retransmits', 'hw.invalid': 'Invalid',
+  'hw.bus.ok': 'Зв’язок стабільний', 'hw.bus.warn': 'Ростуть втрати пакетів (retransmit / invalid)', 'hw.bus.off': 'MCU не відповідає',
   'eng.klipper': 'Klipper', 'eng.host': 'Хост', 'eng.state': 'Стан', 'eng.cpu': 'Процесор', 'eng.cpuTemp': 'Температура CPU',
   'eng.mem': 'Пам’ять', 'eng.uptime': 'Аптайм', 'eng.memVal': '{p}% з {gb} ГБ', 'eng.demoUptime': '3 доби',
   'eng.confirmRestart': 'Перезапустити Klipper?', 'eng.confirmFw': 'Виконати firmware restart?',

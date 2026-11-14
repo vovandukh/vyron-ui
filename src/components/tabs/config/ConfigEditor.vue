@@ -95,9 +95,20 @@ function onFindKey(e) {
   else if (e.key === 'Escape') toggleFind(false)
 }
 
+// Відкрито інший файл — вміст м'яко з'являється (Web Animations: textarea не перестворюється, курсор і Undo цілі)
+const wrap = ref(null)
+const still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+function reveal() {
+  if (still || !wrap.value?.animate) return
+  for (const el of wrap.value.children) {
+    el.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }],
+      { duration: 380, easing: 'cubic-bezier(.22,1,.36,1)' })
+  }
+}
+
 function reset() {
   // Після програмної заміни value курсор стоїть у кінці файлу — повертаємо його на початок.
-  nextTick(() => { if (ta.value) { ta.value.setSelectionRange(0, 0); ta.value.scrollTop = 0; syncScroll(); emitCursor() } })
+  nextTick(() => { if (ta.value) { ta.value.setSelectionRange(0, 0); ta.value.scrollTop = 0; syncScroll(); emitCursor() } reveal() })
 }
 
 defineExpose({ toggleFind, focus: () => ta.value?.focus(), reset })
@@ -113,7 +124,7 @@ defineExpose({ toggleFind, focus: () => ta.value?.focus(), reset })
     <button @click="replaceOne">{{ t('cfg.replace') }}</button>
     <button @click="replaceAll">{{ t('cfg.all') }}</button>
   </div>
-  <div class="ceWrap">
+  <div ref="wrap" class="ceWrap">
     <div ref="ln" class="ceLn">{{ lineNums }}</div>
     <div class="ceCode">
       <pre ref="hl" aria-hidden="true" v-html="html"></pre>
@@ -127,9 +138,23 @@ defineExpose({ toggleFind, focus: () => ta.value?.focus(), reset })
 .ceFind{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .ceFind input{width:150px}
 .ceFind span{color:var(--dim);font-size:12px}
-.ceWrap{flex:1;min-height:200px;display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:rgba(255,255,255,.02)}
+.ceWrap{flex:1;min-height:200px;display:flex;border:1px solid var(--hair);border-radius:var(--r-lg);overflow:hidden;background:rgba(0,0,0,.32);box-shadow:inset 0 1px 3px rgba(0,0,0,.35);transition:border-color var(--t-fast) var(--ease-out)}
+.ceWrap:focus-within{border-color:rgba(255,107,90,.45)}
 .ceLn,.ceCode pre,.view .ceCode textarea{font:13px/20px var(--mono);padding:10px 12px;margin:0;tab-size:2;white-space:pre;letter-spacing:0;box-sizing:border-box}
 .ceLn{width:50px;flex:none;overflow:hidden;text-align:right;color:#4a4f58;border-right:1px solid var(--line);user-select:none}
+/* Скролбари є лише в textarea (9px). Підсвічений <pre> і номери рядків отримують такий самий запас справа/знизу,
+   інакше біля кінця файлу підсвітка й курсор розходяться. Знизу — «повітря», щоб останній рядок
+   не ховався під горизонтальною смугою. */
+.view .ceCode textarea{padding-bottom:24px}
+.ceCode pre{padding:10px 21px 24px 12px}
+.ceLn{padding-bottom:24px}
+/* Бігунок не впирається в заокруглені кути рамки */
+.view .ceCode textarea::-webkit-scrollbar-track{margin:10px}
+/* Горизонтальна смуга перекреслювала нижній видимий рядок — ховаємо її; прокрутка вбік лишається
+   (Shift + колесо, свайп, рух курсору). Довгі рядки в конфігах рідкісні (URL, коментарі). */
+.view .ceCode textarea::-webkit-scrollbar:horizontal{height:0}
+/* М'яке затухання тексту біля верхнього й нижнього країв — обрізаний рядок виглядає навмисним */
+.ceCode pre,.ceLn{-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 10px,#000 calc(100% - 22px),transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 10px,#000 calc(100% - 22px),transparent 100%)}
 .ceCode{position:relative;flex:1;min-width:0}
 .ceCode pre{position:absolute;inset:0;overflow:hidden;pointer-events:none;color:#c9ced6}
 .view .ceCode textarea{position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:0;background:transparent;color:transparent;caret-color:#fff;resize:none;outline:none;overflow:auto}

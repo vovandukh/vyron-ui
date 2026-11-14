@@ -25,11 +25,18 @@ function resize() {
   renderer.setSize(w, h, false)
   cam.aspect = w / h
   cam.updateProjectionMatrix()
+  kick()
 }
 
-function loop() {
-  if (props.active && w && h) { orbit.place(cam, ORIGIN); renderer.render(scene, cam) }
-  raf = requestAnimationFrame(loop)
+// Рендер на вимогу: поки камера нерухома і дані не змінились, цикл спить.
+let dirty = true
+function kick() { dirty = true; if (!raf && renderer) raf = requestAnimationFrame(loop) }
+orbit.wake = kick
+function loop(now) {
+  raf = 0
+  const moving = orbit.update(now)
+  if (props.active && w && h && (moving || dirty)) { orbit.place(cam, ORIGIN); renderer.render(scene, cam); dirty = false }
+  if (moving && props.active) raf = requestAnimationFrame(loop)
 }
 
 function dispose() {
@@ -63,6 +70,7 @@ function surface(mx, lim) {
   obj.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.12 })))
   obj.add(new THREE.GridHelper(W, C - 1, 0x3a2a2c, 0x3a2a2c))
   scene.add(obj)
+  kick()
 }
 
 onMounted(() => {
@@ -77,7 +85,7 @@ onMounted(() => {
   ro.observe(wrap.value)
   resize()
   surface(props.matrix, props.lim)
-  loop()
+  kick()
 })
 
 onBeforeUnmount(() => {
@@ -96,7 +104,7 @@ watch(() => props.active, a => { if (a) resize() })
 </template>
 
 <style scoped>
-.m3{position:relative;min-height:280px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.m3{position:relative;min-height:280px;background:radial-gradient(ellipse at 50% 40%,rgba(255,255,255,.04),transparent 70%),var(--surface);border:1px solid var(--hair);border-radius:var(--r-lg);overflow:hidden}
 @media(max-width:900px){.m3{min-height:180px}}
 @media(max-width:700px){.m3{min-height:260px}}
 canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}

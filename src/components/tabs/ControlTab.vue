@@ -5,6 +5,7 @@ import { useI18n } from '../../composables/useI18n'
 import StatusPanel from './control/StatusPanel.vue'
 import JogControls from './control/JogControls.vue'
 import ToolStrip from './control/ToolStrip.vue'
+import RollNumber from '../ui/RollNumber.vue'
 
 const printer = usePrinterStore()
 const { t, tm } = useI18n()
@@ -22,7 +23,7 @@ const { t, tm } = useI18n()
     </div>
     <StatusPanel />
     <JogControls />
-    <div class="pct"><span>{{ printer.progressPct }}</span><small>%</small></div>
+    <div class="pct"><RollNumber :value="printer.progressPct" /><small>%</small></div>
     <div class="meta">{{ tm(printer.meta) }}</div>
     <ToolStrip />
   </div>
@@ -31,11 +32,14 @@ const { t, tm } = useI18n()
 <style scoped>
 /* Розмір і ширина обмежені відстанню до центрованої смуги голів (~450px для 6 голів), щоб «100%»
    і довга назва файлу не заходили під неї. */
-.pct{position:fixed;left:32px;bottom:55px;font-size:clamp(70px,min(16vw,calc((50vw - 270px) / 2)),130px);font-weight:200;line-height:1;letter-spacing:-.04em;pointer-events:none}
-.pct small{font-size:.3em;color:var(--red);margin-left:5px}
+.pct{position:fixed;left:32px;bottom:55px;display:flex;align-items:baseline;font-size:clamp(70px,min(16vw,calc((50vw - 270px) / 2)),130px);font-weight:200;line-height:1;letter-spacing:-.04em;pointer-events:none;--rn-h:1.04em}
+/* Анодований метал: вертикальний градієнт на кожній цифрі одометра (клітинка = своя «пластина») */
+.pct :deep(.rn-strip>span){background:linear-gradient(180deg,#ffffff 0%,#eef0f3 34%,#b9bec6 72%,#8a9099 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+/* М'яке тепле світіння позаду (окремий шар, без дорогого filter на великому тексті) */
+.pct::before{content:'';position:absolute;left:-18%;right:-30%;top:-10%;bottom:-25%;z-index:-1;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(240,58,46,.16),rgba(240,58,46,.05) 60%,transparent)}
+.pct small{font-size:.3em;color:var(--red);margin-left:5px;text-shadow:0 0 18px rgba(240,58,46,.6)}
 .meta{position:fixed;left:36px;bottom:24px;color:var(--dim);font-size:12px;pointer-events:none;max-width:min(40vw,calc(50vw - 280px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* ≤1100px смуга голів піднята над рядком підключення — назва файлу може займати 40vw */
-@media(max-width:1100px){.meta{max-width:40vw}}
 @media(max-width:900px){.pct{left:16px;bottom:24px;font-size:70px}.meta{display:none}}
 @media(max-width:560px){.pct{bottom:12px;font-size:54px}}
 .pv{position:fixed;top:calc(var(--hb,72px) + 12px);left:50%;transform:translateX(-50%);z-index:4;display:flex;align-items:center;gap:10px;max-width:min(560px,calc(100vw - 32px));padding:6px 6px 6px 10px;background:rgba(10,10,11,.88);border:1px solid var(--line);border-radius:9px;backdrop-filter:blur(10px);font-size:12px}

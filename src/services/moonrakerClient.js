@@ -9,8 +9,11 @@ const secure = () => typeof location !== 'undefined' && location.protocol === 'h
 export const socketUrl = host => (secure() ? 'wss://' : 'ws://') + host + '/websocket'
 export const httpBase = host => (secure() ? 'https://' : 'http://') + host
 
-// ---------- вибір хоста принтера (жодних захардкоджених IP) ----------
+// ---------- вибір хоста принтера ----------
 const HOST_KEY = 'voronui.host'
+
+/** Принтер за замовчуванням — останній запасний варіант, коли адресу не задано ніде інде. */
+export const DEFAULT_PRINTER_HOST = '192.168.0.232'
 
 /** Хост, збережений після ручного підключення (порожній — підключатися до хоста сторінки). */
 export function savedHost() {
@@ -28,7 +31,8 @@ export function rememberHost(host) {
 /**
  * Хост для автопідключення:
  *   ?host=ip:port → збережений у localStorage → VITE_PRINTER_HOST → хост, з якого відкрито сторінку
- *   (на принтері це сам nginx/Moonraker, у dev — проксі Vite). Порожній рядок — підключатися нікуди.
+ *   (на принтері це сам nginx/Moonraker, у dev — проксі Vite на той самий принтер) →
+ *   DEFAULT_PRINTER_HOST (сторінку відкрито як файл).
  */
 export function resolveHost() {
   const q = new URLSearchParams(location.search).get('host')
@@ -37,7 +41,8 @@ export function resolveHost() {
   if (s) return normalizeHost(s)
   const env = import.meta.env.VITE_PRINTER_HOST
   if (env) return normalizeHost(env)
-  return location.protocol.startsWith('http') && location.host ? location.host : ''
+  if (location.protocol.startsWith('http') && location.host) return location.host
+  return DEFAULT_PRINTER_HOST
 }
 
 export class RpcError extends Error {}

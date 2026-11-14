@@ -13,7 +13,7 @@ export function useConfirm() {
     force || settings.cSys ? ui.openDialog({ message: toMsg(message) }) : Promise.resolve(true)
 
   /** Питає завжди. */
-  const confirm = message => ui.openDialog({ message: toMsg(message) })
+  const confirm = (message, labels = {}) => ui.openDialog({ message: toMsg(message), ...labels })
 
   /** Поле вводу: рядок або null при скасуванні. */
   const prompt = message => ui.openDialog({ message: toMsg(message), input: true })
