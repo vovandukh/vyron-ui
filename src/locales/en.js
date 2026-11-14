@@ -47,6 +47,7 @@ export default {
   'status.qglDone': 'leveled', 'status.qglNot': 'not leveled', 'status.ztilt': 'Z-Tilt',
   'qs.now': 'Now', 'qs.target': 'Target', 'qs.off': 'Off', 'qs.exact': 'Exact value…', 'qs.adjust': 'Quick adjust: {name}',
 
+  'jog.title': 'Motion', 'jog.step': '{a} step, mm', 'jog.position': 'Current {a} position, mm',
   'jog.home': 'Home all axes', 'jog.motorsOff': 'Disable motors (M84)', 'jog.motorsOffAria': 'Disable motors',
   'jog.badDistance': 'Enter a valid distance greater than 0',
 

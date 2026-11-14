@@ -47,6 +47,7 @@ export default {
   'status.qglDone': 'вирівняно', 'status.qglNot': 'не вирівняно', 'status.ztilt': 'Z-Tilt',
   'qs.now': 'Зараз', 'qs.target': 'Ціль', 'qs.off': 'Вимк.', 'qs.exact': 'Точне значення…', 'qs.adjust': 'Швидке налаштування: {name}',
 
+  'jog.title': 'Рух', 'jog.step': 'Крок по {a}, мм', 'jog.position': 'Поточна позиція {a}, мм',
   'jog.home': 'Home усіх осей', 'jog.motorsOff': 'Вимкнути мотори (M84)', 'jog.motorsOffAria': 'Вимкнути мотори',
   'jog.badDistance': 'Введи коректну відстань більше 0',
 

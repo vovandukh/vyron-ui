@@ -22,54 +22,61 @@ const posText = i => (printer.position ? Number(printer.position[i]).toFixed(1) 
 </script>
 
 <template>
-  <div class="ctl">
-    <div class="hrow">
-      <button class="home glass" :title="t('jog.home')" aria-label="Home" :disabled="printer.isPrinting" @click="printer.rpc('G28')">
-        <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5M5.5 10v10h13V10M10 20v-5.5h4V20" /></svg>
-      </button>
-      <button class="home glass" :title="t('jog.motorsOff')" :aria-label="t('jog.motorsOffAria')" :disabled="printer.isPrinting" @click="printer.rpc('M84')">
-        <svg viewBox="0 0 24 24"><path d="M12 3v8M6.3 6.8a8 8 0 1 0 11.4 0" /></svg>
-      </button>
+  <!-- Одна скляна панель (як телеметрія праворуч): елементи не губляться на фоні сцени й сітки -->
+  <div class="ctl glass">
+    <div class="hd">
+      <span class="ttl">{{ t('jog.title') }}</span>
+      <div class="hrow">
+        <button class="home" :title="t('jog.home')" aria-label="Home" :disabled="printer.isPrinting" @click="printer.rpc('G28')">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 10v10h13V10M10 20v-5.5h4V20" /></svg>
+        </button>
+        <button class="home" :title="t('jog.motorsOff')" :aria-label="t('jog.motorsOffAria')" :disabled="printer.isPrinting" @click="printer.rpc('M84')">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v8M6.3 6.8a8 8 0 1 0 11.4 0" /></svg>
+        </button>
+      </div>
     </div>
     <div v-for="(a, i) in axes" :key="a" class="ax">
+      <!-- Мітка осі — в основному акцентному кольорі інтерфейсу -->
       <span class="al">{{ a }}</span>
-      <div class="seg glass">
-        <button :disabled="printer.isPrinting" @click="jog(a, -1)">−</button>
-        <input v-model="step[a]" type="number" min=".01" step="any" :disabled="printer.isPrinting">
-        <button :disabled="printer.isPrinting" @click="jog(a, 1)">+</button>
+      <div class="seg">
+        <button :disabled="printer.isPrinting" :aria-label="a + ' −'" @click="jog(a, -1)">−</button>
+        <input v-model="step[a]" type="number" min=".01" step="any" :aria-label="t('jog.step', { a })" :disabled="printer.isPrinting">
+        <button :disabled="printer.isPrinting" :aria-label="a + ' +'" @click="jog(a, 1)">+</button>
       </div>
-      <span class="pos">{{ posText(i) }}</span>
+      <span class="pos" :title="t('jog.position', { a })">{{ posText(i) }}</span>
     </div>
-    <div class="cmsg">{{ tm(printer.ctlMsg) }}</div>
+    <div v-if="printer.ctlMsg" class="cmsg">{{ tm(printer.ctlMsg) }}</div>
   </div>
 </template>
 
 <style scoped>
-.ctl{position:fixed;left:32px;top:50%;transform:translateY(-50%);display:grid;gap:10px;font-size:12px}
-/* Кнопки — тактильні: м'яке підсвічування при наведенні, пружне «втискання» при натисканні */
-.ctl button{background:none;border:0;color:var(--ink);font:inherit;cursor:pointer;
-  transition:transform var(--t-spring) var(--spring),color var(--t-fast) var(--ease-out),background-color var(--t-fast) var(--ease-out),box-shadow var(--t-mid) var(--ease-out)}
-.ctl button:hover:not(:disabled){color:var(--coral);background-color:rgba(255,255,255,.06)}
-.ctl button:active:not(:disabled){transform:scale(.95);background-color:rgba(255,107,90,.14)}
+.ctl{position:fixed;left:32px;top:50%;transform:translateY(-50%);display:grid;gap:8px;padding:12px;border-radius:18px;font-size:12px;z-index:3}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 2px 2px}
+.ttl{font-size:11px;font-weight:500;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+/* Кнопки — світліші поверхні на склі: тактильні, з м'яким підсвічуванням і пружним натисканням */
+.ctl button{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.06);color:var(--ink);font:inherit;cursor:pointer;
+  transition:transform var(--t-spring) var(--spring),color var(--t-fast) var(--ease-out),background-color var(--t-fast) var(--ease-out),border-color var(--t-fast) var(--ease-out)}
+.ctl button:hover:not(:disabled){color:var(--coral);background-color:rgba(255,255,255,.11);border-color:rgba(255,255,255,.14)}
+.ctl button:active:not(:disabled){transform:scale(.95);background-color:rgba(255,107,90,.16)}
 .ctl button:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
 .ctl button:disabled,.ctl input:disabled{opacity:.35;cursor:not-allowed}
-.hrow{display:flex;gap:8px;margin-left:21px;width:126px}
-/* .glass задає фон/межі; селектор .ctl .home потрібен, щоб перебити скидання фону з .ctl button */
-.ctl .home{flex:1;height:38px;border-radius:12px;display:grid;place-items:center;background-color:var(--glass-bg);border:1px solid;border-color:var(--edge-hi) var(--edge-lo) var(--edge-lo) var(--edge-hi)}
-.ctl .home:hover:not(:disabled){box-shadow:var(--glass-shadow),0 0 18px -6px rgba(255,107,90,.55)}
-.ctl .home svg{width:19px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.ax{display:flex;align-items:center;gap:9px}
-.seg{display:flex;border-radius:12px;overflow:hidden}
-.seg button{width:38px;height:38px;font-size:18px}
-.seg button:first-child{border-right:1px solid rgba(255,255,255,.06)}
-.seg button:last-child{border-left:1px solid rgba(255,255,255,.06)}
-/* Chrome резервує в type=number місце під невидимі стрілки-спінери (~15px праворуч),
-   через що число зсувалось на ~8px ліворуч від центру. Ховаємо спінери й обнуляємо відступи. */
-.seg input{width:48px;padding:0;margin:0;background:none;border:0;color:var(--ink);text-align:center;font:inherit;-moz-appearance:textfield;appearance:textfield}
+.hrow{display:flex;gap:6px}
+.ctl .home{width:38px;height:34px;padding:0;border-radius:11px;display:grid;place-items:center}
+.ctl .home svg{width:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.ax{display:flex;align-items:center;gap:10px}
+/* Сегмент «− крок +»: одна поверхня з тонкими розділювачами */
+.seg{display:flex;border-radius:11px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.25)}
+.ctl .seg button{width:38px;height:38px;font-size:18px;border:0;border-radius:0;background:rgba(255,255,255,.05)}
+.ctl .seg button:first-child{border-right:1px solid rgba(255,255,255,.07)}
+.ctl .seg button:last-child{border-left:1px solid rgba(255,255,255,.07)}
+.seg input{width:50px;padding:0;margin:0;background:none;border:0;color:var(--ink);text-align:center;font:inherit;font-size:13px;font-weight:500;-moz-appearance:textfield;appearance:textfield}
+.seg input:focus{outline:none;background:rgba(255,107,90,.1)}
 .seg input::-webkit-inner-spin-button,.seg input::-webkit-outer-spin-button{-webkit-appearance:none;appearance:none;margin:0}
-.al{width:12px;color:var(--red);font-weight:600}
-.pos{width:44px;color:var(--dim);font-size:11px}
-.cmsg{color:var(--red);font-size:11px;max-width:220px;min-height:14px}
+.al{flex:none;width:24px;height:24px;border-radius:8px;display:grid;place-items:center;font-size:12px;font-weight:700;
+  color:var(--coral);background:rgba(255,107,90,.14);box-shadow:inset 0 0 0 1px rgba(255,107,90,.3)}
+/* Поточна координата — яскраво й табличними цифрами */
+.pos{min-width:48px;text-align:right;color:var(--ink);font-size:13px;font-weight:300}
+.cmsg{color:var(--coral);font-size:11px;max-width:230px;padding:0 2px}
 @media(max-width:900px){.ctl{left:14px}}
-@media(max-width:560px){.ctl{top:43%;gap:7px}.seg button{width:30px}.seg input{width:35px}.pos{display:none}}
+@media(max-width:560px){.ctl{top:43%;gap:6px;padding:10px}.ctl .seg button{width:30px}.seg input{width:36px}.pos{display:none}}
 </style>
