@@ -4,6 +4,7 @@ import { usePrinterStore } from '../../stores/printerStore'
 import { useConfirm } from '../../composables/useConfirm'
 import { useI18n } from '../../composables/useI18n'
 import { demoUpdates } from '../../services/demo'
+import { DEMO_BUILD } from '../../config'
 
 const printer = usePrinterStore()
 const { ask } = useConfirm()
@@ -31,7 +32,7 @@ const rows = computed(() => Object.keys(vi.value).map(name => {
 }))
 
 function load(refresh) {
-  if (printer.demoMode) { vi.value = demoUpdates; return }
+  if ((DEMO_BUILD && printer.demoMode)) { vi.value = demoUpdates; return }
   msg.value = ''
   printer.call('machine.update.status', { refresh: !!refresh })
     .then(r => { vi.value = r.version_info || {}; busy.value = !!r.busy })

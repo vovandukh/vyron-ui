@@ -234,7 +234,8 @@ export function resetDemoFiles() {
     return { path, modified: now - age - i * 60, size: 400000 + i * 173000 }
   })
 }
-resetDemoFiles()
+// Без виклику на рівні модуля: список заповнює startDemo() (resetDemoFiles), а відсутність побічних ефектів
+// дає Rollup викинути весь модуль зі збірки для принтера.
 
 export const demoFileList = () => demoFiles.map(f => ({ ...f }))
 export const demoFileMeta = path => ({ ...(demoMeta[path] || {}) })

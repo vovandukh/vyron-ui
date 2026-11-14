@@ -7,6 +7,7 @@ import { useUiStore } from '../../stores/uiStore'
 import { useConfirm } from '../../composables/useConfirm'
 import { useI18n } from '../../composables/useI18n'
 import { normalizeHost, savedHost, DEFAULT_PRINTER_HOST } from '../../services/moonrakerClient'
+import { DEMO_BUILD } from '../../config'
 
 const printer = usePrinterStore()
 const ui = useUiStore()
@@ -79,7 +80,8 @@ function onEnter(el) {
                    autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="url">
             <button type="submit" class="pri" :disabled="printer.link === 'connecting'">{{ t('conn.connect') }}</button>
           </form>
-          <button type="button" class="tgl" role="switch" :aria-checked="String(printer.demoMode)" @click="toggleDemo">
+          <!-- Перемикач демо — лише в демо-збірці (GitHub Pages); у збірці для принтера демо немає -->
+          <button v-if="DEMO_BUILD" type="button" class="tgl" role="switch" :aria-checked="String(printer.demoMode)" @click="toggleDemo">
             <span class="tgl-tx"><b>{{ t('cc.demo') }}</b><small>{{ t('cc.demoHint') }}</small></span>
             <span class="sw" :class="{ on: printer.demoMode }" aria-hidden="true"><i></i></span>
           </button>

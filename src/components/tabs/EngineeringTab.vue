@@ -7,6 +7,7 @@ import { useConfirm } from '../../composables/useConfirm'
 import { useI18n } from '../../composables/useI18n'
 import { fmtDuration } from '../../utils/format'
 import { demoSysInfo } from '../../services/demo'
+import { DEMO_BUILD } from '../../config'
 import HardwareCard from './eng/HardwareCard.vue'
 
 const props = defineProps({ active: { type: Boolean, default: false } })
@@ -27,7 +28,7 @@ const rows = computed(() => [
 ].filter(([, v]) => v != null && v !== ''))
 
 function load() {
-  if (printer.demoMode) { Object.assign(s, demoSysInfo); return }
+  if ((DEMO_BUILD && printer.demoMode)) { Object.assign(s, demoSysInfo); return }
   if (!printer.connected) return
   printer.call('printer.info', {}).then(i => {
     Object.assign(s, { sver: i.software_version || null, shost: i.hostname || null, sstate: i.state || null })
@@ -47,7 +48,7 @@ let timer = null
 const stop = () => { clearInterval(timer); timer = null }
 watch(() => props.active, a => { stop(); if (a) { load(); timer = setInterval(load, POLL_MS) } }, { immediate: true })
 // Демо ↔ реальний принтер — перечитати
-watch(() => [printer.demoMode, printer.link], () => { if (props.active) load() })
+watch(() => [(DEMO_BUILD && printer.demoMode), printer.link], () => { if (props.active) load() })
 onBeforeUnmount(stop)
 
 async function restart(fw) {

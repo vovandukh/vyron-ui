@@ -9,6 +9,7 @@ import { useI18n } from '../../composables/useI18n'
 import { fmtDuration } from '../../utils/format'
 import { jobThumbUrl, thumbUrl, listGcodeFiles, fileMetadata, deleteGcodeFile } from '../../services/moonrakerApi'
 import { demoHistory, demoFileList, demoFileMeta, demoDeleteFile } from '../../services/demo'
+import { DEMO_BUILD } from '../../config'
 
 const PAGE = 30          // скільки файлів показувати за раз (метадані вантажаться лише для видимих)
 const META_PARALLEL = 4  // одночасних запитів метаданих
@@ -88,7 +89,7 @@ const last = computed(() => {
   const md = j.metadata || {}
   return {
     ...info(j.status), path: j.filename, file: fname(j.filename), exists: exists(j.filename, j),
-    thumb: printer.demoMode ? demoFileMeta(j.filename).__thumb || null : jobThumbUrl(printer.host, j),
+    thumb: (DEMO_BUILD && printer.demoMode) ? demoFileMeta(j.filename).__thumb || null : jobThumbUrl(printer.host, j),
     fields: [
       ['hist.started', date(j.start_time)],
       ['hist.duration', fmtDuration(j.print_duration, t)],
@@ -136,7 +137,7 @@ watch(query, () => { limit.value = PAGE })
 const pending = new Set()
 let active = 0
 function pumpMeta() {
-  if (printer.demoMode) return
+  if ((DEMO_BUILD && printer.demoMode)) return
   for (const f of visible.value) {
     if (active >= META_PARALLEL) return
     if (meta.value[f.path] || pending.has(f.path)) continue
@@ -150,7 +151,7 @@ function pumpMeta() {
 watch(visible, pumpMeta)
 
 async function loadFiles() {
-  if (printer.demoMode) {
+  if ((DEMO_BUILD && printer.demoMode)) {
     files.value = demoFileList()
     meta.value = Object.fromEntries(files.value.map(f => [f.path, demoFileMeta(f.path)]))
     filesLoaded.value = true
@@ -167,7 +168,7 @@ function load() {
   badThumb.value = false
   msg.value = null
   loadFiles()
-  if (printer.demoMode) {
+  if ((DEMO_BUILD && printer.demoMode)) {
     const d = demoHistory()
     jobs.value = d.jobs; totals.value = d.totals; loaded.value = true
     return
@@ -187,7 +188,7 @@ function load() {
  */
 const printBlock = computed(() => {
   if (printer.printBusy) return t('files.printBusy')
-  if (!printer.demoMode && !printer.connected) return t('msg.notConnectedPrinter')
+  if (!(DEMO_BUILD && printer.demoMode) && !printer.connected) return t('msg.notConnectedPrinter')
   return ''
 })
 const starting = ref(false)
@@ -220,7 +221,7 @@ async function remove(path) {
   if (isBusy(path)) { say({ key: 'files.busy' }, true); return }   // друк міг стартувати, поки було відкрите вікно
   deleting.value = path
   try {
-    if (printer.demoMode) demoDeleteFile(path)
+    if ((DEMO_BUILD && printer.demoMode)) demoDeleteFile(path)
     else await deleteGcodeFile(printer.host, path)
     files.value = files.value.filter(f => f.path !== path)
     if (printer.preview && printer.preview.name === path) printer.closePreview()
