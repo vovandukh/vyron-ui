@@ -24,6 +24,7 @@ export default {
   'conn.wsError': 'WebSocket error · check the address and access', 'conn.lost': 'Connection lost · reconnecting…',
   'conn.addrError': 'Address error: {msg}',
   'cc.title': 'Control Center', 'cc.connection': 'Connection', 'cc.demo': 'Demo mode', 'cc.demoHint': 'Simulated print, no printer needed',
+  'cc.connected': 'Connected', 'cc.notConnected': 'Not connected',
   'cc.address': 'Address',
   'cc.open': 'Control Center · connection',
   'island.demo': 'Demo mode active', 'island.connected': 'Connected · {host}', 'island.lost': 'Connection lost',
@@ -107,6 +108,7 @@ export default {
   'cfg.badName': 'The name must end in .cfg or .conf', 'cfg.listError': 'Could not get the file list: {msg}',
   'cfg.openError': 'Could not open: {msg}', 'cfg.confirmSaveRestart': 'Save and restart Klipper?',
 
+  'upd.checking': 'Checking…', 'upd.availableN': 'Updates available: {n}', 'upd.allUpToDate': 'Everything is up to date',
   'upd.check': 'Check for updates', 'upd.all': 'Update all', 'upd.update': 'Update', 'upd.available': 'Update available',
   'upd.upToDate': 'Up to date', 'upd.dirty': 'has local changes', 'upd.invalid': 'invalid configuration',
   'upd.packages': '{n} packages to update', 'upd.finished': 'Update finished',
