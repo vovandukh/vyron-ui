@@ -48,9 +48,10 @@ const DEMO_ERR = [
   { g: 'gcode', items: ['home', 'range', 'cold', 'probe', 'qgl', 'macro', 'unknown'] }
 ]
 const errOpen = ref(false)
-function demoErr(kind) {
+function demoErr(kind, group) {
   ui.closeCc()
-  ui.klippyHidden = false
+  // Сховану картку повертає лише нова помилка стану Klipper; G-code помилка — тільки тост (як на справжньому принтері)
+  if (group === 'klippy') ui.klippyHidden = false
   printer.demoError(kind)
 }
 
@@ -119,7 +120,7 @@ function onEnter(el) {
                 <div v-for="grp in DEMO_ERR" :key="grp.g" class="dg">
                   <small>{{ t('demoErr.g.' + grp.g) }}</small>
                   <div class="chips">
-                    <button v-for="k in grp.items" :key="k" type="button" :class="'c-' + grp.g" @click="demoErr(k)">{{ t('demoErr.' + k) }}</button>
+                    <button v-for="k in grp.items" :key="k" type="button" :class="'c-' + grp.g" @click="demoErr(k, grp.g)">{{ t('demoErr.' + k) }}</button>
                   </div>
                 </div>
               </div>
