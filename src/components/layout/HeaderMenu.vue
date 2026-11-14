@@ -36,6 +36,9 @@ function connect() {
 }
 /** Адреса, до якої підключено (або буде підключено) — для показу на принтері */
 const shownHost = computed(() => printer.host || resolveHost())
+/** Заголовок плитки: на принтері — сам стан з'єднання («Підключено»), у демо-збірці — «Підключення» */
+const LINK_TITLE = { open: 'cc.connected', ready: 'cc.connected', shutdown: 'cc.connected', connecting: 'state.connecting', lost: 'state.lost' }
+const linkTitle = computed(() => (DEMO_BUILD ? 'cc.connection' : LINK_TITLE[printer.link] || 'cc.notConnected'))
 const toggleDemo = () => (printer.demoMode ? printer.exitDemo() : printer.startDemo())
 
 // ---------- меню ----------
@@ -74,7 +77,7 @@ function onEnter(el) {
         <section class="tile">
           <div class="tile-hd">
             <span class="dot" :class="'l-' + printer.link"></span>
-            <b>{{ t('cc.connection') }}</b>
+            <b>{{ t(linkTitle) }}</b>
             <span class="st">{{ tm(printer.stateLabel) }}</span>
           </div>
           <!-- На принтері інтерфейс бере адресу зі сторінки сам — лише показуємо її; ручне підключення — тільки в демо-збірці -->

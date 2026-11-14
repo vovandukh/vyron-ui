@@ -24,6 +24,7 @@ export default {
   'conn.wsError': 'Помилка WebSocket · перевір адресу та доступ', 'conn.lost': 'Зв’язок втрачено · повторне підключення…',
   'conn.addrError': 'Помилка адреси: {msg}',
   'cc.title': 'Центр керування', 'cc.connection': 'Підключення', 'cc.demo': 'Демо-режим', 'cc.demoHint': 'Імітація друку без принтера',
+  'cc.connected': 'Підключено', 'cc.notConnected': 'Не підключено',
   'cc.address': 'Адреса',
   'cc.open': 'Центр керування · підключення',
   'island.demo': 'Демо-режим активний', 'island.connected': 'Підключено · {host}', 'island.lost': 'Зв’язок втрачено',
@@ -107,6 +108,7 @@ export default {
   'cfg.badName': 'Назва має закінчуватись на .cfg або .conf', 'cfg.listError': 'Не вдалося отримати список файлів: {msg}',
   'cfg.openError': 'Не вдалося відкрити: {msg}', 'cfg.confirmSaveRestart': 'Зберегти й перезапустити Klipper?',
 
+  'upd.checking': 'Перевірка…', 'upd.availableN': 'Доступно оновлень: {n}', 'upd.allUpToDate': 'Усе актуально',
   'upd.check': 'Перевірити оновлення', 'upd.all': 'Оновити все', 'upd.update': 'Оновити', 'upd.available': 'Є оновлення',
   'upd.upToDate': 'Актуально', 'upd.dirty': 'є локальні зміни', 'upd.invalid': 'конфігурація невалідна',
   'upd.packages': '{n} пакетів до оновлення', 'upd.finished': 'Оновлення завершено',
