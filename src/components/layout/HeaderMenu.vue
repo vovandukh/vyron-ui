@@ -1,12 +1,12 @@
 <script setup>
 // Центр керування (у дусі macOS Control Center): підключення до принтера, демо-режим і меню системи.
 // Відкривається лише кнопкою «…» — стан у ui.cc.
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { usePrinterStore } from '../../stores/printerStore'
 import { useUiStore } from '../../stores/uiStore'
 import { useConfirm } from '../../composables/useConfirm'
 import { useI18n } from '../../composables/useI18n'
-import { normalizeHost, savedHost, DEFAULT_PRINTER_HOST } from '../../services/moonrakerClient'
+import { normalizeHost, savedHost, resolveHost, DEFAULT_PRINTER_HOST } from '../../services/moonrakerClient'
 import { DEMO_BUILD } from '../../config'
 
 const printer = usePrinterStore()
@@ -34,6 +34,8 @@ function connect() {
   host.value = h
   printer.connect(h, { remember: true })
 }
+/** Адреса, до якої підключено (або буде підключено) — для показу на принтері */
+const shownHost = computed(() => printer.host || resolveHost())
 const toggleDemo = () => (printer.demoMode ? printer.exitDemo() : printer.startDemo())
 
 // ---------- меню ----------
@@ -75,11 +77,16 @@ function onEnter(el) {
             <b>{{ t('cc.connection') }}</b>
             <span class="st">{{ tm(printer.stateLabel) }}</span>
           </div>
-          <form class="host" @submit.prevent="connect">
+          <!-- На принтері інтерфейс бере адресу зі сторінки сам — лише показуємо її; ручне підключення — тільки в демо-збірці -->
+          <form v-if="DEMO_BUILD" class="host" @submit.prevent="connect">
             <input v-model="host" :placeholder="t('conn.placeholder')" :aria-label="t('conn.aria')"
                    autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="url">
             <button type="submit" class="pri" :disabled="printer.link === 'connecting'">{{ t('conn.connect') }}</button>
           </form>
+          <div v-else class="hostRo">
+            <small>{{ t('cc.address') }}</small>
+            <b :title="shownHost">{{ shownHost || t('island.noHost') }}</b>
+          </div>
           <!-- Перемикач демо — лише в демо-збірці (GitHub Pages); у збірці для принтера демо немає -->
           <button v-if="DEMO_BUILD" type="button" class="tgl" role="switch" :aria-checked="String(printer.demoMode)" @click="toggleDemo">
             <span class="tgl-tx"><b>{{ t('cc.demo') }}</b><small>{{ t('cc.demoHint') }}</small></span>
@@ -121,6 +128,10 @@ function onEnter(el) {
 @keyframes blink{50%{opacity:.3}}
 
 .host{display:flex;gap:6px}
+/* Адреса принтера лише для читання (збірка для принтера) */
+.hostRo{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:9px 11px;border-radius:11px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.06)}
+.hostRo small{color:var(--dim);font-size:11px;white-space:nowrap}
+.hostRo b{font:500 13px/1.2 var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .host input{flex:1;width:0;min-width:0;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.08);color:var(--ink);font:inherit;font-size:13px;padding:9px 11px;border-radius:11px;
   transition:border-color var(--t-fast) var(--ease-out),box-shadow var(--t-fast) var(--ease-out)}
 .host input:focus{outline:none;border-color:rgba(255,107,90,.7);box-shadow:0 0 0 3px rgba(255,107,90,.18)}

@@ -89,10 +89,15 @@ onDeactivated(() => { offs.forEach(f => f()); offs = [] })
 
 <style scoped>
 .msg{color:var(--dim);font-size:12px}
-.ulog{max-height:160px}
+/* Лог під списком: заповнює решту місця, але не менше ~4 рядків */
+.view .ulog{flex:1 1 120px;min-height:90px;max-height:none}
 .updRow{display:grid;grid-template-columns:1fr 1.6fr 1fr auto;gap:12px;align-items:center;padding:10px 14px;font-size:13px}
 .updRow+.updRow{border-top:1px solid var(--hair)}
-.upd{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r-lg);overflow:hidden}
+/* Список компонентів — динамічна висота: при кількох рядках займає рівно стільки, скільки треба,
+   при багатьох — бере вільне місце панелі й прокручується сам (раніше overflow:hidden у flex-колонці
+   стискав блок і обрізав рядки без прокрутки). Лог під ним лишається видимим. */
+.upd{flex:0 1 auto;min-height:96px;overflow-y:auto;overscroll-behavior:contain;background:var(--surface);border:1px solid var(--hair);border-radius:var(--r-lg)}
+.upd::-webkit-scrollbar-track{margin:12px 0}
 .updRow .n{font-weight:500}
 .updRow .d{color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .updRow .need{color:var(--coral)}
