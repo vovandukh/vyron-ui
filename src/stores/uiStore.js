@@ -28,6 +28,8 @@ export const useUiStore = defineStore('ui', () => {
    * а поповери самого «Керування» (слайдер телеметрії, меню голови) слухають homeTick.
    */
   const homeTick = ref(0)
+  /** Картку стану Klipper (shutdown / помилка конфігурації) сховано кнопкою «Сховати»; повертається кліком по капсулі статусу або новою помилкою. */
+  const klippyHidden = ref(false)
   function goHome() {
     go('main')
     tempModal.value = null
@@ -56,5 +58,5 @@ export const useUiStore = defineStore('ui', () => {
     d?.resolve(result)
   }
 
-  return { view, tempModal, dialog, cc, toggleCc, closeCc, engSection, hwOpen, homeTick, goHome, go, openDialog, closeDialog }
+  return { klippyHidden, view, tempModal, dialog, cc, toggleCc, closeCc, engSection, hwOpen, homeTick, goHome, go, openDialog, closeDialog }
 })

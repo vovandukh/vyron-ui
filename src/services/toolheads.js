@@ -22,7 +22,7 @@ export function pinMcu(v) {
   return i < 0 ? 'mcu' : s.slice(0, i).trim()
 }
 
-/** Скорочений ID для відображення: 5bff930ca785 → 5bff…a785 */
+/** Скорочений ID для відображення: f3e9a0b47c21 → f3e9…7c21 */
 export const shortId = id => (id && id.length > 10 ? id.slice(0, 4) + '…' + id.slice(-4) : id || '')
 
 /**

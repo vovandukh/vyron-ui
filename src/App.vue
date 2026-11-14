@@ -7,6 +7,8 @@ import PrintPreview3D from './components/viz/PrintPreview3D.vue'
 import BackdropFx from './components/viz/BackdropFx.vue'
 import AppHeader from './components/layout/AppHeader.vue'
 import ProgressBar from './components/layout/ProgressBar.vue'
+import KlippyCard from './components/layout/KlippyCard.vue'
+import KlipperToasts from './components/layout/KlipperToasts.vue'
 
 import ControlTab from './components/tabs/ControlTab.vue'
 import ConsoleTab from './components/tabs/ConsoleTab.vue'
@@ -50,6 +52,9 @@ onMounted(() => printer.autoStart())
     </KeepAlive>
   </Transition>
   <ProgressBar />
+  <!-- Помилки Klipper: картка стану (shutdown / конфіг / запуск) і тости помилок G-code -->
+  <KlippyCard />
+  <KlipperToasts />
   <TemperatureModal />
   <ConfirmModal />
 </template>

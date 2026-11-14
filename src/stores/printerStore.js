@@ -12,8 +12,13 @@ import {
   demoGcode, demoStaticStatus, demoTickStatus, demoHwSensors, demoHostInfo, demoMcuConn
 } from '../services/demo'
 import { DEMO_BUILD } from '../config'
+import { classify, isGcodeError } from '../services/klipperErrors'
 
 const LOG_MAX = 500
+/** Скільки тостів помилок тримаємо одночасно (старіші витісняються). */
+const ALERTS_MAX = 4
+/** Опитування стану Klipper, поки він не готовий (startup / disconnected), мс */
+const KLIPPY_POLL = 2000
 
 /**
  * Повідомлення в UI зберігаються як { key, params } (перекладаються в компонентах)
@@ -27,6 +32,18 @@ export const usePrinterStore = defineStore('printer', () => {
   const link = ref('idle')
   const metaOverride = ref(null)
   const gcodeError = ref(null)
+
+  // ---------- стан Klipper і помилки ----------
+  /**
+   * Стан самого Klippy (окремо від WebSocket до Moonraker): state — ready | startup | shutdown | error | disconnected | null,
+   * message — state_message Klipper (текст shutdown / помилки конфігурації), info — його розбір (services/klipperErrors.js).
+   */
+  const klippy = ref({ state: null, message: '', info: null })
+  /** Тости помилок G-code / друку: [{ id, at, n, src: 'gcode' | 'print', info }] — новіші в кінці */
+  const alerts = ref([])
+  /** Дія перезапуску, що виконується: 'fw' | 'restart' | 'service' | null (див. klippyAction) */
+  const klippyBusy = ref(null)
+  let klippyTimer = 0, alertId = 0, busyTransit = false, busyTimer = 0
 
   // ---------- стан Klipper ----------
   /** Об'єкти статусу Klipper ('print_stats', 'extruder', …). Кожен ключ замінюється цілком при оновленні. */
@@ -85,7 +102,10 @@ export const usePrinterStore = defineStore('printer', () => {
       case 'idle': return { key: 'state.standby' }
       case 'connecting': return { key: 'state.connecting' }
       case 'lost': return { key: 'state.lost' }
-      case 'shutdown': return { key: 'state.klipperError' }
+      case 'shutdown': return { key: klippy.value.state === 'error' ? 'state.klipperConfig' : 'state.klipperError' }
+      case 'open':
+        if (klippy.value.state === 'startup') return { key: 'state.klipperStartup' }
+        if (klippy.value.state === 'disconnected') return { key: 'state.klipperOffline' }
     }
     const s = printState.value
     if (s) return STATE_KEYS[s] ? { key: STATE_KEYS[s] } : { raw: s }
@@ -198,6 +218,11 @@ export const usePrinterStore = defineStore('printer', () => {
     metaOverride.value = null
     preview.value = null
     savedPrint = null
+    clearTimeout(klippyTimer)
+    clearTimeout(busyTimer)
+    klippy.value = { state: null, message: '', info: null }
+    alerts.value = []
+    klippyBusy.value = null
   }
 
   function stopDemo() {
@@ -242,26 +267,153 @@ export const usePrinterStore = defineStore('printer', () => {
       link.value = 'open'
       metaOverride.value = { key: 'conn.connectedTo', params: { host: info.host } }
       initObjects()
+      refreshKlippy()
       client.call('server.gcode_store', { count: 60 })
         .then(r => (r.gcode_store || []).forEach(x => log(x.message)))
         .catch(() => {})
     }
     else if (s === 'error') metaOverride.value = { key: 'conn.wsError' }
-    else if (s === 'lost') { link.value = 'lost'; metaOverride.value = { key: 'conn.lost' } }
+    else if (s === 'lost') { link.value = 'lost'; metaOverride.value = { key: 'conn.lost' }; clearTimeout(klippyTimer); klippyBusy.value = null }
     else if (s === 'addrError') { link.value = 'idle'; metaOverride.value = { key: 'conn.addrError', params: { msg: info.message } } }
   }
 
   function handleNotify(method, params) {
     switch (method) {
       case 'notify_status_update': mergeStatus(params[0] || {}); break
-      case 'notify_gcode_response': log(params[0] || ''); break
-      case 'notify_klippy_ready': link.value = 'ready'; initObjects(); break
-      case 'notify_klippy_shutdown': link.value = 'shutdown'; break
+      case 'notify_gcode_response': {
+        const line = params[0] || ''
+        log(line)
+        if (isGcodeError(line)) pushAlert(line, 'gcode')
+        break
+      }
+      case 'notify_klippy_ready': setKlippy('ready', ''); initObjects(); break
+      // Текст причини приходить окремо: у webhooks.state_message або через printer.info
+      case 'notify_klippy_shutdown': setKlippy('shutdown', klippy.value.state === 'shutdown' ? klippy.value.message : ''); refreshKlippy(); break
+      case 'notify_klippy_disconnected': setKlippy('disconnected', ''); break
       case 'notify_history_changed': emit('history_changed'); break
       case 'notify_filelist_changed': emit('filelist_changed', params[0] || {}); break
       case 'notify_update_response': emit('update_response', params[0]); break
       case 'notify_update_refreshed': emit('update_refreshed', params[0] || {}); break
     }
+  }
+
+  // ================= стан Klipper і помилки =================
+  /**
+   * Новий стан Klippy (з printer.info, webhooks або notify_klippy_*). Синхронізує link
+   * (ready → 'ready', shutdown/error → 'shutdown', startup/disconnected → 'open') і, поки Klipper
+   * не готовий, опитує його стан — notify_klippy_* приходять не на кожен перехід (зокрема startup → error).
+   */
+  function setKlippy(state, message = '') {
+    if (!state) return
+    message = String(message || '').trim()
+    const bad = state === 'shutdown' || state === 'error'
+    const cur = klippy.value
+    if (cur.state !== state || cur.message !== message) {
+      const info = bad && message ? classify(message) : null
+      klippy.value = { state, message, info }
+      // Причину зупинки показує картка Klipper — той самий текст у тостах зайвий
+      if (info) alerts.value = alerts.value.filter(a => a.info.head !== info.head)
+    }
+    if (!demoMode.value && ['open', 'ready', 'shutdown'].includes(link.value)) link.value = state === 'ready' ? 'ready' : bad ? 'shutdown' : 'open'
+    if (klippyBusy.value) {
+      if (state === 'startup' || state === 'disconnected') busyTransit = true
+      else if (busyTransit) finishBusy()
+    }
+    clearTimeout(klippyTimer)
+    if (!demoMode.value && (state === 'startup' || state === 'disconnected')) klippyTimer = setTimeout(refreshKlippy, KLIPPY_POLL)
+  }
+
+  /** Запит стану: server.info (працює й без Klipper) → printer.info з текстом state_message. */
+  async function refreshKlippy() {
+    if (demoMode.value || !client.connected) return
+    clearTimeout(klippyTimer)
+    try {
+      const s = await client.call('server.info')
+      if (!s || !s.klippy_connected) { setKlippy((s && s.klippy_state) || 'disconnected', ''); return }
+      const p = await client.call('printer.info')
+      setKlippy(p.state, p.state_message)
+    } catch {
+      if (client.connected) klippyTimer = setTimeout(refreshKlippy, KLIPPY_POLL)
+    }
+  }
+
+  /** Тост помилки. Однакові повідомлення не множаться — лічильник «×N» і таймер з нуля. */
+  function pushAlert(raw, src) {
+    const info = classify(raw)
+    if (!info.head) return
+    const k = klippy.value
+    if ((k.state === 'shutdown' || k.state === 'error') && (info.id === 'shutdownNow' || (k.info && k.info.head === info.head))) return
+    const a = alerts.value, same = a.find(x => x.info.head === info.head)
+    if (same) {
+      alerts.value = [...a.filter(x => x !== same), { ...same, at: Date.now(), n: same.n + 1, src: src === 'print' ? 'print' : same.src }]
+      return
+    }
+    alerts.value = [...a, { id: ++alertId, at: Date.now(), n: 1, src, info }].slice(-ALERTS_MAX)
+  }
+  const dismissAlert = id => { alerts.value = alerts.value.filter(a => a.id !== id) }
+
+  /**
+   * Перезапуск після помилки: 'fw' — FIRMWARE_RESTART (MCU + хост), 'restart' — RESTART (перечитати конфіг),
+   * 'service' — перезапуск служби klipper через Moonraker (коли Klippy взагалі не підключений).
+   * klippyBusy тримається, доки Klipper не пройде через startup і не стане ready / знову shutdown (або 45 с).
+   */
+  const KLIPPY_RPC = { fw: ['printer.firmware_restart', {}], restart: ['printer.restart', {}], service: ['machine.services.restart', { service: 'klipper' }] }
+  const KLIPPY_CMD = { fw: 'FIRMWARE_RESTART', restart: 'RESTART', service: 'systemctl restart klipper' }
+  function finishBusy() { clearTimeout(busyTimer); klippyBusy.value = null; busyTransit = false }
+  async function klippyAction(kind) {
+    if (!KLIPPY_RPC[kind] || klippyBusy.value) return
+    klippyBusy.value = kind
+    busyTransit = false
+    clearTimeout(busyTimer)
+    busyTimer = setTimeout(finishBusy, 45000)
+    if (DEMO_BUILD && demoMode.value) {
+      setTimeout(() => setKlippy('startup'), 500)
+      setTimeout(() => setKlippy('ready'), 2600)
+      return
+    }
+    try {
+      if (!client.connected) throw new Error('not connected')
+      log('> ' + KLIPPY_CMD[kind], 'c')
+      await client.call(...KLIPPY_RPC[kind])
+      refreshKlippy()
+    } catch (e) {
+      // Klipper може розірвати з'єднання з Moonraker раніше, ніж відповість, — це і є перезапуск
+      if (busyTransit || /disconnect|closed|shutdown/i.test((e && e.message) || '')) { refreshKlippy(); return }
+      finishBusy()
+      throw e
+    }
+  }
+
+  // ---------- демо: імітація помилок для перевірки інтерфейсу (?demoError=<вид>, консоль DEMO_ERROR <вид>) ----------
+  const RESTART_TAIL = '\n\nOnce the underlying issue is corrected, use the\n"FIRMWARE_RESTART" command to reset the firmware, reload the\nconfig, and restart the host software.\nPrinter is shutdown'
+  const DEMO_KLIPPY = {
+    mcu: ['shutdown', "Lost communication with MCU 'EBBCan'" + RESTART_TAIL],
+    timer: ['shutdown', "MCU 'mcu' shutdown: Timer too close\nThis often indicates the host computer is overloaded. Check\nfor other processes consuming excessive CPU time, high swap\nusage, disk errors, overheating, unstable voltage, or\nsimilar system problems on the host computer." + RESTART_TAIL],
+    heater: ['shutdown', "Heater extruder not heating at expected rate\nSee the 'verify_heater' section in docs/Config_Reference.md\nfor the parameters that control this check." + RESTART_TAIL],
+    adc: ['shutdown', "MCU 'EBBCan' shutdown: ADC out of range\nThis generally occurs when a heater temperature exceeds\nits configured min_temp or max_temp." + RESTART_TAIL],
+    estop: ['shutdown', 'Shutdown due to M112 command' + RESTART_TAIL],
+    config: ['error', "Option 'max_temp' in section 'extruder' must be specified\n\nOnce the underlying issue is corrected, use the \"RESTART\"\ncommand to reload the config and restart the host software.\nPrinter is halted"],
+    startup: ['startup', ''], offline: ['disconnected', '']
+  }
+  const DEMO_GCODE = {
+    home: '!! Must home axis first: 120.000 120.000 10.000 [0.000]',
+    range: '!! Move out of range: 400.000 120.000 10.000 [0.000]',
+    cold: "!! Extrude below minimum temp\n!! See the 'min_extrude_temp' config option for details",
+    probe: '!! Probe triggered prior to movement',
+    qgl: '!! Too many retries: aborting QGL',
+    macro: "!! Error evaluating 'gcode_macro PRINT_START:gcode': jinja2.exceptions.UndefinedError: 'BED' is undefined",
+    unknown: '!! Unknown command:"G29"'
+  }
+  function demoError(kind) {
+    if (!DEMO_BUILD || !demoMode.value) return false
+    if (DEMO_GCODE[kind]) { log(DEMO_GCODE[kind]); pushAlert(DEMO_GCODE[kind], 'gcode'); return true }
+    if (kind === 'ready') { setKlippy('ready'); return true }
+    const e = DEMO_KLIPPY[kind]
+    if (!e) return false
+    setKlippy(e[0], e[1])
+    // Демо-запуск сам доходить до «готовий» (у справжньому Klipper так само, без дій користувача)
+    if (kind === 'startup') setTimeout(() => { if (demoMode.value && klippy.value.state === 'startup') setKlippy('ready') }, 6000)
+    return true
   }
 
   async function initObjects() {
@@ -323,11 +475,16 @@ export const usePrinterStore = defineStore('printer', () => {
   }
 
   function mergeStatus(patch) {
+    const prevPrint = (st.print_stats || {}).state
     for (const k in patch) {
       st[k] = Object.assign({}, st[k], patch[k])
       if (patch[k] && patch[k].last_stats && /^mcu( |$)/.test(k)) trackMcu(k, patch[k].last_stats)
       else if (patch[k] && /^canbus_stats /.test(k)) trackCan(k, st[k])
     }
+    // Друк обірвався з помилкою: print_stats.message — причина (дублікат рядка «!!» відсіє pushAlert)
+    const ps = st.print_stats || {}
+    if (ps.state === 'error' && prevPrint && prevPrint !== 'error' && ps.message) pushAlert(ps.message, 'print')
+    if (patch.webhooks && !demoMode.value) setKlippy(st.webhooks.state, st.webhooks.state_message)
     if (demoMode.value) return
     metaOverride.value = null
     maybeLoadGcode()
@@ -388,6 +545,9 @@ export const usePrinterStore = defineStore('printer', () => {
     hwSensors.value = demoHwSensors(heads)
     hostInfo.value = demoHostInfo
     mcuConn.value = demoMcuConn(heads, eds)
+    setKlippy('ready')
+    const de = new URLSearchParams(location.search).get('demoError')
+    if (de) setTimeout(() => demoError(de), 600)
     demoTimer = setInterval(() => {
       // Під час перегляду файлу модель на екрані інша — «друк» на паузі, щоб не малювати прогрес по чужій моделі.
       if (!preview.value && demoJob.state === 'printing') {
@@ -539,6 +699,8 @@ export const usePrinterStore = defineStore('printer', () => {
     if (!cmd) return
     cmdHistory.value.push(cmd)
     log('> ' + cmd, 'c')
+    const dm = DEMO_BUILD && demoMode.value && /^DEMO_ERRORs+(w+)$/i.exec(cmd)
+    if (dm && demoError(dm[1].toLowerCase())) return
     if (demoMode.value || !client.connected) {
       log({ key: demoMode.value ? 'msg.demoNoExec' : 'msg.notConnectedPrinter' }, 'e')
       return
@@ -586,6 +748,35 @@ export const usePrinterStore = defineStore('printer', () => {
    * тож паркування голови тощо — як у Mainsail). Підтвердження скасування — в компоненті.
    * У демо стан змінюється локально (цикл демо-друку зупиняється на паузі).
    */
+  /**
+   * Вирівнювання порталу (кнопка QGL / Z-Tilt). Як у Voron: якщо осі не захомлені — спершу G28,
+   * далі QUAD_GANTRY_LEVEL (або Z_TILT_ADJUST), потім G28 Z (після вирівнювання висота змінюється).
+   * printer.gcode.script повертається лише після виконання — проміс триває рівно стільки, скільки рухається портал.
+   * Помилка Klipper (напр. «Probe triggered prior to movement») — відхилений проміс з текстом.
+   */
+  const levelingBusy = ref(false)
+  async function levelGantry() {
+    const lv = leveling.value
+    if (!lv || levelingBusy.value) return
+    levelingBusy.value = true
+    try {
+      if (DEMO_BUILD && demoMode.value) {
+        mergeStatus({ [lv.obj]: { applied: false } })
+        await new Promise(r => setTimeout(r, 2600))
+        mergeStatus({ [lv.obj]: { applied: true } })
+        return
+      }
+      if (!client.connected) throw new Error('not connected')
+      const homed = String((st.toolhead || {}).homed_axes || '')
+      const cmd = lv.kind === 'ztilt' ? 'Z_TILT_ADJUST' : 'QUAD_GANTRY_LEVEL'
+      const script = (/x/.test(homed) && /y/.test(homed) && /z/.test(homed) ? '' : 'G28\n') + cmd + '\nG28 Z'
+      log('> ' + script.replace(/\n/g, ' · '), 'c')
+      await client.call('printer.gcode.script', { script })
+    } finally {
+      levelingBusy.value = false
+    }
+  }
+
   async function printAction(kind) {
     if (!['pause', 'resume', 'cancel'].includes(kind)) return
     if (demoMode.value) {
@@ -611,6 +802,8 @@ export const usePrinterStore = defineStore('printer', () => {
     // actions
     preview, openPreview, closePreview, printBusy, startPrint,
     on, log, connect, startDemo, exitDemo, autoStart, rpc, sendRaw, consoleSend, call, selectTool, setToolTarget,
-    setHeater, emergencyStop, printAction, mergeStatus
+    setHeater, emergencyStop, printAction, levelGantry, levelingBusy, mergeStatus,
+    // помилки Klipper
+    klippy, alerts, klippyBusy, dismissAlert, klippyAction, refreshKlippy, demoError
   }
 })
