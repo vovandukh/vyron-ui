@@ -41,10 +41,13 @@ export const useUiStore = defineStore('ui', () => {
     cc.value = null
   }
 
-  /** Відкриває ConfirmModal. Promise → true/false, або рядок/null у режимі введення. */
-  function openDialog({ message, input = false }) {
+  /**
+   * Відкриває ConfirmModal. Promise → true/false, або рядок/null у режимі введення.
+   * okKey / cancelKey — власні підписи кнопок (напр. «Скасувати друк» / «Залишити» замість «Так» / «Скасувати»).
+   */
+  function openDialog({ message, input = false, okKey = null, cancelKey = null }) {
     if (dialog.value) dialog.value.resolve(dialog.value.input ? null : false)
-    return new Promise(resolve => { dialog.value = { message, input, resolve } })
+    return new Promise(resolve => { dialog.value = { message, input, okKey, cancelKey, resolve } })
   }
 
   function closeDialog(result) {

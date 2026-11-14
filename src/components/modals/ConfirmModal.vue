@@ -31,8 +31,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
         <div id="dlg-msg" class="msg">{{ tm(ui.dialog.message) }}</div>
         <input v-if="ui.dialog.input" ref="inp" v-model="value" autocomplete="off" spellcheck="false" @keydown.enter="ok">
         <div class="acts">
-          <button @click="cancel">{{ t('common.cancel') }}</button>
-          <button ref="okBtn" class="primary" @click="ok">{{ t('common.ok') }}</button>
+          <button @click="cancel">{{ t(ui.dialog.cancelKey || 'common.cancel') }}</button>
+          <button ref="okBtn" class="primary" @click="ok">{{ t(ui.dialog.okKey || 'common.ok') }}</button>
         </div>
       </div>
     </div>

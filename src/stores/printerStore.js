@@ -582,6 +582,25 @@ export const usePrinterStore = defineStore('printer', () => {
     client.fire('printer.emergency_stop')
   }
 
+  /**
+   * Пауза / продовження / скасування поточного друку — штатні методи Moonraker
+   * (printer.print.pause|resume|cancel викликають макроси PAUSE / RESUME / CANCEL_PRINT принтера,
+   * тож паркування голови тощо — як у Mainsail). Підтвердження скасування — в компоненті.
+   * У демо стан змінюється локально (цикл демо-друку зупиняється на паузі).
+   */
+  async function printAction(kind) {
+    if (!['pause', 'resume', 'cancel'].includes(kind)) return
+    if (demoMode.value) {
+      if (kind === 'pause' && demoJob.state === 'printing') demoJob.state = 'paused'
+      else if (kind === 'resume' && demoJob.state === 'paused') demoJob.state = 'printing'
+      else if (kind === 'cancel') demoJob.state = 'cancelled'
+      mergeStatus({ print_stats: { state: demoJob.state } })
+      return
+    }
+    if (!client.connected) throw new Error('not connected')
+    await client.call('printer.print.' + kind, {})
+  }
+
   return {
     // state
     host, demoMode, link, st, objectList, toolObjects, boardObjects, toolheads, eddies, activeTool, toolStatus, ctlMsg,
@@ -594,6 +613,6 @@ export const usePrinterStore = defineStore('printer', () => {
     // actions
     preview, openPreview, closePreview, printBusy, startPrint,
     on, log, connect, startDemo, exitDemo, autoStart, rpc, sendRaw, consoleSend, call, selectTool, setToolTarget,
-    setHeater, emergencyStop, mergeStatus
+    setHeater, emergencyStop, printAction, mergeStatus
   }
 })

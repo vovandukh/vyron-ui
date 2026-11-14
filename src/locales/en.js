@@ -35,6 +35,10 @@ export default {
   'meta.notConnected': 'Not connected', 'meta.noFile': 'No active file',
   'meta.gcodeError': 'Could not load G-code: {msg}', 'meta.demo': 'Demo · simulated print',
 
+  'print.controls': 'Print controls', 'print.pause': 'Pause', 'print.resume': 'Resume', 'print.cancel': 'Cancel',
+  'print.pausing': 'Pausing…', 'print.resuming': 'Resuming…', 'print.cancelling': 'Cancelling…',
+  'print.cancelConfirm': 'Cancel the current print? It cannot be resumed afterwards.', 'print.failed': 'Command failed — check the connection and console',
+  'print.cancelOk': 'Cancel print', 'print.keep': 'Keep printing',
   'status.nozzle': 'Active nozzle', 'status.bed': 'Bed', 'status.chamber': 'Chamber', 'status.speed': 'Speed',
   'status.fan': 'Fan', 'status.z': 'Z height', 'status.layer': 'Layer', 'status.qgl': 'QGL',
   'status.setNozzle': 'Set nozzle temperature', 'status.setBed': 'Set bed temperature',

@@ -35,6 +35,10 @@ export default {
   'meta.notConnected': 'Не підключено', 'meta.noFile': 'Немає активного файлу',
   'meta.gcodeError': 'Не вдалося завантажити G-code: {msg}', 'meta.demo': 'Демо · імітація друку',
 
+  'print.controls': 'Керування друком', 'print.pause': 'Пауза', 'print.resume': 'Продовжити', 'print.cancel': 'Скасувати',
+  'print.pausing': 'Пауза…', 'print.resuming': 'Продовження…', 'print.cancelling': 'Скасування…',
+  'print.cancelConfirm': 'Скасувати поточний друк? Продовжити його вже не вийде.', 'print.failed': 'Команду не виконано — перевір підключення та консоль',
+  'print.cancelOk': 'Скасувати друк', 'print.keep': 'Залишити',
   'status.nozzle': 'Активне сопло', 'status.bed': 'Стіл', 'status.chamber': 'Камера', 'status.speed': 'Швидкість',
   'status.fan': 'Обдув', 'status.z': 'Висота Z', 'status.layer': 'Шар', 'status.qgl': 'QGL',
   'status.setNozzle': 'Задати температуру сопла', 'status.setBed': 'Задати температуру столу',

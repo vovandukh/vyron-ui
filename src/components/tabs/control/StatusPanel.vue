@@ -9,6 +9,7 @@ import { useI18n } from '../../../composables/useI18n'
 import { heatRgb } from '../../../utils/format'
 import RollNumber from '../../ui/RollNumber.vue'
 import QuickSlider from './QuickSlider.vue'
+import PrintControls from './PrintControls.vue'
 
 const printer = usePrinterStore()
 const ui = useUiStore()
@@ -67,6 +68,10 @@ watch(() => ui.homeTick, () => { open.value = null })   // клік по лог�
           </dd>
         </div>
       </TransitionGroup>
+      <!-- Керування друком: лише під час друку / паузи (не під час 3D-перегляду іншого файлу) -->
+      <Transition name="pcx">
+        <PrintControls v-if="printer.printBusy && !printer.preview" />
+      </Transition>
     </div>
   </Transition>
   <Transition name="qs">
@@ -75,7 +80,7 @@ watch(() => ui.homeTick, () => { open.value = null })   // клік по лог�
 </template>
 
 <style scoped>
-.st{position:fixed;top:calc(var(--hb,72px) + 16px);right:36px;width:min(250px,40vw);margin:0;padding:6px 10px;text-align:left;pointer-events:none;border-radius:18px}
+.st{position:fixed;top:calc(var(--hb,72px) + 16px);right:36px;width:min(268px,40vw);margin:0;padding:6px 10px;text-align:left;pointer-events:none;border-radius:18px}
 .dl{display:grid;margin:0}
 .rw{position:relative;display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:9px 8px;border-radius:11px;max-height:60px;
   transition:background-color var(--t-fast) var(--ease-out),transform var(--t-spring) var(--spring)}
@@ -102,13 +107,18 @@ dd.warn{color:#ffb35c}
 .pn-enter-active,.pn-leave-active{transition:opacity var(--t-mid) var(--ease-out),transform var(--t-spring) var(--spring)}
 .pn-enter-from,.pn-leave-to{opacity:0;transform:translateY(-6px) scale(.98)}
 
+/* Блок керування друком — під тонким розділювачем; з'являється/зникає зміною висоти */
+.st .pc{border-top:1px solid rgba(255,255,255,.06);margin-top:2px;max-height:120px}
+.pcx-enter-active,.pcx-leave-active{transition:max-height var(--t-spring) var(--spring),opacity var(--t-mid) var(--ease-out),padding var(--t-mid) var(--ease-out);overflow:hidden}
+.pcx-enter-from,.pcx-leave-to{max-height:0;opacity:0;padding-top:0;padding-bottom:0}
+
 /* Поповер слайдера: пружне масштабування від рядка */
 .qs-enter-active{transition:transform var(--t-spring) var(--spring),opacity var(--t-fast) var(--ease-out)}
 .qs-leave-active{transition:transform .16s var(--ease-out),opacity .14s var(--ease-out)}
 .qs-enter-from{opacity:0;transform:scale(.8)}
 .qs-leave-to{opacity:0;transform:scale(.94)}
 
-@media(max-width:700px){.st{top:auto;bottom:140px;right:14px;width:min(240px,62vw)}}
+@media(max-width:700px){.st{top:auto;bottom:140px;right:14px;width:min(268px,62vw)}}
 /* Низькі екрани (800×480): компактні рядки, щоб блок не заходив під смугу голів */
 @media(max-height:540px){.st{padding:4px 8px}.rw{padding:5px 8px}dd{font-size:14px}dt{font-size:11px}}
 </style>

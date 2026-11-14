@@ -278,7 +278,7 @@ onDeactivated(() => { offs.forEach(f => f()); offs = []; clearTimeout(fileTimer)
     </div>
     <div v-if="filesLoaded && !files.length" class="empty">{{ t('files.empty') }}</div>
     <div class="files">
-      <div v-for="f in visible" :key="f.path" class="frow" :class="{ busy: f.busy }">
+      <div v-for="(f, i) in visible" :key="f.path" class="frow" :class="{ busy: f.busy }" :style="{ '--i': i % 24 }">
         <div class="th">
           <img v-if="f.thumb" :src="f.thumb" alt="" loading="lazy" @error="badThumbs = { ...badThumbs, [f.path]: true }">
         </div>
@@ -306,7 +306,7 @@ onDeactivated(() => { offs.forEach(f => f()); offs = []; clearTimeout(fileTimer)
 
     <div v-if="rest.length" class="listTitle">{{ t('hist.prevTitle') }}</div>
     <div>
-      <div v-for="r in rest" :key="r.id" class="histRow">
+      <div v-for="(r, i) in rest" :key="r.id" class="histRow" :style="{ '--i': Math.min(i, 16) }">
         <span :class="r.cls" :title="r.text">{{ r.icon }}</span>
         <span class="f" :title="r.path">{{ r.file }}<span v-if="!r.exists && filesLoaded" class="gone"> · {{ t('files.removed') }}</span></span>
         <span class="d">{{ r.date }}</span>
@@ -348,6 +348,9 @@ onDeactivated(() => { offs.forEach(f => f()); offs = []; clearTimeout(fileTimer)
 .files{display:grid;gap:2px}
 .frow{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;padding:7px 10px;border-radius:var(--r-md);transition:background-color var(--t-fast) var(--ease-out)}
 .frow:hover{background:var(--surface-hi)}
+/* Легка каскадна поява рядків (лише при вставці в DOM: завантаження, «Показати ще», пошук) */
+.frow,.histRow,.histCard{animation:row-in var(--t-mid) var(--ease-out) both;animation-delay:calc(var(--i, 0) * 22ms)}
+@keyframes row-in{from{opacity:0;transform:translateY(6px)}}
 .frow.busy{background:rgba(52,199,89,.07);box-shadow:inset 3px 0 0 #34c759}
 .th{width:44px;height:44px;border-radius:var(--r-sm);background:rgba(255,255,255,.03);overflow:hidden;display:grid;place-items:center}
 .th img{width:100%;height:100%;object-fit:contain}
