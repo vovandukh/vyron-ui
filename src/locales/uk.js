@@ -24,6 +24,7 @@ export default {
   'conn.wsError': 'Помилка WebSocket · перевір адресу та доступ', 'conn.lost': 'Зв’язок втрачено · повторне підключення…',
   'conn.addrError': 'Помилка адреси: {msg}',
   'cc.title': 'Центр керування', 'cc.connection': 'Підключення', 'cc.demo': 'Демо-режим', 'cc.demoHint': 'Імітація друку без принтера',
+  'cc.address': 'Адреса',
   'cc.open': 'Центр керування · підключення',
   'island.demo': 'Демо-режим активний', 'island.connected': 'Підключено · {host}', 'island.lost': 'Зв’язок втрачено',
   'island.ready': 'Klipper готовий', 'island.klipperError': 'Помилка Klipper', 'island.qgl': 'Вирівнювання QGL завершено', 'island.ztilt': 'Вирівнювання Z-Tilt завершено',

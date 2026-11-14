@@ -24,6 +24,7 @@ export default {
   'conn.wsError': 'WebSocket error · check the address and access', 'conn.lost': 'Connection lost · reconnecting…',
   'conn.addrError': 'Address error: {msg}',
   'cc.title': 'Control Center', 'cc.connection': 'Connection', 'cc.demo': 'Demo mode', 'cc.demoHint': 'Simulated print, no printer needed',
+  'cc.address': 'Address',
   'cc.open': 'Control Center · connection',
   'island.demo': 'Demo mode active', 'island.connected': 'Connected · {host}', 'island.lost': 'Connection lost',
   'island.ready': 'Klipper ready', 'island.klipperError': 'Klipper error', 'island.qgl': 'Quad gantry level complete', 'island.ztilt': 'Z-Tilt adjust complete',
