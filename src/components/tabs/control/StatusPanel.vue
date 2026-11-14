@@ -49,6 +49,7 @@ const toggle = id => { open.value = open.value === id ? null : id }
 // Рядок зник (немає даних / відключення) або вкладка змінилась — закриваємо його слайдер.
 watch(() => rows.value.some(r => r.id === open.value), has => { if (!has) open.value = null })
 watch(() => ui.view, v => { if (v !== 'main') open.value = null })
+watch(() => ui.homeTick, () => { open.value = null })   // клік по логотипу закриває все
 </script>
 
 <template>

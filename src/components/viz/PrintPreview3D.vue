@@ -9,6 +9,7 @@ import * as THREE from 'three'
 import { usePrinterStore } from '../../stores/printerStore'
 import { useUiStore } from '../../stores/uiStore'
 import { useOrbitCamera } from '../../composables/useOrbitCamera'
+import { useI18n } from '../../composables/useI18n'
 import { model, BED } from '../../services/gcodeModel'
 
 // ---------- кольори ----------
@@ -53,6 +54,10 @@ const printer = usePrinterStore()
 const ui = useUiStore()
 const cv = ref(null)
 const orbit = useOrbitCamera(cv, { ...HOME_ROT, dist: 650, speed: 0.007, minX: -0.1, maxX: 1.5, wheel: true, pan: true, minDist: 20, maxDist: 2200 })
+
+// Кнопка «Скинути ракурс» видна, лише коли камеру зрушено (верхньорівневий ref — щоб шаблон розгорнув його)
+const camMoved = orbit.isCameraMoved
+const { t } = useI18n()
 
 let renderer, scene, cam, lines = null, colAttr = null, raf = 0
 const target = new THREE.Vector3(...IDLE_VIEW.target)
@@ -438,9 +443,28 @@ watch(() => ui.view, kick)
 
 <template>
   <canvas ref="cv" class="bg3d"></canvas>
+  <!-- Скидання ракурсу: з'являється, коли камеру зрушено; подвійний клік/тап по сцені теж працює -->
+  <Transition name="rv">
+    <button v-if="camMoved && ui.view === 'main'" type="button" class="rv glass" :title="t('view.reset')" :aria-label="t('view.reset')" @click="orbit.reset()">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3" /><path d="M4.5 4.5v3.7h3.7" /><circle cx="12" cy="12" r="2.2" /></svg>
+    </button>
+  </Transition>
 </template>
 
 <style scoped>
 .bg3d{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
 .bg3d:active{cursor:grabbing}
+/* Правий нижній кут: на 1440/1024/800 там вільно — не перекриває модель, джог, «%» і телеметрію */
+.rv{position:fixed;right:32px;bottom:24px;z-index:4;width:42px;height:42px;padding:0;border-radius:50%;display:grid;place-items:center;color:var(--ink);cursor:pointer;
+  transition:transform var(--t-spring) var(--spring),color var(--t-fast) var(--ease-out),box-shadow var(--t-mid) var(--ease-out)}
+.rv svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.rv:hover{color:var(--coral);box-shadow:var(--glass-shadow),0 0 18px -4px rgba(255,107,90,.55)}
+.rv:active{transform:scale(.92)}
+.rv:focus-visible{outline:2px solid var(--coral);outline-offset:3px}
+.rv-enter-active{transition:transform var(--t-spring) var(--spring),opacity var(--t-fast) var(--ease-out)}
+.rv-leave-active{transition:transform .2s var(--ease-out),opacity .16s var(--ease-out)}
+.rv-enter-from,.rv-leave-to{opacity:0;transform:scale(.6)}
+@media(max-width:900px){.rv{right:16px;bottom:16px}}
+/* Вузькі екрани: телеметрія внизу праворуч — кнопка у вільному верхньому куті під шапкою */
+@media(max-width:700px){.rv{bottom:auto;top:calc(var(--hb,72px) + 12px)}}
 </style>

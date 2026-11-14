@@ -18,7 +18,28 @@ export const useUiStore = defineStore('ui', () => {
   }
   const closeCc = () => { cc.value = null }
 
-  function go(v) { view.value = v; cc.value = null }
+  /** Підрозділ «Інженерного меню»: 'sys' (діагностика та система) | 'cfg' (конфігурація). Живе всю сесію. */
+  const engSection = ref('sys')
+  /** Розгорнута картка MCU в «Апаратному забезпеченні» (за замовчуванням — основна плата); null — усі згорнуті */
+  const hwOpen = ref('mcu')
+
+  /**
+   * «Додому» (клік по логотипу): вкладка «Керування» + закрити все відкрите — центр керування, вікно температури,
+   * а поповери самого «Керування» (слайдер телеметрії, меню голови) слухають homeTick.
+   */
+  const homeTick = ref(0)
+  function goHome() {
+    go('main')
+    tempModal.value = null
+    homeTick.value++
+  }
+
+  function go(v) {
+    // Стара адреса вкладки «Конфіг» тепер — підрозділ «Інженерного меню»
+    if (v === 'cfg') { engSection.value = 'cfg'; v = 'eng' }
+    view.value = v
+    cc.value = null
+  }
 
   /** Відкриває ConfirmModal. Promise → true/false, або рядок/null у режимі введення. */
   function openDialog({ message, input = false }) {
@@ -32,5 +53,5 @@ export const useUiStore = defineStore('ui', () => {
     d?.resolve(result)
   }
 
-  return { view, tempModal, dialog, cc, toggleCc, closeCc, go, openDialog, closeDialog }
+  return { view, tempModal, dialog, cc, toggleCc, closeCc, engSection, hwOpen, homeTick, goHome, go, openDialog, closeDialog }
 })

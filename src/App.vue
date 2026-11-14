@@ -12,8 +12,7 @@ import ControlTab from './components/tabs/ControlTab.vue'
 import ConsoleTab from './components/tabs/ConsoleTab.vue'
 import BedMeshTab from './components/tabs/BedMeshTab.vue'
 import HistoryTab from './components/tabs/HistoryTab.vue'
-import EngineeringTab from './components/tabs/EngineeringTab.vue'
-import ConfigTab from './components/tabs/ConfigTab.vue'
+import EngineeringMenu from './components/tabs/EngineeringMenu.vue'
 
 import SettingsModal from './components/modals/SettingsModal.vue'
 import UpdatesModal from './components/modals/UpdatesModal.vue'
@@ -26,7 +25,7 @@ const ui = useUiStore()
 
 // Панелі поверх 3D-сцени. «Керування» (main) — сама сцена з елементами керування.
 const panels = {
-  console: ConsoleTab, mesh: BedMeshTab, hist: HistoryTab, eng: EngineeringTab, cfg: ConfigTab,
+  console: ConsoleTab, mesh: BedMeshTab, hist: HistoryTab, eng: EngineeringMenu,
   set: SettingsModal, upd: UpdatesModal, net: WifiModal
 }
 const panel = computed(() => panels[ui.view] || null)

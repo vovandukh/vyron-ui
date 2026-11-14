@@ -13,7 +13,7 @@ const settings = useSettingsStore()
 const { t } = useI18n()
 
 // Головки окремої вкладки не мають: деталі голови відкриваються кліком по T0…TN у смузі на «Керуванні».
-const tabs = ['main', 'console', 'mesh', 'hist', 'eng', 'cfg']
+const tabs = ['main', 'console', 'mesh', 'hist', 'eng']
 // Назва принтера в шапці та вкладці браузера — завжди «Voron 2.4» (hostname хоста, напр. bigtreetech-cb1, не показуємо).
 document.title = 'Voron 2.4'
 
@@ -54,7 +54,10 @@ onBeforeUnmount(() => { removeEventListener('resize', onResize); ro?.disconnect(
 <template>
   <header ref="hd" class="hd">
     <div class="lead">
-      <span class="wm"><img :src="logo" width="30" height="30" alt="Voron"><b>VORON</b><i>2.4</i></span>
+      <!-- Логотип — «Додому»: вкладка «Керування» + закрити поповери й меню -->
+      <button type="button" class="wm" :title="t('nav.home')" :aria-label="t('nav.home')" @click="ui.goHome()">
+        <img :src="logo" width="30" height="30" alt=""><b>VORON</b><i>2.4</i>
+      </button>
       <StatusIsland />
     </div>
     <nav ref="nav" class="nav glass">
@@ -73,7 +76,14 @@ onBeforeUnmount(() => { removeEventListener('resize', onResize); ro?.disconnect(
 /* row-gap після gap: шорткат gap інакше скидає row-gap до 20px */
 .hd{position:fixed;top:20px;left:32px;right:32px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:20px;row-gap:8px;font-size:12px;color:var(--dim);pointer-events:none;z-index:8}
 .lead{display:flex;align-items:center;gap:14px;min-width:0}
-.wm{display:flex;align-items:center;gap:12px;font-weight:600;color:var(--ink);letter-spacing:.15em;white-space:nowrap}
+.wm{display:flex;align-items:center;gap:12px;font:inherit;font-weight:600;color:var(--ink);letter-spacing:.15em;white-space:nowrap;
+  background:none;border:0;padding:4px 8px 4px 4px;margin:-4px -8px -4px -4px;border-radius:12px;cursor:pointer;pointer-events:auto;
+  transition:transform var(--t-spring) var(--spring),background-color var(--t-fast) var(--ease-out)}
+.wm:hover{background:rgba(255,255,255,.05)}
+.wm:hover img{filter:drop-shadow(0 0 8px rgba(240,58,46,.55))}
+.wm:active{transform:scale(.96)}
+.wm:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
+.wm img{transition:filter var(--t-mid) var(--ease-out)}
 .wm b{color:var(--red);font-weight:600}
 .wm i{font-style:normal;font-weight:200;color:var(--dim);max-width:220px;overflow:hidden;text-overflow:ellipsis}
 .wm img{display:block}

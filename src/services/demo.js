@@ -89,19 +89,30 @@ export function demoStaticStatus(toolheads, eddies = {}) {
     fan: { speed: 0.4 },
     quad_gantry_level: { applied: true },
     bed_mesh: demoMesh(),
-    mcu: { mcu_version: 'v0.13.0-573-g644cda5e', last_stats: { mcu_task_avg: 0.000066, mcu_task_stddev: 0.000057, freq: 63998525 } }
+    mcu: { mcu_version: 'v0.13.0-573-g644cda5e', mcu_build_versions: 'gcc: (15:14.2.rel1-1) 14.2.1 20241119 binutils: 2.42', mcu_constants: { MCU: 'stm32g0b1xx', CLOCK_FREQ: 64000000 },
+      last_stats: { mcu_task_avg: 0.000066, mcu_task_stddev: 0.000057, freq: 63998525, bytes_retransmit: 0, bytes_invalid: 0 } },
+    // Залізо: чип основної плати й хост (Raspberry Pi) — для «Інженерного меню»
+    'mcu host': { mcu_version: 'v0.13.0-573-g644cda5e', mcu_build_versions: 'gcc: (Debian 12.2.0-14) 12.2.0 binutils: 2.40', mcu_constants: { MCU: 'linux', CLOCK_FREQ: 50000000 },
+      last_stats: { mcu_task_avg: 0.00001, mcu_task_stddev: 0.000014, freq: 49999964, bytes_retransmit: 0, bytes_invalid: 0 } },
+    'temperature_sensor mcu_temp': { temperature: 41.2 },
+    'temperature_sensor raspberry_pi': { temperature: 51.8 },
+    system_stats: { sysload: 0.62, cputime: 4210.5, memavail: 2563000 }
   }
   Object.values(toolheads).filter(Boolean).forEach((th, i) => {
+    if (th.link === 'can') st['canbus_stats ' + th.mcu] = { bus_state: 'active', rx_error: 0, tx_error: 0, tx_retries: 0 }
     st[th.mcuObj] = {
       mcu_version: 'v0.13.0-' + (560 + i * 7) + '-g' + (0xaea1bcf56 + i).toString(16).slice(0, 9),
-      last_stats: { mcu_task_avg: 0.000012 + i * 0.000004, mcu_task_stddev: 0.000014, freq: th.link === 'usb' ? 133000000 : 63999071 }
+      mcu_build_versions: 'gcc: (15:12.2.rel1-1) 12.2.1 20221205 binutils: 2.40',
+      mcu_constants: th.link === 'usb' ? { MCU: 'rp2040', CLOCK_FREQ: 12000000 } : { MCU: 'stm32g0b1xx', CLOCK_FREQ: 64000000 },
+      last_stats: { mcu_task_avg: 0.000012 + i * 0.000004, mcu_task_stddev: 0.000014, freq: th.link === 'usb' ? 12000391 : 63999071, bytes_retransmit: 0, bytes_invalid: 0 }
     }
   })
   for (const list of Object.values(eddies)) for (const e of list) {
     st[e.probeObj] = { name: e.probeObj, last_query: false, last_z_result: 0 }
     if (e.link === 'can') {
-      st[e.mcuObj] = { mcu_version: 'v0.13.0-656-g4cc47cf56', last_stats: { mcu_task_avg: 0.000007, mcu_task_stddev: 0.000012, freq: 133000000 } }
-      if (e.canStatsObj) st[e.canStatsObj] = { bus_state: 'active', rx_error: 0, tx_error: 0 }
+      st[e.mcuObj] = { mcu_version: 'v0.13.0-656-g4cc47cf56', mcu_build_versions: 'gcc: (15:12.2.rel1-1) 12.2.1 20221205 binutils: 2.40', mcu_constants: { MCU: 'rp2040', CLOCK_FREQ: 12000000 },
+        last_stats: { mcu_task_avg: 0.000007, mcu_task_stddev: 0.000012, freq: 12000428, bytes_retransmit: 0, bytes_invalid: 0 } }
+      if (e.canStatsObj) st[e.canStatsObj] = { bus_state: 'active', rx_error: 0, tx_error: 0, tx_retries: 0 }
     }
   }
   return st
@@ -136,11 +147,32 @@ export function demoTickStatus({ pos, progress, activeTool, tools, toolheads, ed
     if (e.tempProbeObj) patch[e.tempProbeObj] = { temperature: 41.5 + warm + progress * 3, compensation_enabled: true }
     if (e.chipObj) patch[e.chipObj] = { temperature: 46.8 + warm / 2 }
   }))
+  for (const [obj, m] of demoMcuList(toolheads, eddies)) patch[obj] = { last_stats: demoMcuStats(m) }
+  // Хост «живе»: легке коливання навантаження, пам'яті й температур чипів
+  const w = Math.sin(Date.now() / 2300)
+  patch.system_stats = { sysload: +(0.62 + 0.18 * w).toFixed(2), cputime: 4210.5 + (Date.now() / 1000) % 1000, memavail: 2563000 - Math.round(24000 * w) }
+  patch['temperature_sensor mcu_temp'] = { temperature: 41.2 + 0.6 * w }
+  patch['temperature_sensor raspberry_pi'] = { temperature: 51.8 + 1.4 * Math.sin(Date.now() / 3100) }
   return patch
 }
 
+/** Демо-хост для machine.system_info */
+export const demoHostInfo = {
+  cpu_info: { cpu_count: 4, model: 'Raspberry Pi 4 Model B Rev 1.4', cpu_desc: 'Cortex-A72', hardware_desc: 'BCM2711', total_memory: 3884000, memory_units: 'kB' },
+  distribution: { name: 'Debian GNU/Linux 12 (bookworm)' }
+}
+
+/** Демо-датчики температури чипів: основна плата, хост і плати голів. */
+export function demoHwSensors(toolheads) {
+  return [
+    { obj: 'temperature_sensor mcu_temp', name: 'mcu_temp', type: 'mcu', mcu: 'mcu' },
+    { obj: 'temperature_sensor raspberry_pi', name: 'raspberry_pi', type: 'host', mcu: null },
+    ...Object.values(toolheads).filter(Boolean).map(th => ({ obj: th.sensors[0].obj, name: th.sensors[0].name, type: 'mcu', mcu: th.mcu }))
+  ]
+}
+
 export const demoSysInfo = {
-  sver: 'v0.12.x', shost: 'voron', sstate: 'ready', cpu: 18, cpuTemp: 52, memPct: 34, memGb: '3.7', uptimeKey: 'eng.demoUptime'
+  sver: 'v0.13.0-573-g644cda5e', shost: 'voron', sstate: 'ready', cpu: 18, cpuTemp: 52, memPct: 34, memGb: '3.7', uptimeKey: 'eng.demoUptime'
 }
 
 export const demoNetworks = [
@@ -248,4 +280,31 @@ export function demoPreviewModel(path) {
     }
   }
   return { P: Float32Array.from(out), F: off, T: Uint8Array.from(tools), total: off.length }
+}
+
+// ---------- демо-MCU: живі last_stats і підключення ----------
+const DEMO_T0 = Date.now() / 1000 - 1800
+/** [[об'єкт MCU, { freq, w, r, task }]] — трафік (Б/с) приблизно як на реальному Voron */
+function demoMcuList(toolheads, eddies) {
+  const out = [['mcu', { freq: 63998612, w: 32, r: 340, task: 0.00001 }], ['mcu host', { freq: 49999964, w: 30, r: 95, task: 0.00001 }]]
+  Object.values(toolheads).filter(Boolean).forEach((th, i) => out.push([th.mcuObj, th.link === 'usb' ? { freq: 12000391, w: 55, r: 610, task: 0.000012 } : { freq: 63999598 - i * 37, w: 60, r: 650, task: 0.000011 + i * 0.000001 }]))
+  for (const list of Object.values(eddies)) for (const e of list) if (e.link === 'can') out.push([e.mcuObj, { freq: 12000428, w: 59, r: 652, task: 0.000007 }])
+  return out
+}
+function demoMcuStats(m) {
+  const t = Date.now() / 1000 - DEMO_T0, j = Math.sin(t * 1.7 + m.freq)
+  return {
+    mcu_awake: +(0.0015 + 0.0008 * j).toFixed(4), mcu_task_avg: m.task, mcu_task_stddev: m.task * 0.9,
+    bytes_write: Math.round(t * m.w), bytes_read: Math.round(t * m.r), bytes_retransmit: 0, bytes_invalid: 0,
+    srtt: +(0.0011 + 0.0002 * j).toFixed(4), rttvar: 0.0003, rto: 0.025, freq: m.freq
+  }
+}
+/** Підключення демо-плат: основна — USB, голови — CAN/USB, Eddy — CAN, host — процес Linux */
+export function demoMcuConn(toolheads, eddies) {
+  const out = { mcu: { kind: 'usb', id: 'usb-Klipper_stm32g0b1xx_0A002D0015504D5930313820-if00' }, 'mcu host': { kind: 'linux', id: '/tmp/klipper_host_mcu' } }
+  Object.values(toolheads).filter(Boolean).forEach((th, i) => {
+    out[th.mcuObj] = th.link === 'can' ? { kind: 'can', iface: 'can0', id: (0x5bff930ca785 + i * 0x1111).toString(16) } : { kind: 'usb', id: 'usb-Klipper_rp2040_E66138935F4B' + i + 'A28-if00' }
+  })
+  for (const list of Object.values(eddies)) for (const e of list) if (e.link === 'can') out[e.mcuObj] = { kind: 'can', iface: 'can0', id: '9cd6391e8623' }
+  return out
 }

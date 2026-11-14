@@ -82,7 +82,7 @@ onBeforeUnmount(() => removeEventListener('beforeunload', beforeUnload))
 </script>
 
 <template>
-  <section class="view">
+  <div class="cfgPane">
     <div class="ce">
       <aside class="ceSide">
         <input v-model="filter" type="search" :placeholder="t('cfg.search')" :aria-label="t('cfg.search')">
@@ -107,10 +107,12 @@ onBeforeUnmount(() => removeEventListener('beforeunload', beforeUnload))
         </div>
       </div>
     </div>
-  </section>
+  </div>
 </template>
 
 <style scoped>
+/* Підрозділ «Конфігурація» всередині панелі «Інженерного меню» — займає всю висоту, що лишилась */
+.cfgPane{display:flex;flex-direction:column;flex:1;min-height:0}
 .ce{display:grid;grid-template-columns:220px minmax(0,1fr);gap:14px;flex:1;min-height:0}
 .ceSide,.ceMain{display:flex;flex-direction:column;gap:8px;min-height:0}
 .ceSide{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r-lg);padding:8px}

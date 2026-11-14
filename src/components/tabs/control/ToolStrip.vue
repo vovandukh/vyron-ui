@@ -31,6 +31,7 @@ const close = () => { open.value = null }
 
 // Меню закривається, коли смуга зникає: інша вкладка, голова пропала з конфігу, перепідключення.
 watch(() => ui.view, v => { if (v !== 'main') close() })
+watch(() => ui.homeTick, close)   // клік по логотипу закриває все
 watch(() => printer.toolObjects, list => { if (open.value && !list.includes(open.value.name)) close() })
 
 // ---------- спільна підсвітка вибору ----------

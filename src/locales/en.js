@@ -1,6 +1,6 @@
 export default {
   'nav.main': 'Control', 'nav.console': 'Console', 'nav.mesh': 'Bed mesh',
-  'nav.hist': 'History', 'nav.eng': 'Engineering', 'nav.cfg': 'Config',
+  'nav.hist': 'History', 'nav.eng': 'Engineering',
 
   'common.set': 'Set', 'common.off': 'Turn off', 'common.cancel': 'Cancel', 'common.save': 'Save', 'common.ok': 'OK',
   'fmt.hm': '{h} h {m} min', 'fmt.m': '{m} min',
@@ -27,6 +27,7 @@ export default {
   'cc.open': 'Control Center · connection',
   'island.demo': 'Demo mode active', 'island.connected': 'Connected · {host}', 'island.lost': 'Connection lost',
   'island.ready': 'Klipper ready', 'island.klipperError': 'Klipper error', 'island.qgl': 'Quad gantry level complete', 'island.ztilt': 'Z-Tilt adjust complete',
+  'view.reset': 'Reset view', 'nav.home': 'Home — Control',
   'island.detail': '{state} · {host}', 'island.demoHost': 'local simulation', 'island.noHost': 'no host set', 'island.peekTitle': 'Printer status and address',
   'island.printStart': 'Print started', 'island.printDone': 'Print complete', 'island.paused': 'Print paused',
   'island.printError': 'Print error', 'island.cancelled': 'Print cancelled',
@@ -79,6 +80,14 @@ export default {
   'hist.totals': 'Total prints: {n} · Print time: {time} · Filament: {fil} m',
   'hist.unavailable': 'History unavailable: {msg} (needs [history] in moonraker.conf)',
 
+  'eng.secSys': 'Diagnostics & system', 'eng.secCfg': 'Configuration', 'eng.system': 'System',
+  'hw.title': 'Hardware & MCU', 'hw.host': 'Host', 'hw.mainBoard': 'Main board', 'hw.cores': '{n} cores', 'hw.ram': '{gb} GB RAM',
+  'hw.cpuLoad': 'CPU load', 'hw.ramUsed': 'Memory', 'hw.hostTemp': 'Temperature', 'hw.sysload': 'Load average',
+  'hw.hostMcu': 'Host (Linux)', 'hw.firmware': 'Klipper firmware', 'hw.link': 'Connection', 'hw.linuxProc': 'Linux process',
+  'hw.clock': 'Clock', 'hw.mcuLoad': 'Load', 'hw.latency': 'Latency (srtt)', 'hw.bandwidth': 'Traffic', 'hw.transferred': 'Transferred',
+  'hw.canBus': 'CAN bus', 'hw.temp.mcu': 'Chip temperature', 'hw.temp.board': 'Board temperature', 'hw.temp.host': 'Host temperature',
+  'hw.mhz': 'MHz', 'hw.retransmit': 'Retransmits', 'hw.invalid': 'Invalid',
+  'hw.bus.ok': 'Link stable', 'hw.bus.warn': 'Packet loss growing (retransmit / invalid)', 'hw.bus.off': 'MCU not responding',
   'eng.klipper': 'Klipper', 'eng.host': 'Host', 'eng.state': 'State', 'eng.cpu': 'CPU', 'eng.cpuTemp': 'CPU temperature',
   'eng.mem': 'Memory', 'eng.uptime': 'Uptime', 'eng.memVal': '{p}% of {gb} GB', 'eng.demoUptime': '3 days',
   'eng.confirmRestart': 'Restart Klipper?', 'eng.confirmFw': 'Run firmware restart?',

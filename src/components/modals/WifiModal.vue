@@ -145,7 +145,6 @@ gcode:
 .net button{cursor:pointer;font-weight:500}
 
 .net pre{background:rgba(0,0,0,.32);border:1px solid var(--hair);border-radius:var(--r-md);padding:12px;overflow:auto;font:12px/1.5 var(--mono)}
-.net summary{cursor:pointer;color:var(--dim);font-size:13px}
 .wfl{display:grid;gap:4px;max-width:480px;max-height:240px;overflow:auto}
 .wfn{display:flex;justify-content:space-between;gap:12px;text-align:left}
 .wfn span:last-child{color:var(--dim);white-space:nowrap}

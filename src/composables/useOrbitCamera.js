@@ -1,4 +1,4 @@
-import { onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
 
@@ -26,6 +26,19 @@ export function useOrbitCamera(elRef, opts) {
   const ptr = new Map()                 // активні вказівники: id → {x, y}
   let mv = { x: 0, y: 0, t: 0 }         // згладжена швидкість перетягування (для інерції)
   let tap = { t: 0, x: 0, y: 0 }, downAt = null, gesture = null
+
+  /**
+   * Реактивний прапорець: камеру зрушено з вихідного ракурсу (за наміром користувача — goal, не поточна позиція,
+   * тож після скидання кнопка ховається одразу). Пороги: 0.03 рад обертання, 3% відстані, 2 од. панорами.
+   */
+  const isCameraMoved = ref(false)
+  const TAU = Math.PI * 2
+  function checkMoved() {
+    const dy = Math.abs(((goal.rotY - home.rotY) % TAU + TAU + Math.PI) % TAU - Math.PI)
+    const m = dy > 0.03 || Math.abs(goal.rotX - home.rotX) > 0.03 ||
+      Math.abs(goal.dist - home.dist) > home.dist * 0.03 || Math.hypot(goal.panX, goal.panY) > 2
+    if (m !== isCameraMoved.value) isCameraMoved.value = m
+  }
 
   const setRotX = v => { goal.rotX = clamp(v, o.minX, o.maxX) }
   const setDist = v => { goal.dist = clamp(v, o.minDist, o.maxDist) }
@@ -103,12 +116,14 @@ export function useOrbitCamera(elRef, opts) {
     /** Пружне повернення у вихідний ракурс (подвійний тап). Оберт іде коротшим шляхом. */
     reset() {
       fling.x = fling.y = 0
-      const TAU = Math.PI * 2
       const wrap = Math.round((cur.rotY - home.rotY) / TAU) * TAU
       cur.rotY -= wrap; goal.rotY = home.rotY
       goal.rotX = home.rotX; goal.dist = home.dist; goal.panX = 0; goal.panY = 0
+      checkMoved()
       s.wake?.()
     },
+    /** true — камеру зрушено з вихідного ракурсу (для кнопки «Скинути ракурс») */
+    isCameraMoved,
     /** Крок фізики. true — камера ще рухається або її тягнуть. */
     update(now) {
       let dt = last ? Math.min(0.05, (now - last) / 1000) : 0
@@ -123,6 +138,7 @@ export function useOrbitCamera(elRef, opts) {
         fling.x *= f; fling.y *= f
         if (Math.abs(fling.x) < 0.01 && Math.abs(fling.y) < 0.01) fling.x = fling.y = 0
       }
+      checkMoved()
       let moving = dragging || !!(fling.x || fling.y)
       while (dt > 0) {
         const h = Math.min(dt, 1 / 120)

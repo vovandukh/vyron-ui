@@ -2,14 +2,14 @@ import { defineStore } from 'pinia'
 import { ref, shallowReactive, computed } from 'vue'
 import { MoonrakerClient, normalizeHost, resolveHost, rememberHost, savedHost } from '../services/moonrakerClient'
 import { fetchGcode, startPrintFile } from '../services/moonrakerApi'
-import { discoverTools, subscriptionObjects, STATE_KEYS, toolNum, findChamber, findLeveling } from '../services/klipper'
+import { discoverTools, subscriptionObjects, STATE_KEYS, toolNum, findChamber, findLeveling, findMcus, findHwSensors, mcuConnections } from '../services/klipper'
 import { detectToolheads, toolheadObjects } from '../services/toolheads'
 import { detectEddy, eddyObjects } from '../services/eddy'
 import { parseGcode } from '../services/gcodeParser'
 import { model, loadModel, indexForPos, segEnd, layerLabel } from '../services/gcodeModel'
 import {
   DEMO_DEFAULT_TOOLS, DEMO_MAX_TOOLS, DEMO_STEP, DEMO_INTERVAL, demoTools, demoToolheads, demoEddies, demoPreviewModel, resetDemoFiles, DEMO_PRINTING_FILE,
-  demoGcode, demoStaticStatus, demoTickStatus
+  demoGcode, demoStaticStatus, demoTickStatus, demoHwSensors, demoHostInfo, demoMcuConn
 } from '../services/demo'
 
 const LOG_MAX = 500
@@ -126,6 +126,15 @@ export const usePrinterStore = defineStore('printer', () => {
   const qgl = computed(() => (leveling.value ? (st[leveling.value.obj] || {}).applied ?? null : null))
   /** Межі нагрівачів з printer.cfg (max_temp): { extruder: 300, heater_bed: 120, … } */
   const heaterMax = ref({})
+  // ---------- залізо: MCU, хост ----------
+  /** Усі мікроконтролери з printer.objects.list ('mcu', 'mcu EBBCan', …) */
+  const mcuObjects = computed(() => findMcus(objectList.value))
+  /** Датчики температури чипів плат і хоста: [{ obj, name, type: 'mcu'|'host', mcu }] */
+  const hwSensors = ref([])
+  /** machine.system_info хоста (модель, CPU, RAM) — запитується раз на підключення */
+  const hostInfo = ref(null)
+  /** Підключення кожного MCU з printer.cfg: { obj: { kind: 'usb'|'can'|'uart'|'linux', iface?, id } } */
+  const mcuConn = ref({})
 
   const progressPct = computed(() => {
     // Під час 3D-перегляду файлу модель — не поточний друк; прогрес друку беремо з virtual_sdcard.
@@ -172,6 +181,12 @@ export const usePrinterStore = defineStore('printer', () => {
     for (const k of Object.keys(st)) delete st[k]
     objectList.value = []
     heaterMax.value = {}
+    hwSensors.value = []
+    hostInfo.value = null
+    mcuBadAt.value = {}
+    mcuRate.value = {}
+    mcuConn.value = {}
+    for (const k in mcuSeen) delete mcuSeen[k]
     toolObjects.value = []
     boardObjects.value = {}
     toolheads.value = {}
@@ -266,15 +281,52 @@ export const usePrinterStore = defineStore('printer', () => {
           .map(n => [n, Number((settings[n] || {}).max_temp)]).filter(([, v]) => v > 0))
         toolheads.value = detectToolheads(settings, tools, objectList.value)
         eddies.value = detectEddy(settings, tools, toolheads.value, objectList.value)
+        hwSensors.value = findHwSensors(objectList.value, settings)
+        mcuConn.value = mcuConnections(settings, findMcus(objectList.value))
         extra = [...toolheadObjects(toolheads.value), ...eddyObjects(eddies.value)]
-      } catch { toolheads.value = {}; eddies.value = {} }
+      } catch { toolheads.value = {}; eddies.value = {}; hwSensors.value = findHwSensors(objectList.value) }
+      // Телеметрія заліза: усі MCU (версія, last_stats з retransmit/invalid), навантаження хоста, датчики чипів
+      extra.push(...findMcus(objectList.value), 'system_stats', ...hwSensors.value.map(s => s.obj),
+        ...objectList.value.filter(n => /^canbus_stats /.test(n)))
+      client.call('machine.system_info', {}).then(r => { hostInfo.value = (r && r.system_info) || null }).catch(() => {})
       const s = await client.call('printer.objects.subscribe', { objects: subscriptionObjects(objectList.value, tools, boards, extra) })
       if (s && s.status) mergeStatus(s.status)
     } catch { /* помилку вже записано в консоль */ }
   }
 
+  /**
+   * Стабільність шини MCU: момент останнього зростання bytes_retransmit / bytes_invalid для кожного MCU.
+   * Відстежується в сторі від самого підключення — щоб «Інженерне меню» бачило втрати, що сталися, поки воно було закрите.
+   */
+  const mcuBadAt = ref({})
+  /** Трафік кожного MCU, Б/с: { 'mcu EBBCan': { w, r } } — з приросту bytes_write / bytes_read */
+  const mcuRate = ref({})
+  const mcuSeen = {}
+  const markBad = k => { mcuBadAt.value = { ...mcuBadAt.value, [k]: Date.now() } }
+  function trackMcu(k, ls) {
+    const r = Number(ls.bytes_retransmit) || 0, i = Number(ls.bytes_invalid) || 0, p = mcuSeen[k]
+    const bw = Number(ls.bytes_write), br = Number(ls.bytes_read), t = performance.now()
+    if (p && (r > p.r || i > p.i)) markBad(k)
+    if (p && p.t && Number.isFinite(bw) && Number.isFinite(br) && t - p.t > 400 && bw >= p.bw && br >= p.br) {
+      const dt = (t - p.t) / 1000
+      mcuRate.value = { ...mcuRate.value, [k]: { w: (bw - p.bw) / dt, r: (br - p.br) / dt } }
+      mcuSeen[k] = { r, i, bw, br, t }
+    } else mcuSeen[k] = { r, i, bw: p && t - p.t <= 400 ? p.bw : bw, br: p && t - p.t <= 400 ? p.br : br, t: p && t - p.t <= 400 ? p.t : t }
+  }
+  /** CAN-шина: помилки прийому/передачі, що ростуть, — теж ознака нестабільного зв'язку (tx_retries — лише показуємо) */
+  function trackCan(k, s) {
+    const mk = 'mcu ' + k.slice(13), key = k + '#', p = mcuSeen[key]
+    const rx = Number(s.rx_error) || 0, tx = Number(s.tx_error) || 0
+    if (p && (rx > p.rx || tx > p.tx)) markBad(mk)
+    mcuSeen[key] = { rx, tx }
+  }
+
   function mergeStatus(patch) {
-    for (const k in patch) st[k] = Object.assign({}, st[k], patch[k])
+    for (const k in patch) {
+      st[k] = Object.assign({}, st[k], patch[k])
+      if (patch[k] && patch[k].last_stats && /^mcu( |$)/.test(k)) trackMcu(k, patch[k].last_stats)
+      else if (patch[k] && /^canbus_stats /.test(k)) trackCan(k, st[k])
+    }
     if (demoMode.value) return
     metaOverride.value = null
     maybeLoadGcode()
@@ -331,6 +383,9 @@ export const usePrinterStore = defineStore('printer', () => {
     mergeStatus(demoTickStatus({ pos: null, progress: 0, state: 'printing', filename: demoJob.file, activeTool: 0, tools, toolheads: heads, eddies: eds, heat: demoHeatStep(tools) }))
     objectList.value = Object.keys(st)
     heaterMax.value = Object.fromEntries([...tools.map(n => [n, 300]), ['heater_bed', 120]])
+    hwSensors.value = demoHwSensors(heads)
+    hostInfo.value = demoHostInfo
+    mcuConn.value = demoMcuConn(heads, eds)
     demoTimer = setInterval(() => {
       // Під час перегляду файлу модель на екрані інша — «друк» на паузі, щоб не малювати прогрес по чужій моделі.
       if (!preview.value && demoJob.state === 'printing') {
@@ -535,6 +590,7 @@ export const usePrinterStore = defineStore('printer', () => {
     connected, isPrinting, printState, stateLabel, meta, activeToolName, canSwitchTools, toolCount, nozzleTemp, bedTemp, chamberTemp,
     speedFactor, fanSpeed, position, qgl, progressPct, etaSeconds, layerText, nozzleHeater,
     nozzleTarget, bedTarget, hasBed, hasFan, chamberObj, leveling, heaterMax, quickSet,
+    mcuObjects, hwSensors, hostInfo, mcuBadAt, mcuRate, mcuConn,
     // actions
     preview, openPreview, closePreview, printBusy, startPrint,
     on, log, connect, startDemo, exitDemo, autoStart, rpc, sendRaw, consoleSend, call, selectTool, setToolTarget,
