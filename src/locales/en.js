@@ -23,6 +23,13 @@ export default {
   'conn.connectingTo': 'Connecting to {host}…', 'conn.connectedTo': 'Connected · {host}',
   'conn.wsError': 'WebSocket error · check the address and access', 'conn.lost': 'Connection lost · reconnecting…',
   'conn.addrError': 'Address error: {msg}',
+  'cc.title': 'Control Center', 'cc.connection': 'Connection', 'cc.demo': 'Demo mode', 'cc.demoHint': 'Simulated print, no printer needed',
+  'cc.open': 'Control Center · connection',
+  'island.demo': 'Demo mode active', 'island.connected': 'Connected · {host}', 'island.lost': 'Connection lost',
+  'island.ready': 'Klipper ready', 'island.klipperError': 'Klipper error', 'island.qgl': 'Quad gantry level complete', 'island.ztilt': 'Z-Tilt adjust complete',
+  'island.detail': '{state} · {host}', 'island.demoHost': 'local simulation', 'island.noHost': 'no host set', 'island.peekTitle': 'Printer status and address',
+  'island.printStart': 'Print started', 'island.printDone': 'Print complete', 'island.paused': 'Print paused',
+  'island.printError': 'Print error', 'island.cancelled': 'Print cancelled',
 
   'meta.notConnected': 'Not connected', 'meta.noFile': 'No active file',
   'meta.gcodeError': 'Could not load G-code: {msg}', 'meta.demo': 'Demo · simulated print',
@@ -30,7 +37,8 @@ export default {
   'status.nozzle': 'Active nozzle', 'status.bed': 'Bed', 'status.chamber': 'Chamber', 'status.speed': 'Speed',
   'status.fan': 'Fan', 'status.z': 'Z height', 'status.layer': 'Layer', 'status.qgl': 'QGL',
   'status.setNozzle': 'Set nozzle temperature', 'status.setBed': 'Set bed temperature',
-  'status.qglDone': 'leveled', 'status.qglNot': 'not done',
+  'status.qglDone': 'leveled', 'status.qglNot': 'not leveled', 'status.ztilt': 'Z-Tilt',
+  'qs.now': 'Now', 'qs.target': 'Target', 'qs.off': 'Off', 'qs.exact': 'Exact value…', 'qs.adjust': 'Quick adjust: {name}',
 
   'jog.home': 'Home all axes', 'jog.motorsOff': 'Disable motors (M84)', 'jog.motorsOffAria': 'Disable motors',
   'jog.badDistance': 'Enter a valid distance greater than 0',
@@ -57,6 +65,9 @@ export default {
 
   'console.placeholder': 'G-code, e.g. G28', 'console.send': 'Send',
 
+  'console.macros': 'Quick macros',
+  'mesh.save': 'Save profile', 'mesh.saveConfirm': 'Save the mesh as profile default and run SAVE_CONFIG? Klipper will restart.',
+  'mesh.profile': 'Profile', 'mesh.savedShort': 'saved', 'mesh.min': 'Min, mm', 'mesh.max': 'Max, mm', 'mesh.range': 'Range, mm', 'mesh.exag': 'Scale',
   'mesh.calibrate': 'Calibrate', 'mesh.none': 'No bed mesh yet.', 'mesh.front': 'Front of the bed at the bottom.',
   'mesh.calSent': 'Command sent. Calibration progress is in the console.',
   'mesh.info': '{name}{saved} · {lo}…{hi} mm · range {range} mm · ×{k}', 'mesh.savedSuffix': ' · saved profile',

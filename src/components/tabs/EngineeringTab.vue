@@ -65,10 +65,11 @@ async function restart(fw) {
 </template>
 
 <style scoped>
-.eng{display:grid;grid-template-columns:minmax(0,420px);gap:20px;flex:1;min-height:0}
-.sys dl{margin:0;display:grid;gap:12px}
+.eng{display:grid;grid-template-columns:minmax(0,560px);gap:20px;flex:1;min-height:0}
+.sys{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r-lg);padding:16px}
+.sys dl{margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 20px}
 .sys dt{font-size:11px;color:var(--dim)}
-.sys dd{margin:0;font-size:18px;font-weight:200}
+.sys dd{margin:2px 0 0;font-size:18px;font-weight:300}
 .btns{display:grid;gap:7px;margin-top:16px}
-@media(max-width:900px){.sys dl{grid-template-columns:repeat(2,1fr)}}
+
 </style>

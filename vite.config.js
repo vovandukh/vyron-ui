@@ -23,8 +23,8 @@ const htmlAliases = names => ({
 })
 
 // Принтер для dev-проксі: PRINTER_URL=http://<ip-принтера>:7125 npm run dev
-// (без змінної — Moonraker на цій самій машині).
-const PRINTER = process.env.PRINTER_URL || 'http://localhost:7125'
+// (без змінної — принтер за замовчуванням, див. DEFAULT_PRINTER_HOST у services/moonrakerClient.js).
+const PRINTER = process.env.PRINTER_URL || 'http://192.168.0.232:7125'
 
 // Проксі Moonraker: застосунок у dev звертається до власного хоста (localhost:5173),
 // а Vite пересилає API і WebSocket на принтер. Origin переписується на адресу принтера,

@@ -159,24 +159,26 @@ watch(() => props.anchor, place)
 </template>
 
 <style scoped>
-.tpop{position:fixed;z-index:9;background:rgba(14,15,17,.98);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.55);font-size:12px;color:var(--ink);outline:none}
+.tpop{position:fixed;z-index:9;background:rgba(22,22,24,.9);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);border:1px solid;border-color:var(--edge-hi) var(--edge-lo) var(--edge-lo) var(--edge-hi);border-radius:var(--r-lg);box-shadow:0 24px 48px -16px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.05);font-size:12px;color:var(--ink);outline:none}
 .body{padding:12px;display:grid;gap:9px;overflow:auto}
-.arrow{position:absolute;bottom:-6px;left:calc(var(--arrow) - 6px);width:12px;height:12px;background:rgba(14,15,17,.98);border-right:1px solid var(--line);border-bottom:1px solid var(--line);transform:rotate(45deg)}
+.arrow{position:absolute;bottom:-6px;left:calc(var(--arrow) - 6px);width:12px;height:12px;background:rgb(24,24,26);border-right:1px solid var(--edge-lo);border-bottom:1px solid var(--edge-lo);transform:rotate(45deg)}
 .head{display:flex;align-items:center;gap:8px;min-width:0}
 .head strong{font-size:15px;font-weight:500}
-.state{font-size:10px;letter-spacing:.06em;padding:2px 6px;border-radius:4px;border:1px solid var(--line);color:var(--dim)}
+.state{font-size:10px;letter-spacing:.06em;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--dim)}
 .state.on{border-color:rgba(240,58,46,.6);color:var(--red)}
 .sp{flex:1}
 .nm{color:var(--dim);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .tline{display:flex;align-items:baseline;gap:6px}
 .temp{font-size:26px;font-weight:200;line-height:1}
 .tline small{color:var(--dim);font-size:12px}
-.tpop button,.tpop input{background:rgba(10,10,11,.5);border:1px solid var(--line);color:var(--ink);font:inherit;font-size:12px;border-radius:7px;padding:7px 10px}
-.tpop button{cursor:pointer}
-.tpop button:hover:not(:disabled){border-color:var(--red)}
+.tpop button,.tpop input{background:var(--surface-hi);border:1px solid var(--field-bd);color:var(--ink);font:inherit;font-size:12px;border-radius:var(--r);padding:7px 10px}
+.tpop input{background:var(--field-bg)}
+.tpop input:focus{outline:none;border-color:rgba(255,107,90,.7);box-shadow:var(--ring)}
+.tpop button{cursor:pointer;transition:transform var(--t-spring) var(--spring),background-color var(--t-fast) var(--ease-out)}
+.tpop button:active:not(:disabled){transform:scale(.95)}
+.tpop button:hover:not(:disabled){background-color:rgba(255,255,255,.1)}
 .tpop button:disabled{opacity:.35;cursor:not-allowed}
-.tpop .primary{background:#d42a20;border-color:#d42a20;color:#fff;font-weight:600}
-.tpop .primary:hover{background:#f03a2e}
+.tpop .primary{background:linear-gradient(180deg,#ff5a4c,#e0321f);border-color:transparent;color:#fff;font-weight:600}
 .act{align-self:center}
 .set{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px}
 .set input{min-width:0;width:100%}
@@ -185,7 +187,7 @@ watch(() => props.anchor, place)
 .legacy{color:var(--dim);font-size:11px}
 .hot{color:var(--red)}
 .msg{color:var(--dim);font-size:11px}
-.tpop :focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.tpop :focus-visible{outline:2px solid var(--coral);outline-offset:2px}
 /* Низькі екрани (800×480): компактніше, щоб плата голови й BTT Eddy вміщались без прокрутки */
 @media(max-height:540px){
   .body{padding:9px 10px;gap:6px}

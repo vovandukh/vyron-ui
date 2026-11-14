@@ -35,10 +35,11 @@ function setNumber(k, e) {
 </template>
 
 <style scoped>
-.sf{display:grid;gap:14px;max-width:480px}
-.sf label{display:flex;justify-content:space-between;align-items:center;gap:16px;font-size:13px}
-.sf input[type=number],.sf select{background:none;border:1px solid var(--line);color:var(--ink);font:inherit;border-radius:7px;padding:8px 10px;width:130px}
-.sf input[type=checkbox]{width:18px;height:18px;accent-color:var(--red)}
-.sf option{background:#0a0a0b}
-.note{color:var(--dim);font-size:12px}
+.sf{display:grid;max-width:520px;background:var(--surface);border:1px solid var(--hair);border-radius:var(--r-lg);overflow:hidden}
+.sf label{display:flex;justify-content:space-between;align-items:center;gap:16px;font-size:13px;padding:11px 14px;min-height:50px}
+.sf label+label{border-top:1px solid var(--hair)}
+.sf input[type=number],.sf select{width:140px}
+.sf input[type=number]{text-align:right}
+
+.note{color:var(--dim);font-size:12px;padding:12px 14px;border-top:1px solid var(--hair)}
 </style>

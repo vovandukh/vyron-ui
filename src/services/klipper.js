@@ -24,11 +24,27 @@ export function discoverTools(objectList) {
 }
 
 const BASE_OBJECTS = ['print_stats', 'virtual_sdcard', 'heater_bed', 'toolhead', 'gcode_move', 'fan',
-  'quad_gantry_level', 'bed_mesh', 'temperature_sensor chamber', 'heater_generic chamber']
+  'quad_gantry_level', 'z_tilt', 'bed_mesh']
+
+/**
+ * Датчик температури камери, якщо він є в конфігурації: спершу канонічні імена,
+ * далі будь-який temperature_sensor / heater_generic / temperature_fan зі словом «chamber» у назві.
+ */
+export function findChamber(objectList) {
+  for (const n of ['temperature_sensor chamber', 'heater_generic chamber', 'temperature_fan chamber']) if (objectList.includes(n)) return n
+  return objectList.find(n => /^(temperature_sensor|heater_generic|temperature_fan) .*chamber/i.test(n)) || null
+}
+
+/** Об'єкт вирівнювання порталу: QGL (Voron 2.x) або Z-Tilt (Trident тощо). */
+export function findLeveling(objectList) {
+  if (objectList.includes('quad_gantry_level')) return { obj: 'quad_gantry_level', kind: 'qgl' }
+  if (objectList.includes('z_tilt')) return { obj: 'z_tilt', kind: 'ztilt' }
+  return null
+}
 
 /** Об'єкт для printer.objects.subscribe лише з тих об'єктів, що реально існують. */
 export function subscriptionObjects(objectList, tools, boards, extra = []) {
-  const names = [...BASE_OBJECTS, ...tools, ...Object.values(boards), ...extra]
+  const names = [...BASE_OBJECTS, findChamber(objectList), ...tools, ...Object.values(boards), ...extra].filter(Boolean)
   const objects = {}
   names.forEach(n => { if (objectList.includes(n)) objects[n] = null })
   return objects

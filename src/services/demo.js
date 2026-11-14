@@ -55,12 +55,16 @@ export const DEMO_PRINT_SECONDS = 5400
 export const DEMO_STEP = 35
 export const DEMO_INTERVAL = 40
 
+/** Спіральна «ваза»: 150 витків по 0.8 мм (висота ~120 мм), 90 сегментів на виток. */
+const VASE_SEG = 90, VASE_PITCH = 0.8
+export const DEMO_VASE_LAYERS = 150
+
 /** Спіральна «ваза»: кожен сегмент має зміщення = власний індекс. */
 export function demoGcode() {
   const out = [], off = []
   let prev = null, idx = 0
-  for (let s = 0; s < 13500; s++) {
-    const z = 0.4 + (s / 90) * 0.8, a = (s / 90) * Math.PI * 2
+  for (let s = 0; s < VASE_SEG * DEMO_VASE_LAYERS; s++) {
+    const z = 0.4 + (s / VASE_SEG) * VASE_PITCH, a = (s / VASE_SEG) * Math.PI * 2
     const r = 34 + 12 * Math.sin(z / 9) + 6 * Math.sin(a * 5) * (z / 120)
     const p = [175 + r * Math.cos(a), 175 + r * Math.sin(a), z]
     if (prev) { out.push(...prev, ...p); off.push(idx++) }
@@ -104,16 +108,20 @@ export function demoStaticStatus(toolheads, eddies = {}) {
 }
 
 /** Патч статусу для одного кроку симуляції. */
-export function demoTickStatus({ pos, progress, activeTool, tools, toolheads, eddies = {}, state = 'printing', filename = DEMO_PRINTING_FILE }) {
+export function demoTickStatus({ pos, progress, activeTool, tools, toolheads, eddies = {}, state = 'printing', filename = DEMO_PRINTING_FILE, heat = {} }) {
   const z = pos ? pos[2] : 0
+  // Для спіральної вази шар — частка від 150 витків, синхронно з прогресом (100% → 150 / 150);
+  // для інших файлів — із моделі (layerLabel).
+  const layer = Math.min(DEMO_VASE_LAYERS, Math.max(1, Math.ceil(progress * DEMO_VASE_LAYERS)))
   const patch = {
     toolhead: { position: pos ? [pos[0], pos[1], z, 0] : [0, 0, 0, 0], extruder: tools[activeTool] },
     virtual_sdcard: { progress },
-    // Для спіральної вази шар рахується за висотою витка (0.8 мм); для інших файлів — із моделі (layerLabel).
     print_stats: { state, filename, print_duration: progress * DEMO_PRINT_SECONDS,
-      info: filename === DEMO_PRINTING_FILE ? { current_layer: Math.round(z / 0.8), total_layer: 120 } : {} }
+      info: filename === DEMO_PRINTING_FILE ? { current_layer: layer, total_layer: DEMO_VASE_LAYERS } : {} }
   }
-  tools.forEach((n, i) => { patch[n] = { temperature: i === activeTool ? 205 : 25, target: i === activeTool ? 205 : 0 } })
+  // Температури — з імітації нагріву в сторі (demoHeatStep); без неї — сталі значення
+  tools.forEach((n, i) => { patch[n] = heat[n] || { temperature: i === activeTool ? 205 : 25, target: i === activeTool ? 205 : 0 } })
+  if (heat.heater_bed) patch.heater_bed = heat.heater_bed
   tools.forEach((tool, i) => {
     const th = toolheads[tool]
     if (!th) return

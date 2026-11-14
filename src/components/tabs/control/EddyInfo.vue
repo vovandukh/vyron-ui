@@ -65,9 +65,9 @@ const status = computed(() => {
 </template>
 
 <style scoped>
-.ed{border:1px solid var(--line);border-radius:7px;padding:8px 10px;display:grid;gap:5px;background:rgba(255,255,255,.02);font-size:11px;color:var(--dim);min-width:0}
+.ed{border:1px solid var(--hair);border-radius:var(--r-md);padding:8px 10px;display:grid;gap:5px;background:var(--surface);font-size:11px;color:var(--dim);min-width:0}
 .edh{display:flex;align-items:center;gap:7px;min-width:0}
-.badge{flex:none;font-size:9px;font-weight:600;letter-spacing:.08em;padding:2px 5px;border-radius:4px;border:1px solid rgba(120,156,255,.6);color:var(--blue)}
+.badge{flex:none;font-size:9px;font-weight:600;letter-spacing:.08em;padding:2px 6px;border-radius:999px;border:1px solid rgba(120,156,255,.6);color:var(--blue)}
 .name{color:var(--ink);font-weight:500;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .link{flex:none;font-size:9px;letter-spacing:.06em;padding:1px 4px;border-radius:4px;border:1px solid var(--line)}
 .link.can{border-color:rgba(240,58,46,.6);color:var(--red)}

@@ -9,7 +9,16 @@ export const useUiStore = defineStore('ui', () => {
   /** Активне вікно підтвердження: { message, input, resolve } */
   const dialog = shallowRef(null)
 
-  function go(v) { view.value = v }
+  /** Центр керування (підключення, демо, меню): null або { x } — центр кнопки, з якої відкрито (для transform-origin). */
+  const cc = ref(null)
+  function toggleCc(el) {
+    if (cc.value) { cc.value = null; return }
+    const r = el?.getBoundingClientRect?.()
+    cc.value = { x: r ? r.left + r.width / 2 : innerWidth - 50, y: r ? r.bottom : 60 }
+  }
+  const closeCc = () => { cc.value = null }
+
+  function go(v) { view.value = v; cc.value = null }
 
   /** Відкриває ConfirmModal. Promise → true/false, або рядок/null у режимі введення. */
   function openDialog({ message, input = false }) {
@@ -23,5 +32,5 @@ export const useUiStore = defineStore('ui', () => {
     d?.resolve(result)
   }
 
-  return { view, tempModal, dialog, go, openDialog, closeDialog }
+  return { view, tempModal, dialog, cc, toggleCc, closeCc, go, openDialog, closeDialog }
 })

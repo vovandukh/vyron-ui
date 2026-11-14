@@ -329,8 +329,8 @@ onDeactivated(() => { offs.forEach(f => f()); offs = []; clearTimeout(fileTimer)
 .msg.bad{color:var(--red)}
 .tot{color:var(--dim);font-size:13px}
 .listTitle{font-size:12px;color:var(--dim);margin-top:6px}
-.histCard{display:flex;gap:16px;align-items:flex-start;padding:14px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.02)}
-.histCard img{width:140px;height:140px;object-fit:contain;border-radius:8px;background:rgba(255,255,255,.03);flex:none}
+.histCard{display:flex;gap:16px;align-items:flex-start;padding:16px;border:1px solid var(--hair);border-radius:var(--r-lg);background:var(--surface)}
+.histCard img{width:140px;height:140px;object-fit:contain;border-radius:var(--r-md);background:rgba(255,255,255,.03);flex:none}
 .body{flex:1;min-width:0}
 .histSt{font-size:22px;font-weight:300;margin-bottom:2px}
 .histFile{color:var(--dim);font-size:13px;margin-bottom:12px;word-break:break-all}
@@ -345,10 +345,11 @@ onDeactivated(() => { offs.forEach(f => f()); offs = []; clearTimeout(fileTimer)
 .fhead .listTitle{margin:0;flex:1}
 .view .fsearch{width:200px;padding:6px 10px}
 .empty{color:var(--dim);font-size:12px}
-.files{display:grid;border-top:1px solid var(--line)}
-.frow{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
-.frow.busy{background:rgba(125,220,154,.04)}
-.th{width:44px;height:44px;border-radius:6px;background:rgba(255,255,255,.03);overflow:hidden;display:grid;place-items:center}
+.files{display:grid;gap:2px}
+.frow{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;padding:7px 10px;border-radius:var(--r-md);transition:background-color var(--t-fast) var(--ease-out)}
+.frow:hover{background:var(--surface-hi)}
+.frow.busy{background:rgba(52,199,89,.07);box-shadow:inset 3px 0 0 #34c759}
+.th{width:44px;height:44px;border-radius:var(--r-sm);background:rgba(255,255,255,.03);overflow:hidden;display:grid;place-items:center}
 .th img{width:100%;height:100%;object-fit:contain}
 .fi{min-width:0}
 .fn{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -358,19 +359,21 @@ onDeactivated(() => { offs.forEach(f => f()); offs = []; clearTimeout(fileTimer)
 .view .fa button{padding:6px 10px}
 .view .del svg{width:15px;height:15px;display:block;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 /* «Друкувати»: червоний акцент, як основна дія */
-.view .pr{display:inline-flex;align-items:center;gap:5px;border-color:rgba(240,58,46,.55)}
-.view .pr:not(:disabled):hover{background:rgba(240,58,46,.12)}
-.view .pr svg{width:12px;height:12px;display:block;fill:var(--red)}
+.view .pr{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(180deg,#ff5a4c,#e0321f);border-color:transparent;color:#fff;font-weight:600;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 4px 14px -6px rgba(240,58,46,.8)}
+.view .pr:not(:disabled):hover{background:linear-gradient(180deg,#ff6a5c,#e83a27);border-color:transparent}
+.view .pr:disabled{background:var(--surface-hi);box-shadow:none;color:var(--dim)}
+.view .pr svg{width:12px;height:12px;display:block;fill:#fff}
 .view .pr:disabled svg{fill:var(--dim)}
 .ra{display:flex;gap:6px}
 .view .del:hover:not(:disabled){color:var(--red)}
 .more{align-self:flex-start}
 
-.histRow{display:grid;grid-template-columns:22px minmax(0,1fr) auto auto auto auto;gap:14px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.histRow{display:grid;grid-template-columns:22px minmax(0,1fr) auto auto auto auto;gap:14px;align-items:center;padding:8px 10px;border-radius:var(--r-md);font-size:13px;transition:background-color var(--t-fast) var(--ease-out)}
+.histRow:hover{background:var(--surface-hi)}
 .histRow .f{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .histRow .d{color:var(--dim);white-space:nowrap}
-.view .mini{padding:4px 8px;font-size:11px}
-.hok{color:#7ddc9a}.hbad{color:var(--red)}.hmid{color:var(--dim)}
+.view .mini{padding:5px 10px;font-size:11px;border-radius:999px}
+.hok{color:#8fe3a8}.hbad{color:var(--red)}.hmid{color:var(--dim)}
 @media(max-width:900px){.pr-l{display:none}}
 @media(max-width:700px){
   .histCard{flex-direction:column}

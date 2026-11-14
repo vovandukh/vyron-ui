@@ -127,7 +127,8 @@ defineExpose({ toggleFind, focus: () => ta.value?.focus(), reset })
 .ceFind{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .ceFind input{width:150px}
 .ceFind span{color:var(--dim);font-size:12px}
-.ceWrap{flex:1;min-height:200px;display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:rgba(255,255,255,.02)}
+.ceWrap{flex:1;min-height:200px;display:flex;border:1px solid var(--hair);border-radius:var(--r-lg);overflow:hidden;background:rgba(0,0,0,.32);box-shadow:inset 0 1px 3px rgba(0,0,0,.35);transition:border-color var(--t-fast) var(--ease-out)}
+.ceWrap:focus-within{border-color:rgba(255,107,90,.45)}
 .ceLn,.ceCode pre,.view .ceCode textarea{font:13px/20px var(--mono);padding:10px 12px;margin:0;tab-size:2;white-space:pre;letter-spacing:0;box-sizing:border-box}
 .ceLn{width:50px;flex:none;overflow:hidden;text-align:right;color:#4a4f58;border-right:1px solid var(--line);user-select:none}
 .ceCode{position:relative;flex:1;min-width:0}

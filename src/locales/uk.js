@@ -23,6 +23,13 @@ export default {
   'conn.connectingTo': 'Підключення до {host}…', 'conn.connectedTo': 'Підключено · {host}',
   'conn.wsError': 'Помилка WebSocket · перевір адресу та доступ', 'conn.lost': 'Зв’язок втрачено · повторне підключення…',
   'conn.addrError': 'Помилка адреси: {msg}',
+  'cc.title': 'Центр керування', 'cc.connection': 'Підключення', 'cc.demo': 'Демо-режим', 'cc.demoHint': 'Імітація друку без принтера',
+  'cc.open': 'Центр керування · підключення',
+  'island.demo': 'Демо-режим активний', 'island.connected': 'Підключено · {host}', 'island.lost': 'Зв’язок втрачено',
+  'island.ready': 'Klipper готовий', 'island.klipperError': 'Помилка Klipper', 'island.qgl': 'Вирівнювання QGL завершено', 'island.ztilt': 'Вирівнювання Z-Tilt завершено',
+  'island.detail': '{state} · {host}', 'island.demoHost': 'локальна імітація', 'island.noHost': 'хост не задано', 'island.peekTitle': 'Стан і адреса принтера',
+  'island.printStart': 'Друк розпочато', 'island.printDone': 'Друк завершено', 'island.paused': 'Друк на паузі',
+  'island.printError': 'Помилка друку', 'island.cancelled': 'Друк скасовано',
 
   'meta.notConnected': 'Не підключено', 'meta.noFile': 'Немає активного файлу',
   'meta.gcodeError': 'Не вдалося завантажити G-code: {msg}', 'meta.demo': 'Демо · імітація друку',
@@ -30,7 +37,8 @@ export default {
   'status.nozzle': 'Активне сопло', 'status.bed': 'Стіл', 'status.chamber': 'Камера', 'status.speed': 'Швидкість',
   'status.fan': 'Обдув', 'status.z': 'Висота Z', 'status.layer': 'Шар', 'status.qgl': 'QGL',
   'status.setNozzle': 'Задати температуру сопла', 'status.setBed': 'Задати температуру столу',
-  'status.qglDone': 'вирівняно', 'status.qglNot': 'не виконано',
+  'status.qglDone': 'вирівняно', 'status.qglNot': 'не вирівняно', 'status.ztilt': 'Z-Tilt',
+  'qs.now': 'Зараз', 'qs.target': 'Ціль', 'qs.off': 'Вимк.', 'qs.exact': 'Точне значення…', 'qs.adjust': 'Швидке налаштування: {name}',
 
   'jog.home': 'Home усіх осей', 'jog.motorsOff': 'Вимкнути мотори (M84)', 'jog.motorsOffAria': 'Вимкнути мотори',
   'jog.badDistance': 'Введи коректну відстань більше 0',
@@ -57,6 +65,9 @@ export default {
 
   'console.placeholder': 'G-code, наприклад G28', 'console.send': 'Надіслати',
 
+  'console.macros': 'Швидкі макроси',
+  'mesh.save': 'Зберегти профіль', 'mesh.saveConfirm': 'Зберегти карту як профіль default і виконати SAVE_CONFIG? Klipper перезапуститься.',
+  'mesh.profile': 'Профіль', 'mesh.savedShort': 'збережений', 'mesh.min': 'Мін, мм', 'mesh.max': 'Макс, мм', 'mesh.range': 'Розмах, мм', 'mesh.exag': 'Масштаб',
   'mesh.calibrate': 'Калібрувати', 'mesh.none': 'Карти столу ще немає.', 'mesh.front': 'Передня сторона столу знизу.',
   'mesh.calSent': 'Команду надіслано. Хід калібрування — у консолі.',
   'mesh.info': '{name}{saved} · {lo}…{hi} мм · розмах {range} мм · ×{k}', 'mesh.savedSuffix': ' · збережений профіль',

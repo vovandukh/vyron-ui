@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, shallowReactive, computed } from 'vue'
-import { MoonrakerClient, normalizeHost, resolveHost, rememberHost } from '../services/moonrakerClient'
+import { MoonrakerClient, normalizeHost, resolveHost, rememberHost, savedHost } from '../services/moonrakerClient'
 import { fetchGcode, startPrintFile } from '../services/moonrakerApi'
-import { discoverTools, subscriptionObjects, STATE_KEYS, toolNum } from '../services/klipper'
+import { discoverTools, subscriptionObjects, STATE_KEYS, toolNum, findChamber, findLeveling } from '../services/klipper'
 import { detectToolheads, toolheadObjects } from '../services/toolheads'
 import { detectEddy, eddyObjects } from '../services/eddy'
 import { parseGcode } from '../services/gcodeParser'
@@ -108,12 +108,24 @@ export const usePrinterStore = defineStore('printer', () => {
   /** Перемикання голів має сенс лише коли їх більше однієї. */
   const canSwitchTools = computed(() => toolObjects.value.length > 1)
   const nozzleTemp = computed(() => (activeToolName.value ? (st[activeToolName.value] || {}).temperature : null))
+  const nozzleTarget = computed(() => (activeToolName.value ? (st[activeToolName.value] || {}).target : null))
   const bedTemp = computed(() => (st.heater_bed || {}).temperature)
-  const chamberTemp = computed(() => (st['temperature_sensor chamber'] || st['heater_generic chamber'] || {}).temperature)
+  const bedTarget = computed(() => (st.heater_bed || {}).target)
+  // Що реально є в конфігурації Klipper (printer.objects.list; у демо — ключі імітованого статусу).
+  // Панель телеметрії показує лише рядки, для яких є і об'єкт, і дані.
+  const hasBed = computed(() => objectList.value.includes('heater_bed'))
+  const hasFan = computed(() => objectList.value.includes('fan'))
+  const chamberObj = computed(() => findChamber(objectList.value))
+  const chamberTemp = computed(() => (chamberObj.value ? (st[chamberObj.value] || {}).temperature : null))
   const speedFactor = computed(() => (st.gcode_move || {}).speed_factor)
   const fanSpeed = computed(() => (st.fan || {}).speed)
   const position = computed(() => (st.toolhead || {}).position || null)
-  const qgl = computed(() => (st.quad_gantry_level || {}).applied)
+  /** Вирівнювання порталу: { obj, kind: 'qgl' | 'ztilt' } або null, якщо його немає в конфігурації. */
+  const leveling = computed(() => findLeveling(objectList.value))
+  /** Стан вирівнювання (applied) — для QGL або Z-Tilt; null, якщо немає ні того, ні іншого. */
+  const qgl = computed(() => (leveling.value ? (st[leveling.value.obj] || {}).applied ?? null : null))
+  /** Межі нагрівачів з printer.cfg (max_temp): { extruder: 300, heater_bed: 120, … } */
+  const heaterMax = ref({})
 
   const progressPct = computed(() => {
     // Під час 3D-перегляду файлу модель — не поточний друк; прогрес друку беремо з virtual_sdcard.
@@ -159,6 +171,7 @@ export const usePrinterStore = defineStore('printer', () => {
   function clearState() {
     for (const k of Object.keys(st)) delete st[k]
     objectList.value = []
+    heaterMax.value = {}
     toolObjects.value = []
     boardObjects.value = {}
     toolheads.value = {}
@@ -174,6 +187,25 @@ export const usePrinterStore = defineStore('printer', () => {
   function stopDemo() {
     clearInterval(demoTimer)
     demoTimer = null
+  }
+
+  /**
+   * Вихід із демо (перемикач «Демо-режим» у центрі керування). Якщо принтер уже відомий
+   * (попереднє підключення чи збережений хост) — підключаємось до нього, інакше лишаємось у режимі очікування
+   * з порожньою сценою. Хост сторінки тут не беремо: у демо-збірці на GitHub Pages це не принтер.
+   */
+  function exitDemo() {
+    if (!demoMode.value) return
+    stopDemo()
+    demoMode.value = false
+    clearState()
+    activeTool.value = 0
+    toolStatus.value = { key: 'tools.waiting' }
+    Object.assign(demoJob, { file: null, state: 'standby', k: 0, pos: null, progress: 0 })
+    applyModel({ P: new Float32Array(0), F: [], T: null })
+    link.value = 'idle'
+    const h = host.value || savedHost()
+    if (h) connect(h)
   }
 
   /** remember: хост введено вручну — запам'ятати для наступних відкриттів сторінки. */
@@ -230,6 +262,8 @@ export const usePrinterStore = defineStore('printer', () => {
       try {
         const q = await client.call('printer.objects.query', { objects: { configfile: ['settings'] } })
         const settings = (((q || {}).status || {}).configfile || {}).settings || {}
+        heaterMax.value = Object.fromEntries([...tools, 'heater_bed']
+          .map(n => [n, Number((settings[n] || {}).max_temp)]).filter(([, v]) => v > 0))
         toolheads.value = detectToolheads(settings, tools, objectList.value)
         eddies.value = detectEddy(settings, tools, toolheads.value, objectList.value)
         extra = [...toolheadObjects(toolheads.value), ...eddyObjects(eddies.value)]
@@ -290,8 +324,13 @@ export const usePrinterStore = defineStore('printer', () => {
     activeTool.value = 0
     toolStatus.value = { key: 'tools.demoMode' }
     resetDemoFiles()
+    demoHeat.targets = {}; demoHeat.temps = {}
     mergeStatus(demoStaticStatus(heads, eds))
     demoBeginPrint(DEMO_PRINTING_FILE)
+    // Демо має повний набір датчиків (камера, QGL, обдув…) — «список об'єктів» беремо з імітованого статусу.
+    mergeStatus(demoTickStatus({ pos: null, progress: 0, state: 'printing', filename: demoJob.file, activeTool: 0, tools, toolheads: heads, eddies: eds, heat: demoHeatStep(tools) }))
+    objectList.value = Object.keys(st)
+    heaterMax.value = Object.fromEntries([...tools.map(n => [n, 300]), ['heater_bed', 120]])
     demoTimer = setInterval(() => {
       // Під час перегляду файлу модель на екрані інша — «друк» на паузі, щоб не малювати прогрес по чужій моделі.
       if (!preview.value && demoJob.state === 'printing') {
@@ -304,13 +343,58 @@ export const usePrinterStore = defineStore('printer', () => {
       }
       mergeStatus(demoTickStatus({
         pos: demoJob.pos, progress: demoJob.progress, state: demoJob.state, filename: demoJob.file,
-        activeTool: activeTool.value, tools, toolheads: heads, eddies: eds
+        activeTool: activeTool.value, tools, toolheads: heads, eddies: eds, heat: demoHeatStep(tools)
       }))
     }, DEMO_INTERVAL)
   }
 
   /** Поточне демо-завдання: файл, стан, позиція в моделі. */
   const demoJob = { file: null, state: 'standby', k: 0, pos: null, progress: 0 }
+
+  /**
+   * Демо-нагрівачі: цілі, задані користувачем (швидкі слайдери), і поточні температури,
+   * що плавно тягнуться до цілі (~1 с) — щоб у демо було видно і одометр, і теплову індикацію голів.
+   * Без явної цілі: активна голова 205°, решта вимкнені; стіл 110°.
+   */
+  const demoHeat = { targets: {}, temps: {} }
+  function demoHeatStep(tools) {
+    const out = {}
+    const step = (n, def) => {
+      const tg = demoHeat.targets[n] ?? def
+      const cur = demoHeat.temps[n] ?? Math.max(tg, 25)
+      const next = cur + (Math.max(tg, 25) - cur) * 0.05
+      demoHeat.temps[n] = Math.abs(next - Math.max(tg, 25)) < 0.05 ? Math.max(tg, 25) : next
+      out[n] = { temperature: demoHeat.temps[n], target: tg }
+    }
+    tools.forEach((n, i) => step(n, i === activeTool.value ? 205 : 0))
+    step('heater_bed', 110)
+    return out
+  }
+
+  /**
+   * Швидке керування з панелі телеметрії (слайдери та пресети). Реальні G-code:
+   *   nozzle → M104 T<n> S<°>, bed → M140 S<°>, speed → M220 S<%>, fan → M106 S<0…255>.
+   * У демо команди не надсилаються — значення імітуються локально.
+   */
+  function quickSet(kind, v) {
+    v = Math.round(Number(v))
+    if (!Number.isFinite(v) || v < 0) return false
+    const tool = activeToolName.value
+    if (demoMode.value) {
+      if (kind === 'nozzle' && tool) demoHeat.targets[tool] = v
+      else if (kind === 'bed') demoHeat.targets.heater_bed = v
+      else if (kind === 'speed') mergeStatus({ gcode_move: { speed_factor: v / 100 } })
+      else if (kind === 'fan') mergeStatus({ fan: { speed: v / 100 } })
+      return true
+    }
+    const script = {
+      nozzle: tool ? `M104 T${toolNum(tool)} S${v}` : null,
+      bed: `M140 S${v}`,
+      speed: `M220 S${Math.max(1, v)}`,
+      fan: `M106 S${Math.round(Math.min(100, v) * 2.55)}`
+    }[kind]
+    return script ? rpc(script) : false
+  }
 
   function demoBeginPrint(file) {
     applyModel(file === DEMO_PRINTING_FILE ? demoGcode() : demoPreviewModel(file))
@@ -450,9 +534,10 @@ export const usePrinterStore = defineStore('printer', () => {
     // getters
     connected, isPrinting, printState, stateLabel, meta, activeToolName, canSwitchTools, toolCount, nozzleTemp, bedTemp, chamberTemp,
     speedFactor, fanSpeed, position, qgl, progressPct, etaSeconds, layerText, nozzleHeater,
+    nozzleTarget, bedTarget, hasBed, hasFan, chamberObj, leveling, heaterMax, quickSet,
     // actions
     preview, openPreview, closePreview, printBusy, startPrint,
-    on, log, connect, startDemo, autoStart, rpc, sendRaw, consoleSend, call, selectTool, setToolTarget,
+    on, log, connect, startDemo, exitDemo, autoStart, rpc, sendRaw, consoleSend, call, selectTool, setToolTarget,
     setHeater, emergencyStop, mergeStatus
   }
 })

@@ -72,7 +72,7 @@ onDeactivated(() => { offs.forEach(f => f()); offs = [] })
       <button :disabled="printer.isPrinting" @click="updateAll">{{ t('upd.all') }}</button>
       <span class="msg">{{ msg }}</span>
     </div>
-    <div>
+    <div v-if="rows.length" class="upd">
       <div v-for="r in rows" :key="r.name" class="updRow">
         <span class="n" :title="r.name">{{ r.name }}</span>
         <span class="d" :title="r.info">{{ r.info }}</span>
@@ -89,9 +89,11 @@ onDeactivated(() => { offs.forEach(f => f()); offs = [] })
 <style scoped>
 .msg{color:var(--dim);font-size:12px}
 .ulog{max-height:160px}
-.updRow{display:grid;grid-template-columns:1fr 1.6fr 1fr auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}
+.updRow{display:grid;grid-template-columns:1fr 1.6fr 1fr auto;gap:12px;align-items:center;padding:10px 14px;font-size:13px}
+.updRow+.updRow{border-top:1px solid var(--hair)}
+.upd{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r-lg);overflow:hidden}
 .updRow .n{font-weight:500}
 .updRow .d{color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.updRow .need{color:var(--red)}
+.updRow .need{color:var(--coral)}
 @media(max-width:700px){.updRow{grid-template-columns:1fr auto}}
 </style>

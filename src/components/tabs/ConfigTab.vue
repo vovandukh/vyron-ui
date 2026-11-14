@@ -113,14 +113,15 @@ onBeforeUnmount(() => removeEventListener('beforeunload', beforeUnload))
 <style scoped>
 .ce{display:grid;grid-template-columns:220px minmax(0,1fr);gap:14px;flex:1;min-height:0}
 .ceSide,.ceMain{display:flex;flex-direction:column;gap:8px;min-height:0}
+.ceSide{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r-lg);padding:8px}
 /* flex-колонка з flex:none у кнопок: у grid/flex з обмеженою висотою кнопки з overflow:hidden
    стискались до ~20px, коли файлів багато (реальний принтер), і текст обрізався */
 .ceList{overflow:auto;display:flex;flex-direction:column;gap:4px;flex:1;min-height:0}
-.view .cef{flex:none;text-align:left;padding:8px 10px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.view .cef.on{border-color:var(--red)}
+.view .cef{flex:none;text-align:left;padding:8px 12px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:transparent;border-color:transparent}
+.view .cef.on{background:rgba(255,107,90,.12);border-color:rgba(255,107,90,.4)}
 .ceBar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .ceBar b{font-weight:500;font-size:13px}
-.ceDirty{color:var(--red);font-size:12px}
+.ceDirty{color:var(--coral);font-size:11px;padding:2px 8px;border-radius:999px;background:rgba(255,107,90,.12)}
 .sp{flex:1}
 .ceStat{display:flex;justify-content:space-between;gap:12px;color:var(--dim);font-size:12px}
 .bad{color:var(--red)}
