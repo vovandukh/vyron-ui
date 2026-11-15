@@ -42,6 +42,11 @@ else
   info "службу не встановлено"
 fi
 
+# ---------- екран: повернути KlipperScreen ----------
+if [ -f /etc/systemd/system/vyron-screen.service ] || [ -e /etc/nginx/sites-enabled/vyron-screen ]; then
+  if [ $DRY = 1 ]; then bash "$REPO/install/screen.sh" --remove --dry-run; else bash "$REPO/install/screen.sh" --remove; fi
+fi
+
 # ---------- nginx ----------
 say "2. Сайт nginx"
 SITE_AV=/etc/nginx/sites-available/vyron

@@ -47,3 +47,16 @@ cd ~ && git clone https://github.com/vovandukh/vyron-ecosystem.git
 ```
 
 Повертає Mainsail на порт 80 (вмикає знову), прибирає сайт `vyron`, запис з `moonraker.conf` і службу Vyron Core.
+
+## Vyron Screen на екрані принтера (замість KlipperScreen)
+
+```bash
+~/vyron-ecosystem/install/screen.sh --dry-run   # подивитися план
+~/vyron-ecosystem/install/screen.sh             # поставити Vyron Screen на екран
+~/vyron-ecosystem/install/screen.sh --remove    # повернути KlipperScreen
+```
+
+Працює окремо від `install.sh`: для екрана піднімається локальний сайт nginx на `127.0.0.1:7136`
+(з мережі недоступний, Mainsail не чіпає). Ставить Chromium (якщо немає) і службу `vyron-screen`, яка
+бере налаштування дисплея й тачскріна від KlipperScreen. KlipperScreen лише вимикається; якщо
+Vyron Screen не запуститься — KlipperScreen повертається автоматично.
