@@ -42,9 +42,14 @@ git clone https://github.com/vovandukh/vyron-ecosystem.git
 | Vyron Web | `http://IP-принтера/` |
 | Vyron Screen | `http://IP-принтера/screen.html` |
 
-Mainsail і Fluidd після встановлення приховані — на принтері працює лише Vyron. Їхні файли нікуди
-не діваються, видалення Vyron поверне все як було. Якщо Mainsail потрібен поруч — встанови з
-`--mainsail-port 66`, і він буде на `http://IP-принтера:66/`.
+Vyron стає основою: у браузері замість Mainsail/Fluidd — Vyron Web, на сенсорному екрані принтера
+замість KlipperScreen — Vyron Screen. Mainsail, Fluidd і KlipperScreen не видаляються, а лише ховаються:
+видалення Vyron поверне все як було. Якщо Vyron Screen на екрані не запуститься, скрипт сам поверне
+KlipperScreen.
+
+- Mainsail потрібен поруч — встанови з `--mainsail-port 66` (буде на `http://IP-принтера:66/`).
+- Екран не чіпати — `--no-screen`.
+- Перший раз скрипт докачує браузер Chromium для екрана (~100 МБ, кілька хвилин).
 
 **Оновлення** — у Vyron → Налаштування → Оновлення → `vyron`.
 
