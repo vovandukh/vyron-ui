@@ -3,3 +3,5 @@ dist/
 dist-demo/
 .env.local
 .vite/
+__pycache__/
+*.pyc

@@ -1,0 +1,5 @@
+# Скрипти й файли для принтера (Linux) — завжди LF, інакше bash/systemd їх не прочитають
+*.sh text eol=lf
+*.service text eol=lf
+*.py text eol=lf
+*.conf.example text eol=lf

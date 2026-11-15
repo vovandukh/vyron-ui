@@ -91,6 +91,12 @@ export const useDesignStore = defineStore('design', () => {
   // Після кожного (пере)підключення до принтера — звіряємось із базою Moonraker
   watch(() => printer.link, (l, o) => { if (l === 'open' || (l === 'ready' && o !== 'open')) pullRemote(); else if (!printer.connected) sync.value = 'local' }, { immediate: true })
 
+  // Vyron Core повідомляє, що тему змінили на іншому пристрої, — підтягуємо її одразу.
+  // Власне збереження теж породжує подію, але тоді updated збігається і pullRemote нічого не міняє.
+  printer.on('agent_event', e => {
+    if (e.agent === 'vyron-core' && e.event === 'design_changed' && (e.data || {}).updated !== d.updated) pullRemote()
+  })
+
   /** Імпорт із файлу налаштувань: невідомі ключі відкидаються, числа обмежуються */
   function importDesign(raw) {
     Object.assign(d, sanitizeDesign(raw))

@@ -1,0 +1,31 @@
+name: Core tests
+
+# Тести Vyron Core (стандартна бібліотека Python, імітація Moonraker на Unix-сокеті).
+# 3.9 — як на CB1 (Armbian bullseye), 3.12 — свіжий Python.
+
+on:
+  push:
+    paths:
+      - 'core/**'
+      - '.github/workflows/core-tests.yml'
+  pull_request:
+    paths:
+      - 'core/**'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        python: ['3.9', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Unit tests
+        working-directory: core
+        run: python -m unittest discover -s tests -v
+      - name: Install script syntax
+        run: bash -n core/install.sh && bash -n core/uninstall.sh
