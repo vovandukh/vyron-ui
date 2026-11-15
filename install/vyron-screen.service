@@ -1,5 +1,7 @@
 # Vyron Screen на екрані принтера. Створює install/screen.sh.
-# Якщо Vyron Screen кілька разів поспіль не запускається — система сама повертає KlipperScreen.
+# Якщо Vyron Screen падає 4 рази поспіль за 2 хвилини — система сама повертає KlipperScreen.
+# Звичайна зупинка чи перезапуск (systemctl stop/restart) збоєм не вважаються: xinit, отримавши
+# SIGTERM, виходить з кодом 1 — тому коди 1/2 і сигнали завершення рахуються як нормальний вихід.
 [Unit]
 Description=Vyron Screen (екран принтера)
 After=nginx.service moonraker.service
@@ -14,7 +16,8 @@ User=@USER@
 @GROUPS@
 Environment=XDG_RUNTIME_DIR=/run/user/@UID@
 ExecStart=/usr/bin/xinit @KIOSK@ @URL@ -- :0 -nolisten tcp -nocursor
-Restart=on-failure
+Restart=always
+SuccessExitStatus=1 2 SIGTERM SIGINT SIGHUP
 RestartSec=3
 Nice=5
 
