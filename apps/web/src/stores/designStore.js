@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
-import { reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { DEFAULT_DESIGN, PRESETS, applyDesign, sanitizeDesign, brandFor, hexToRgb } from '@vyron/shared/theme'
 import { usePrinterStore } from './printerStore'
+import { watchDesign } from '@vyron/shared/live'
 
 const KEY = 'vyron-design'
 /** Moonraker database: спільний дизайн для всіх екранів принтера (ПК, планшет, екран принтера) */
@@ -90,6 +91,15 @@ export const useDesignStore = defineStore('design', () => {
 
   // Після кожного (пере)підключення до принтера — звіряємось із базою Moonraker
   watch(() => printer.link, (l, o) => { if (l === 'open' || (l === 'ready' && o !== 'open')) pullRemote(); else if (!printer.connected) sync.value = 'local' }, { immediate: true })
+
+  // Тема, змінена на іншому пристрої (екран принтера, інший браузер), — підхоплюємо без перезавантаження.
+  // Поки триває власний запис (saving), не втручаємось: інакше чужа версія перебила б щойно зроблену зміну.
+  const live = computed(() => printer.connected && !printer.demoMode)
+  let stopLive = null
+  watch(live, on => {
+    stopLive && stopLive(); stopLive = null
+    if (on) stopLive = watchDesign({ call: printer.call, getUpdated: () => d.updated, onChange: () => (sync.value === 'saving' ? null : pullRemote()) })
+  }, { immediate: true })
 
   /** Імпорт із файлу налаштувань: невідомі ключі відкидаються, числа обмежуються */
   function importDesign(raw) {

@@ -10,6 +10,7 @@ import { applyDesign, sanitizeDesign, PRESETS } from '@vyron/shared/theme'
 import { parseGcode } from '@vyron/shared/gcode/parser'
 import { model, loadModel, indexForPos } from '@vyron/shared/gcode/model'
 import { startDemo, demoCall, demoGcode, setDemoUpdateSink } from './demo'
+import { watchDesign } from '@vyron/shared/live'
 
 /** Найбільший G-code, який екран розбирає для візуалізації: на CB1 лише 1 ГБ пам'яті, Klipper важливіший */
 const MAX_GCODE_BYTES = 20 * 1024 * 1024
@@ -173,10 +174,15 @@ export const usePrinter = defineStore('printer', () => {
     }
   }
 
+  // Тема, змінена у вебінтерфейсі, з'являється на екрані без перезавантаження (опитування позначки часу)
+  let stopLive = null
   function onState(s) {
     if (s === 'connecting') link.value = 'connecting'
-    else if (s === 'open') { link.value = 'open'; refresh(); pullDesign() }
-    else if (s === 'lost') link.value = 'lost'
+    else if (s === 'open') {
+      link.value = 'open'; refresh(); pullDesign()
+      stopLive && stopLive()
+      stopLive = watchDesign({ call, getUpdated: () => design.value.updated, onChange: pullDesign })
+    } else if (s === 'lost') { link.value = 'lost'; stopLive && stopLive(); stopLive = null }
   }
 
   function start() {
