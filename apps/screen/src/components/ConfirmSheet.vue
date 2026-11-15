@@ -24,7 +24,7 @@ const emit = defineEmits(['ok', 'cancel'])
 .card{width:min(38rem,100%);border-radius:var(--r-lg);overflow:hidden;background:#232326;border:1px solid rgba(255,255,255,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
 p{margin:0;padding:2rem 2rem 1.8rem;font-size:1.5rem;font-weight:600;line-height:1.4;text-align:center}
 .acts{display:flex;border-top:1px solid var(--group-sep)}
-.btn{flex:1;height:4.8rem;font-size:1.5rem;font-weight:500;color:var(--coral)}
+.btn{flex:1;height:4.8rem;font-size:1.5rem;font-weight:500;color:var(--ink)}
 .btn + .btn{border-left:1px solid var(--group-sep)}
-.btn.danger{color:var(--red);font-weight:700}
+.btn.danger{color:var(--red);font-weight:600}
 </style>

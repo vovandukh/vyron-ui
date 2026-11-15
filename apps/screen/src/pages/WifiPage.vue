@@ -86,8 +86,8 @@ const otherIf = computed(() => ifaces.value.filter(i => !i.wifi))
     <h1>{{ t('scr.page.wifi') }}</h1>
 
     <div v-if="ifaces.length" class="grp">
-      <Row v-for="i in wifiIf" :key="i.name" icon="wifi" color="var(--blue)" :label="i.name" :value="i.ip || t('scr.wifiOff')" />
-      <Row v-for="i in otherIf" :key="i.name" icon="host" color="var(--gray)" :label="i.name" :value="i.ip" />
+      <Row v-for="i in wifiIf" :key="i.name" icon="wifi" :label="i.name" :value="i.ip || t('scr.wifiOff')" />
+      <Row v-for="i in otherIf" :key="i.name" icon="host" :label="i.name" :value="i.ip" />
     </div>
 
     <div class="grp-h hrow">

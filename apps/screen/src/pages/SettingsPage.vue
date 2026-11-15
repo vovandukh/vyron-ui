@@ -25,16 +25,16 @@ const updValue = computed(() => {
   <div class="page set">
     <h1>{{ t('scr.page.settings') }}</h1>
     <div class="grp">
-      <Row icon="wifi" color="var(--blue)" :label="t('scr.page.wifi')" :value="net" chevron @tap="p.go('wifi')" />
+      <Row icon="wifi" :label="t('scr.page.wifi')" :value="net" chevron @tap="p.go('wifi')" />
     </div>
     <div class="grp">
-      <Row icon="palette" color="var(--brand)" :label="t('scr.page.theme')" :value="theme" chevron @tap="p.go('theme')" />
-      <Row icon="globe" color="var(--green)" :label="t('scr.page.language')" :value="langName" chevron @tap="p.go('language')" />
+      <Row icon="palette" :label="t('scr.page.theme')" :value="theme" chevron @tap="p.go('theme')" />
+      <Row icon="globe" :label="t('scr.page.language')" :value="langName" chevron @tap="p.go('language')" />
     </div>
     <div class="grp">
-      <Row icon="refresh" color="var(--teal)" :label="t('scr.page.updates')" :value="updValue" chevron @tap="p.go('updates')" />
-      <Row icon="info" color="var(--gray)" :label="t('scr.page.about')" chevron @tap="p.go('about')" />
-      <Row icon="power" color="var(--red)" :label="t('scr.page.system')" chevron @tap="p.go('system')" />
+      <Row icon="refresh" :label="t('scr.page.updates')" :value="updValue" chevron @tap="p.go('updates')" />
+      <Row icon="info" :label="t('scr.page.about')" chevron @tap="p.go('about')" />
+      <Row icon="power" :label="t('scr.page.system')" chevron @tap="p.go('system')" />
     </div>
   </div>
 </template>

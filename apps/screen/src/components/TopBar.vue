@@ -39,6 +39,6 @@ const prev = computed(() => p.stack[p.stack.length - 2])
 /* «‹ Назад» — акцентним кольором теми, як системна кнопка iOS */
 .bk{flex:none;display:flex;align-items:center;gap:.1rem;height:3.6rem;margin-left:-.6rem;padding:0 .8rem 0 .2rem;border-radius:var(--r-sm);color:var(--coral);font-size:1.4rem;font-weight:500;max-width:14rem}
 .bk span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stop{margin-left:auto;flex:none;height:3.2rem;padding:0 1.5rem;border-radius:1.6rem;font-size:1.3rem;font-weight:800;letter-spacing:.08em;color:#fff;
-  background:linear-gradient(180deg,#ff5b4f,#e0261a);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+.stop{margin-left:auto;flex:none;height:3.2rem;padding:0 1.5rem;border-radius:1.6rem;font-size:1.25rem;font-weight:700;letter-spacing:.06em;color:#fff;
+  background:#e5342a}
 </style>

@@ -116,7 +116,7 @@ function open(d) { if (!d.soon) p.go(d.id) }
     </footer>
     <nav v-else class="dock glass">
       <button v-for="d in DOCK" :key="d.id" type="button" class="dk tap" :class="{ soon: d.soon }" @click="open(d)">
-        <span class="di" :class="'c-' + d.id"><Icon :name="d.icon" size="1.9rem" /></span>
+        <span class="di"><Icon :name="d.icon" size="1.9rem" /></span>
         <span class="dl">{{ t('scr.page.' + d.id) }}</span>
       </button>
     </nav>
@@ -154,7 +154,7 @@ function open(d) { if (!d.soon) p.go(d.id) }
 .chip{padding:.35rem .8rem;border-radius:1rem;background:rgba(255,255,255,.08);font-size:1.15rem;font-weight:500;color:#d1d1d6;white-space:nowrap}
 
 .idle{display:grid;gap:.5rem;padding-left:.6rem}
-.idle small{font-size:1.2rem;font-weight:600;color:var(--coral);text-transform:uppercase;letter-spacing:.08em}
+.idle small{font-size:1.15rem;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
 .idle b{font-size:2.6rem;font-weight:700;letter-spacing:-.03em;line-height:1.1}
 .idle > span{font-size:1.25rem;color:var(--dim);line-height:1.4}
 .quick{display:flex;gap:.5rem;margin-top:.6rem}
@@ -171,21 +171,17 @@ function open(d) { if (!d.soon) p.go(d.id) }
 .now{font-size:2.2rem;font-weight:600;line-height:1.05;letter-spacing:-.03em}
 .now i{font-style:normal;font-weight:400;color:var(--dim)}
 .tgt{position:absolute;top:.7rem;right:1rem;font-size:1.05rem;color:var(--dim)}
-.hot .ti{background:rgba(var(--accent-rgb),.18);color:var(--coral)}
+.hot .ti{color:var(--coral)}
 .hot .now{color:var(--coral)}
 
 .acts{grid-column:1 / -1;display:flex;gap:.8rem}
 .btn{flex:1;height:5rem;border-radius:var(--r);display:flex;align-items:center;justify-content:center;gap:.7rem;font-size:1.5rem;font-weight:600}
 .btn.sq{flex:none;width:5rem}
-.btn.main{background:linear-gradient(180deg,var(--btn-hi),var(--btn-lo));color:var(--on-btn);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
-.btn.danger{color:var(--red)}
+.btn.main{background:var(--primary);color:var(--on-primary);border:0;box-shadow:none}
+.btn.danger .ic{color:var(--red)}
 
 .dock{grid-column:1 / -1;display:flex;gap:.4rem;padding:.5rem;border-radius:var(--r-lg)}
 .dk{flex:1;height:4.6rem;border-radius:var(--r);display:flex;align-items:center;justify-content:center;gap:.8rem;font-size:1.3rem;font-weight:600}
-.di{width:3rem;height:3rem;border-radius:.85rem;display:grid;place-items:center;color:#fff}
-.c-files{background:linear-gradient(180deg,#5ac8fa,#0a84ff)}
-.c-move{background:linear-gradient(180deg,#a78bfa,#7c3aed)}
-.c-temp{background:linear-gradient(180deg,#ffb340,#ff6b2c)}
-.c-settings{background:linear-gradient(180deg,#9a9aa0,#636366)}
+.di{width:3rem;height:3rem;border-radius:.85rem;display:grid;place-items:center;background:var(--tile);color:var(--tile-ink)}
 .dk.soon{opacity:.5}
 </style>

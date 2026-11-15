@@ -71,7 +71,7 @@ function ok() { p.runUpdate(ask.value.name); ask.value = null }
 .st{flex:1;min-width:0;display:grid;gap:.2rem}
 .st b{font-size:1.45rem;font-weight:600}
 .st small{font-size:1.1rem;color:var(--amber)}
-.chk{flex:none;display:flex;align-items:center;gap:.4rem;height:3.4rem;padding:0 1.1rem;border-radius:1.7rem;background:rgba(255,255,255,.08);color:var(--coral);font-size:1.25rem;font-weight:600}
+.chk{flex:none;display:flex;align-items:center;gap:.4rem;height:3.4rem;padding:0 1.1rem;border-radius:1.7rem;background:var(--btn);border:1px solid var(--btn-edge);color:var(--ink);font-size:1.25rem;font-weight:600}
 .spin{animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .it{min-height:5rem;display:flex;align-items:center;gap:1rem;padding:.6rem 1.1rem .6rem 1.4rem;box-shadow:inset 0 -1px 0 var(--group-sep)}
@@ -80,9 +80,9 @@ function ok() { p.runUpdate(ask.value.name); ask.value = null }
 .nm b{font-size:1.4rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nm small{font-size:1.1rem;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nm em{font-style:normal;color:var(--green)}
-.up{flex:none;height:3rem;padding:0 1.3rem;border-radius:1.5rem;background:var(--blue);color:#fff;font-size:1.2rem;font-weight:700}
+.up{flex:none;height:3rem;padding:0 1.3rem;border-radius:1.5rem;background:var(--btn);border:1px solid var(--btn-edge);color:var(--ink);font-size:1.2rem;font-weight:600}
 .ok{color:var(--green)}
-.all{width:100%;height:4.6rem;margin-top:1.2rem;border-radius:var(--r);background:linear-gradient(180deg,var(--btn-hi),var(--btn-lo));color:var(--on-btn);font-size:1.45rem;font-weight:700}
+.all{width:100%;height:4.6rem;margin-top:1.2rem;border-radius:var(--r);background:var(--primary);color:var(--on-primary);font-size:1.45rem;font-weight:600}
 .log{margin-top:1.2rem;padding:.9rem 1.2rem;border-radius:var(--r-sm);background:#000;border:1px solid var(--line);display:grid;gap:.25rem;
   font:1.05rem/1.4 ui-monospace,Menlo,Consolas,"DejaVu Sans Mono",monospace;color:#b8bcc4}
 .log span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

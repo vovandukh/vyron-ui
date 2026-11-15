@@ -48,15 +48,15 @@ const go = (a, sign) => p.jog(a, sign * (a === 'z' ? Math.min(step.value, 10) : 
         </span>
       </div>
       <button type="button" class="act glass tap" :disabled="!!p.moving || p.active" @click="p.homeAll()">
-        <span class="ai c-home"><Icon name="home" size="1.7rem" /></span>{{ t('jog.homeAll') }}<i v-if="p.moving === 'home'" class="spin"></i>
+        <span class="ai"><Icon name="home" size="1.7rem" /></span>{{ t('jog.homeAll') }}<i v-if="p.moving === 'home'" class="spin"></i>
       </button>
       <button v-if="p.leveling" type="button" class="act glass tap" :disabled="!!p.moving || p.active" @click="p.level()">
-        <span class="ai c-level"><Icon name="level" size="1.7rem" /></span>{{ p.leveling.kind === 'ztilt' ? 'Z-Tilt' : 'QGL' }}
+        <span class="ai"><Icon name="level" size="1.7rem" /></span>{{ p.leveling.kind === 'ztilt' ? 'Z-Tilt' : 'QGL' }}
         <i v-if="p.moving === 'level'" class="spin"></i>
         <Icon v-else-if="p.leveled" name="check" size="1.6rem" :stroke="2.8" class="done" />
       </button>
       <button type="button" class="act glass tap" :disabled="!!p.moving || p.active" @click="p.motorsOff()">
-        <span class="ai c-motors"><Icon name="motors" size="1.7rem" /></span>{{ t('jog.motorsShort') }}
+        <span class="ai"><Icon name="motors" size="1.7rem" /></span>{{ t('jog.motorsShort') }}
       </button>
     </section>
     <p v-if="p.active" class="busy">{{ t('scr.moveBusy') }}</p>
@@ -68,10 +68,10 @@ const go = (a, sign) => p.jog(a, sign * (a === 'z' ? Math.min(step.value, 10) : 
 .pad{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;gap:.7rem 1rem;align-content:start;justify-content:start}
 .xy{display:grid;grid-template-columns:repeat(3,5.4rem);grid-template-rows:repeat(3,5.4rem);gap:.5rem}
 .z{display:grid;grid-template-rows:repeat(2,8.4rem);gap:.5rem;width:5.4rem}
-.k{border-radius:var(--r);background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.05));border:1px solid var(--card-edge);
+.k{border-radius:var(--r);background:var(--btn);border:1px solid var(--btn-edge);
   display:grid;place-content:center;justify-items:center;gap:0;color:var(--ink)}
 .k small{font-size:1rem;font-weight:700;color:var(--dim);line-height:1}
-.k.hm{background:rgba(var(--accent-rgb),.16);border-color:rgba(var(--accent-rgb),.35);color:var(--coral)}
+.k.hm{background:var(--primary);border-color:transparent;color:var(--on-primary)}
 .steps{grid-column:1 / -1;display:flex;gap:.3rem;padding:.3rem;border-radius:1.6rem;background:rgba(255,255,255,.06);border:1px solid var(--card-edge)}
 .st{flex:1;height:3rem;border-radius:1.3rem;font-size:1.25rem;font-weight:600;color:var(--dim)}
 .st.on{background:#f2f2f4;color:#111}
@@ -83,10 +83,7 @@ const go = (a, sign) => p.jog(a, sign * (a === 'z' ? Math.min(step.value, 10) : 
 .ax b{font-size:1.45rem;font-weight:600;letter-spacing:-.02em}
 .ax.ok small{color:var(--green)}
 .act{height:4.6rem;display:flex;align-items:center;gap:.9rem;padding:0 1rem 0 .8rem;border-radius:var(--r);font-size:1.35rem;font-weight:600;text-align:left}
-.ai{flex:none;width:3rem;height:3rem;border-radius:.85rem;display:grid;place-items:center;color:#fff}
-.c-home{background:linear-gradient(180deg,var(--btn-hi),var(--btn-lo))}
-.c-level{background:linear-gradient(180deg,#a78bfa,#7c3aed)}
-.c-motors{background:linear-gradient(180deg,#9a9aa0,#636366)}
+.ai{flex:none;width:3rem;height:3rem;border-radius:.85rem;display:grid;place-items:center;background:var(--tile);color:var(--tile-ink)}
 .done{margin-left:auto;color:var(--green)}
 .spin{margin-left:auto;width:1.6rem;height:1.6rem;border-radius:50%;border:.22rem solid rgba(255,255,255,.2);border-top-color:var(--coral);animation:spin .8s linear infinite}
 .pulse{animation:pulse 1s ease-in-out infinite}

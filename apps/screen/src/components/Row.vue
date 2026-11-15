@@ -18,7 +18,7 @@ defineEmits(['tap'])
 
 <template>
   <button type="button" class="row" :class="{ danger }" :disabled="disabled" @click="$emit('tap')">
-    <span v-if="icon" class="ri" :style="{ background: color }"><Icon :name="icon" size="1.7rem" :stroke="2.2" /></span>
+    <span v-if="icon" class="ri"><Icon :name="icon" size="1.7rem" :stroke="2.2" /></span>
     <span class="rb">
       <span class="rl">{{ label }}<slot name="sub" /></span>
       <span v-if="value" class="rv">{{ value }}</span>
@@ -32,7 +32,7 @@ defineEmits(['tap'])
 <style scoped>
 .row{width:100%;min-height:4.6rem;display:flex;align-items:center;gap:1.1rem;padding-left:1.2rem;text-align:left;transition:background-color .1s ease-out}
 .row:active:not(:disabled){background:rgba(255,255,255,.08)}
-.ri{flex:none;width:2.9rem;height:2.9rem;border-radius:.75rem;display:grid;place-items:center;color:#fff}
+.ri{flex:none;width:2.9rem;height:2.9rem;border-radius:.75rem;display:grid;place-items:center;background:var(--tile);color:var(--tile-ink)}
 .rb{flex:1;min-width:0;align-self:stretch;display:flex;align-items:center;gap:.7rem;padding-right:1.1rem;box-shadow:inset 0 -1px 0 var(--group-sep)}
 .row:last-child .rb{box-shadow:none}
 .rl{flex:1;min-width:0;display:grid;font-size:1.45rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

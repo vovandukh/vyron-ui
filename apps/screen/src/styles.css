@@ -11,6 +11,8 @@
   /* Тема (shared/theme.js перевизначає): фірмовий колір і акцент */
   --brand:#f03a2e;--brand-rgb:240,58,46;--coral:#ff6b5a;--accent-rgb:255,107,90;
   --btn-hi:#ff5a4c;--btn-lo:#e0321f;--on-btn:#fff;
+  /* Один тон для кнопок та іконок: нейтральна плитка, світла головна дія; колір — лише там, де він щось означає */
+  --tile:rgba(255,255,255,.07);--tile-ink:#c7c7cc;--btn:rgba(255,255,255,.07);--btn-edge:rgba(255,255,255,.08);--primary:#f2f2f4;--on-primary:#111113;
   --r:1.2rem;--r-lg:1.6rem;--r-sm:.8rem;
   --ease:cubic-bezier(.32,.72,0,1)
 }
