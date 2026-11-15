@@ -35,7 +35,7 @@ function open(d) { if (!d.soon) p.go(d.id) }
 <template>
   <div class="home page">
     <section class="hero glass" :class="{ model: showModel }">
-      <!-- Модель друку (G-code) на всю картку; поверх — відсоток, файл і час. Дотик по моделі повертає ракурс. -->
+      <!-- Модель друку (G-code) на всю картку; поверх — відсоток, файл і час. Під моделлю — легка шестикутна сітка (статична, малюється раз). -->
       <template v-if="showModel">
         <GcodeView />
         <div class="ov-top"><b>{{ pctShown }}</b><small>%</small><span v-if="p.printState === 'complete'" class="done">{{ t('state.complete') }}</span></div>
@@ -113,6 +113,10 @@ function open(d) { if (!d.soon) p.go(d.id) }
 .home{display:grid;grid-template-columns:1fr 16.5rem;grid-template-rows:1fr auto;gap:.9rem;padding:.2rem 1.2rem 1.2rem}
 .hero{position:relative;min-width:0;border-radius:var(--r-lg);display:flex;align-items:center;gap:1.3rem;padding:1rem 1.4rem 1rem 1rem;overflow:hidden}
 .hero.model{padding:0}
+/* Шестикутна сітка Vyron під моделлю: статичний SVG-візерунок, яскравіший у центрі й згасає до країв */
+.hero.model::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.9;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48' viewBox='0 0 28 48'%3E%3Cpath d='M14 0 28 8v16L14 32 0 24V8zM14 32v16' fill='none' stroke='%23ffffff' stroke-opacity='.11' stroke-width='1'/%3E%3C/svg%3E") center / 2.8rem 4.8rem;
+  -webkit-mask-image:radial-gradient(ellipse 62% 66% at 50% 48%,#000 25%,transparent 100%);mask-image:radial-gradient(ellipse 62% 66% at 50% 48%,#000 25%,transparent 100%)}
 /* Підписи поверх моделі: темні градієнти зверху й знизу, щоб текст читався на будь-якому фоні */
 .ov-top{position:absolute;left:0;top:0;right:0;padding:.8rem 1.2rem 2rem;display:flex;align-items:baseline;pointer-events:none;background:linear-gradient(180deg,rgba(6,6,7,.7),transparent)}
 .ov-top b{font-size:3rem;font-weight:700;letter-spacing:-.05em;line-height:1}

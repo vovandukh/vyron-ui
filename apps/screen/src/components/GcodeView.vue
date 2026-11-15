@@ -3,14 +3,14 @@
 // (без WebGL — на SPI-екрані CB1 він програмний і повільний). Вигляд як у Vyron Web: ненадруковане —
 // тонкі сірі лінії, надруковане — колір теми з чергуванням яскравості шарів.
 // Економія: сірі лінії малюються один раз у прихований буфер; надруковане домальовується лише новими
-// відрізками. Повна перемальовка — тільки при новій моделі, зміні розміру, теми чи ракурсу (дотик — поворот на 45°).
+// відрізками. Ракурс один — ізометрія; повна перемальовка лише при новій моделі, зміні розміру чи теми.
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { model } from '@vyron/shared/gcode/model'
 import { hexToRgb } from '@vyron/shared/theme'
 import { usePrinter } from '../store'
 
 const MAX_SEG = 40000      // скільки відрізків малюємо щонайбільше (решта зливається з сусідніми)
-const TILT = 0.42          // нахил «камери»: частка глибини по Y
+const TILT = 0.5           // ізометрія: глибина по Y стискається вдвічі (погляд згори під 30°)
 const MAX_JOIN = 12        // мм: злиті відрізки довші за це не з'єднуємо (переїзди між островами)
 
 const p = usePrinter()
@@ -19,7 +19,7 @@ const cv = ref(null)
 let base = null            // прихований буфер із сірими лініями
 let S = null, L = null, I = null, n = 0   // екранні координати, шар і вихідний індекс кожного відрізка
 let drawn = 0              // скільки відрізків уже пофарбовано як надруковані
-let angle = -Math.PI / 4
+const ANGLE = -Math.PI / 4  // фіксований ракурс: модель повернута на 45°, як класична ізометрія
 let colors = ['#ff6b5a', '#ff9a8c']
 
 function readColors() {
@@ -36,7 +36,7 @@ function project(w, h) {
   if (!P || !N || !b) { n = 0; return }
   const step = Math.max(1, Math.ceil(N / MAX_SEG))
   const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2, zs = model.zScale || 1
-  const ca = Math.cos(angle), sa = Math.sin(angle)
+  const ca = Math.cos(ANGLE), sa = Math.sin(ANGLE)
   const cnt = Math.ceil(N / step)
   const raw = new Float32Array(cnt * 4)
   L = new Uint16Array(cnt); I = new Uint32Array(cnt)
@@ -126,8 +126,6 @@ function more() {
   drawn = upto
 }
 
-function rotate() { angle += Math.PI / 4; full() }
-
 let ro = null
 onMounted(() => {
   full()
@@ -141,10 +139,10 @@ watch(() => p.done, more)
 </script>
 
 <template>
-  <div ref="box" class="gv" @click="rotate"><canvas ref="cv"></canvas></div>
+  <div ref="box" class="gv" aria-hidden="true"><canvas ref="cv"></canvas></div>
 </template>
 
 <style scoped>
-.gv{position:absolute;inset:0;overflow:hidden}
+.gv{position:absolute;inset:0;overflow:hidden;pointer-events:none}
 canvas{display:block;width:100%;height:100%}
 </style>
