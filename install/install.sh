@@ -6,8 +6,9 @@
 #
 # Що робить:
 #   1. Сайт nginx «vyron»: Vyron Web на http://IP/ (порт 80), Vyron Screen на http://IP/screen.html.
-#      Mainsail/Fluidd, що стояли на 80, переносить на порт 66 (файли й оновлення Mainsail не чіпає).
-#      Із --port N Vyron стає на власний порт, а Mainsail лишається як був.
+#      Mainsail/Fluidd приховує — вимикає їхні сайти nginx (файли й оновлення не чіпає, uninstall поверне).
+#      З --mainsail-port N Mainsail не ховається, а переїжджає на порт N.
+#      З --port N Vyron стає на власний порт, а Mainsail лишається як був.
 #   2. Запис [update_manager vyron] у moonraker.conf — оновлення з Mainsail/Vyron одним кліком.
 #   3. З --core — служба Vyron Core (якщо вона є в цій версії).
 # Чого НЕ робить: не чіпає Klipper, printer.cfg, не рухає принтер і не гріє. Усе, що змінює, спершу
@@ -16,7 +17,7 @@
 set -euo pipefail
 
 PORT=80
-MAINSAIL_PORT=66
+MAINSAIL_PORT=""
 DRY=0
 UPDATES=1
 CORE=0
@@ -24,8 +25,8 @@ CORE=0
 usage() { sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; cat <<'EOF'
 Параметри:
   --dry-run           нічого не змінювати, лише показати кроки
-  --port N            порт для Vyron (за замовчуванням 80); якщо не 80 — Mainsail не переноситься
-  --mainsail-port N   куди перенести Mainsail/Fluidd (за замовчуванням 66)
+  --port N            порт для Vyron (за замовчуванням 80); якщо не 80 — Mainsail не чіпається
+  --mainsail-port N   не ховати Mainsail/Fluidd, а перенести на порт N (наприклад 66)
   --no-updates        не додавати запис в Update Manager
   --core              також встановити службу Vyron Core
 EOF
@@ -52,10 +53,19 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 say "Vyron — встановлення$([ $DRY = 1 ] && echo ' (dry-run: нічого не змінюю)')"
 preflight
 valid_port "$PORT" || die "Порт Vyron «$PORT» некоректний."
-valid_port "$MAINSAIL_PORT" || die "Порт Mainsail «$MAINSAIL_PORT» некоректний."
 unsafe_port "$PORT" && die "Порт $PORT браузери блокують як небезпечний — обери інший."
-unsafe_port "$MAINSAIL_PORT" && die "Порт $MAINSAIL_PORT браузери блокують як небезпечний — обери інший (наприклад 66 або 8081)."
-[ "$PORT" != "$MAINSAIL_PORT" ] || die "Порти Vyron і Mainsail мають бути різні."
+# Режим для Mainsail/Fluidd: hide — вимкнути; move — перенести на MAINSAIL_PORT; keep — не чіпати (Vyron не на 80)
+if [ "$PORT" != 80 ]; then
+  MODE=keep
+  [ -z "$MAINSAIL_PORT" ] || warn "--mainsail-port ігнорується: Vyron стає на порт $PORT, Mainsail лишається як був"
+elif [ -n "$MAINSAIL_PORT" ]; then
+  MODE=move
+  valid_port "$MAINSAIL_PORT" || die "Порт Mainsail «$MAINSAIL_PORT» некоректний."
+  unsafe_port "$MAINSAIL_PORT" && die "Порт $MAINSAIL_PORT браузери блокують як небезпечний — обери інший (наприклад 66 або 8081)."
+  [ "$PORT" != "$MAINSAIL_PORT" ] || die "Порти Vyron і Mainsail мають бути різні."
+else
+  MODE=hide
+fi
 [ -f "$REPO/index.html" ] || die "У $REPO немає index.html — це не репозиторій Vyron або збірка ще не готова."
 
 info "репозиторій:  $REPO"
@@ -70,25 +80,24 @@ say "1. Сайт nginx"
 SITE_AV=/etc/nginx/sites-available/vyron
 SITE_EN=/etc/nginx/sites-enabled/vyron
 
-# Хто ще слухає наш порт? Mainsail/Fluidd переносимо, стандартний сайт nginx вимикаємо, решту — не чіпаємо.
+# Інші сайти: Mainsail/Fluidd ховаємо (усі, на будь-якому порту) або переносимо з нашого порту;
+# стандартний сайт nginx на нашому порту вимикаємо; чужі сайти не чіпаємо.
 TO_MOVE=()
 TO_DISABLE=()
 for f in /etc/nginx/sites-enabled/*; do
   [ -e "$f" ] || continue
   [ "$(basename "$f")" = vyron ] && continue
   real="$(readlink -f "$f")"
-  listens_on "$real" "$PORT" || continue
   if is_web_ui "$real"; then
+    if [ $MODE = hide ]; then TO_DISABLE+=("$f"); continue; fi
+    listens_on "$real" "$PORT" || continue
+    [ $MODE = move ] || die "Порт $PORT зайнятий $(basename "$f"). Обери вільний порт (--port)."
     TO_MOVE+=("$real")
-  elif [ "$(basename "$f")" = default ]; then
+  elif listens_on "$real" "$PORT"; then
+    [ "$(basename "$f")" = default ] || die "Порт $PORT уже зайнятий сайтом $f (це не Mainsail/Fluidd). Запусти з --port 8080 або звільни порт."
     TO_DISABLE+=("$f")
-  else
-    die "Порт $PORT уже зайнятий сайтом $f (це не Mainsail/Fluidd). Запусти з --port 8080 або звільни порт."
   fi
 done
-if [ "$PORT" != 80 ] && [ ${#TO_MOVE[@]} -gt 0 ]; then
-  die "Порт $PORT зайнятий Mainsail/Fluidd. Обери вільний порт (--port)."
-fi
 
 # Перенесення Mainsail на MAINSAIL_PORT — лише коли Vyron займає 80
 for real in "${TO_MOVE[@]+"${TO_MOVE[@]}"}"; do
@@ -97,7 +106,7 @@ for real in "${TO_MOVE[@]+"${TO_MOVE[@]}"}"; do
   fi
   info "$(basename "$real"): порт $PORT → $MAINSAIL_PORT (копія: $(backup_name "$real"))"
 done
-for f in "${TO_DISABLE[@]+"${TO_DISABLE[@]}"}"; do info "стандартний сайт nginx $f вимикається (повернеться при видаленні)"; done
+for f in "${TO_DISABLE[@]+"${TO_DISABLE[@]}"}"; do info "$(basename "$f"): приховується — сайт nginx вимикається, файли лишаються (повернеться при видаленні)"; done
 
 # Встановлення вручну (до цього скрипта): Mainsail уже на іншому порту — запам'ятати, щоб uninstall повернув його на 80
 if [ "$PORT" = 80 ] && [ -z "$(state_get MOVED)" ]; then
@@ -167,8 +176,8 @@ else
     die "Нічого не змінено. Надішли текст помилки вище розробникам."
   fi
   state_set PORT "$PORT"
-  [ -n "$MOVED_NOW" ] && state_set MOVED "$(echo "$(state_get MOVED)$MOVED_NOW" | xargs)"
-  [ -n "${LEGACY_MOVED:-}" ] && state_set MOVED "$LEGACY_MOVED"
+  ALL_MOVED="$MOVED_NOW ${LEGACY_MOVED:-}"
+  [ -n "${ALL_MOVED// /}" ] && state_set MOVED "$(echo "$(state_get MOVED) $ALL_MOVED" | xargs)"
   [ -n "$DISABLED_NOW" ] && state_set DISABLED "$(echo "$(state_get DISABLED)$DISABLED_NOW" | xargs)"
   [ $ROOT_OK = 1 ] || state_set HOME_OX 1
 fi
@@ -252,9 +261,9 @@ URL="http://${IP:-<IP принтера>}$([ "$PORT" = 80 ] || echo ":$PORT")"
 say "Готово$([ $DRY = 1 ] && echo ' (dry-run — нічого не змінено)')"
 info "Vyron Web:    $URL/"
 info "Vyron Screen: $URL/screen.html"
-MOVED_ALL="$(state_get MOVED) ${LEGACY_MOVED:-}"
-MS_PORT=""
-if [ ${#TO_MOVE[@]} -gt 0 ]; then MS_PORT="$MAINSAIL_PORT"
-elif [ -n "${MOVED_ALL// /}" ]; then MS_PORT="$(echo "$MOVED_ALL" | xargs -n1 | head -n1 | cut -d'|' -f3)"; fi
-[ "$PORT" = 80 ] && [ -n "$MS_PORT" ] && info "Mainsail:     http://${IP:-<IP>}:$MS_PORT/"
+if [ $MODE = hide ]; then
+  info "Mainsail:     приховано (повернути: uninstall.sh, або встановити з --mainsail-port 66)"
+elif [ $MODE = move ]; then
+  info "Mainsail:     http://${IP:-<IP>}:$MAINSAIL_PORT/"
+fi
 info "Видалити:     $REPO/install/uninstall.sh"
