@@ -3,7 +3,7 @@
 // а назва поточної — великим заголовком на самій сторінці.
 // STOP завжди на місці в правому куті: аварійна зупинка доступна з будь-якої сторінки.
 import { computed } from 'vue'
-import { SHAPE, V } from '@vyron/shared/logo'
+import { logoSvg } from '@vyron/shared/logo'
 import { usePrinter } from '../store'
 import { t } from '../i18n'
 import Icon from './Icon.vue'
@@ -14,12 +14,13 @@ const p = usePrinter()
 
 const sub = computed(() => p.page !== 'home')
 const prev = computed(() => p.stack[p.stack.length - 2])
+const LOGO = logoSvg('var(--brand)', { fx: true })
 </script>
 
 <template>
   <header class="tb">
     <template v-if="!sub">
-      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><path class="sh" :d="SHAPE" /><path class="v" :d="V" /></svg>
+      <span class="logo" aria-hidden="true" v-html="LOGO"></span>
       <StatusPill />
     </template>
     <template v-else>
@@ -33,9 +34,7 @@ const prev = computed(() => p.stack[p.stack.length - 2])
 
 <style scoped>
 .tb{position:relative;height:4.6rem;display:flex;align-items:center;gap:.9rem;padding:0 1rem 0 1.3rem}
-.logo{width:2.6rem;height:2.6rem;flex:none}
-.sh{fill:var(--brand)}
-.v{fill:none;stroke:#fff;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+.logo{display:block;width:3rem;height:3rem;flex:none}
 /* «‹ Назад» — акцентним кольором теми, як системна кнопка iOS */
 .bk{flex:none;display:flex;align-items:center;gap:.1rem;height:3.6rem;margin-left:-.6rem;padding:0 .8rem 0 .2rem;border-radius:var(--r-sm);color:var(--coral);font-size:1.4rem;font-weight:500;max-width:14rem}
 .bk span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
