@@ -37,7 +37,7 @@ SITE_AV=/etc/nginx/sites-available/vyron-screen
 SITE_EN=/etc/nginx/sites-enabled/vyron-screen
 URL="http://127.0.0.1:$LPORT/screen.html"
 KS=KlipperScreen.service
-has_ks() { systemctl list-unit-files "$KS" 2>/dev/null | grep -q "^$KS"; }
+has_ks() { has_unit "$KS"; }
 
 # ---------- повернути KlipperScreen ----------
 if [ $REMOVE = 1 ]; then
@@ -106,9 +106,13 @@ else
     code="$(curl -s -o /dev/null -w '%{http_code}' "$URL" || true)"; [ "$code" = 200 ] && break; sleep 1
   done
   [ "$code" = 200 ] || die "Сторінка $URL не відкривається (код $code)."
-  api="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$LPORT/server/info" || true)"
-  [ "$api" = 200 ] || warn "Moonraker через локальний сайт відповідає кодом $api — екран може не підключитися"
-  ok "сторінка відкривається, Moonraker відповідає"
+  ok "сторінка відкривається"
+  # Moonraker міг щойно перезапуститися (install.sh) — чекаємо до 30 с
+  for i in $(seq 1 15); do
+    api="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$LPORT/server/info" || true)"; [ "$api" = 200 ] && break; sleep 2
+  done
+  if [ "$api" = 200 ]; then ok "Moonraker відповідає"
+  else warn "Moonraker через локальний сайт відповідає кодом $api — екран підключиться, щойно Moonraker запрацює"; fi
 fi
 
 # 2. Chromium
@@ -116,7 +120,6 @@ say "2. Браузер"
 if command -v chromium >/dev/null || command -v chromium-browser >/dev/null; then
   ok "Chromium уже встановлено"
 else
-  has_pkg() { apt-cache policy "$1" 2>/dev/null | grep -q 'Candidate: [0-9]'; }
   FREE_MB="$(df -m / | awk 'NR==2{print $4}')"
   [ "$FREE_MB" -gt 600 ] || die "Мало місця на диску: вільно $FREE_MB МБ, для Chromium треба ~600 МБ."
   # На свіжій системі списки пакетів apt ще порожні — спершу оновити їх, потім шукати Chromium
