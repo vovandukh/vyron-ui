@@ -10,11 +10,12 @@
 const DESIGN_UPDATED = { namespace: 'vyron_ui', key: 'design.updated' }
 
 /** @returns функція зупинки */
-export function watchDesign({ call, getUpdated, onChange, interval = 3000 }) {
+export function watchDesign({ call, getUpdated, onChange, interval = 3000, visibleOnly = true }) {
   let timer = 0, stopped = false, busy = false
+  const shown = () => !visibleOnly || !document.hidden
   async function tick() {
     if (stopped) return
-    if (!document.hidden && !busy) {
+    if (shown() && !busy) {
       busy = true
       try {
         const r = await call('server.database.get_item', DESIGN_UPDATED)
@@ -46,10 +47,15 @@ export function handleCoreEvent(e, { onDesign } = {}) {
 }
 
 /**
- * @param {{ canReload?: () => boolean, beforeReload?: () => void, interval?: number }} o
+ * @param {{ canReload?: () => boolean, beforeReload?: () => void, interval?: number,
+ *   idle?: number | (() => number), visibleOnly?: boolean }} o
+ * idle — скільки мс без дотиків перед перезавантаженням. visibleOnly: false — для екрана принтера (kiosk):
+ * браузер без віконного менеджера може вважати сторінку «невидимою», хоча вона завжди на екрані.
  * @returns функція зупинки
  */
-export function watchBuild({ canReload = () => true, beforeReload = () => {}, interval = 20000 } = {}) {
+export function watchBuild({ canReload = () => true, beforeReload = () => {}, interval = 20000, idle = IDLE_MS, visibleOnly = true } = {}) {
+  const shown = () => !visibleOnly || !document.hidden
+  const idleMs = () => (typeof idle === 'function' ? idle() : idle)
   // У розробці сторінку оновлює vite (HMR); з диска (file://) перевіряти нічого
   if (import.meta.env.DEV || !location.protocol.startsWith('http')) return () => {}
   const url = location.pathname || '/'
@@ -73,14 +79,14 @@ export function watchBuild({ canReload = () => true, beforeReload = () => {}, in
   }
   async function tick() {
     if (stopped) return
-    if (!pending && !document.hidden) {
+    if (!pending && shown()) {
       try {
         const v = await version()
         if (v && tag && v !== tag) pending = true
         if (v && !tag) tag = v
       } catch { /* принтер тимчасово недоступний */ }
     }
-    if (pending && !document.hidden && Date.now() - lastInput > IDLE_MS && canReload()) { stopped = true; reload(); return }
+    if (pending && shown() && Date.now() - lastInput > idleMs() && canReload()) { stopped = true; reload(); return }
     timer = setTimeout(tick, pending ? 1000 : interval)
   }
   timer = setTimeout(tick, 1500)

@@ -21,8 +21,14 @@ const PAGES = { settings: SettingsPage, wifi: WifiPage, theme: ThemePage, langua
 
 const p = usePrinter()
 onMounted(() => p.start())
-// Нова версія на принтері (Update Manager): тихо перезавантажуємось, коли на екрані головна і ніхто її не торкається
-watchBuild({ canReload: () => p.page === 'home' && !ask.value && !p.busy && !p.moving })
+// Нова версія на принтері (Update Manager): тихо перезавантажуємось, коли екрана ніхто не торкається —
+// на головній через 4 с, на інших сторінках через 30 с (щоб не перервати, наприклад, введення пароля Wi‑Fi).
+// visibleOnly: false — Chromium на екрані без віконного менеджера може вважати сторінку «прихованою».
+watchBuild({
+  canReload: () => !ask.value && !p.busy && !p.moving,
+  idle: () => (p.page === 'home' ? 4000 : 30000),
+  visibleOnly: false
+})
 
 const view = computed(() => {
   if (p.page !== 'home') return 'page'
