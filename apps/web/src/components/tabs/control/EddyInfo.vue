@@ -4,7 +4,7 @@
 import { computed } from 'vue'
 import { usePrinterStore } from '../../../stores/printerStore'
 import { useI18n } from '../../../composables/useI18n'
-import { shortId } from '../../../services/toolheads'
+import { shortId } from '@vyron/shared/klipper/toolheads'
 
 const props = defineProps({ eddy: { type: Object, required: true } })
 

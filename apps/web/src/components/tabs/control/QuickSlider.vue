@@ -7,8 +7,8 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { usePrinterStore } from '../../../stores/printerStore'
 import { useUiStore } from '../../../stores/uiStore'
 import { useI18n } from '../../../composables/useI18n'
-import { toolNum } from '../../../services/klipper'
-import { heatRgb } from '../../../utils/format'
+import { toolNum } from '@vyron/shared/klipper/objects'
+import { heatRgb } from '@vyron/shared/format'
 
 const props = defineProps({
   kind: { type: String, required: true },     // nozzle | bed | speed | fan

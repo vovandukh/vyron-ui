@@ -72,7 +72,7 @@ export default {
   'design.reset': 'Скинути дизайн', 'design.resetConfirm': 'Повернути стандартний дизайн Vyron?',
   'design.syncLocal': 'Збережено в цьому браузері', 'design.syncSaving': 'Збереження на принтер…',
   'design.syncOk': 'Збережено на принтері — спільне для всіх екранів', 'design.syncErr': 'Не вдалося зберегти на принтері',
-  // ---------- помилки Klipper (KlippyCard, KlipperToasts, @vyron/shared/klipperErrors.js) ----------
+  // ---------- помилки Klipper (KlippyCard, KlipperToasts, @vyron/shared/klipper/errors.js) ----------
   // kerr.<id>.t — що сталося (заголовок), .d — пояснення простими словами, .h — що зробити (кроки через \n)
   'state.klipperConfig': 'Помилка конфігурації', 'state.klipperStartup': 'Запуск Klipper…', 'state.klipperOffline': 'Klipper не працює',
   'island.klipperConfig': 'Помилка в конфігурації принтера', 'island.klippyShow': 'Показати, що сталося',

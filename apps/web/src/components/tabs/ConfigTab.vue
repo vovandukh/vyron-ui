@@ -3,7 +3,7 @@ import { computed, ref, shallowRef, onActivated, onMounted, onBeforeUnmount } fr
 import { usePrinterStore } from '../../stores/printerStore'
 import { useConfirm } from '../../composables/useConfirm'
 import { useI18n } from '../../composables/useI18n'
-import { listConfigFiles, readConfigFile, saveConfigWithBackup } from '../../services/moonrakerApi'
+import { listConfigFiles, readConfigFile, saveConfigWithBackup } from '@vyron/shared/moonraker/api'
 import ConfigEditor from './config/ConfigEditor.vue'
 
 const printer = usePrinterStore()

@@ -1,14 +1,7 @@
 import { useSettingsStore } from '../stores/settingsStore'
-import uk from '../locales/uk'
-import en from '../locales/en'
+import { translate } from '@vyron/shared/i18n'
 
-const dicts = { uk, en }
-
-export function translate(lang, key, params) {
-  let v = (dicts[lang] && dicts[lang][key]) ?? uk[key] ?? key
-  if (params) v = v.replace(/\{(\w+)\}/g, (_, k) => (params[k] ?? ''))
-  return v
-}
+export { translate }
 
 /**
  * t(key, params) — переклад за ключем; tm(msg) — переклад повідомлення-об'єкта

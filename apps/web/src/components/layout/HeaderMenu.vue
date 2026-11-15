@@ -6,7 +6,7 @@ import { usePrinterStore } from '../../stores/printerStore'
 import { useUiStore } from '../../stores/uiStore'
 import { useConfirm } from '../../composables/useConfirm'
 import { useI18n } from '../../composables/useI18n'
-import { normalizeHost, savedHost, resolveHost } from '../../services/moonrakerClient'
+import { normalizeHost, savedHost, resolveHost } from '@vyron/shared/moonraker/client'
 import { DEMO_BUILD } from '../../config'
 
 const printer = usePrinterStore()

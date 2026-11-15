@@ -5,8 +5,8 @@
 import { computed } from 'vue'
 import { usePrinterStore } from '../../../stores/printerStore'
 import { useI18n } from '../../../composables/useI18n'
-import { mcuName } from '../../../services/klipper'
-import { mcuLoad } from '../../../services/toolheads'
+import { mcuName } from '@vyron/shared/klipper/objects'
+import { mcuLoad } from '@vyron/shared/klipper/toolheads'
 import RollNumber from '../../ui/RollNumber.vue'
 
 const props = defineProps({

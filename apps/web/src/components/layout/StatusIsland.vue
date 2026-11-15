@@ -7,8 +7,8 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { usePrinterStore } from '../../stores/printerStore'
 import { useUiStore } from '../../stores/uiStore'
 import { useI18n } from '../../composables/useI18n'
-import { fmtDuration } from '../../utils/format'
-import { resolveHost } from '../../services/moonrakerClient'
+import { fmtDuration } from '@vyron/shared/format'
+import { resolveHost } from '@vyron/shared/moonraker/client'
 
 const printer = usePrinterStore()
 const ui = useUiStore()

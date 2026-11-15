@@ -1,5 +1,5 @@
 <script setup>
-// Іконки категорій помилок Klipper (@vyron/shared/klipperErrors.js): лінійні, 24×24, колір — currentColor.
+// Іконки категорій помилок Klipper (@vyron/shared/klipper/errors.js): лінійні, 24×24, колір — currentColor.
 defineProps({ cat: { type: String, default: 'generic' }, size: { type: Number, default: 18 } })
 </script>
 

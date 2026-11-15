@@ -72,7 +72,7 @@ export default {
   'design.reset': 'Reset design', 'design.resetConfirm': 'Restore the default Vyron design?',
   'design.syncLocal': 'Saved in this browser', 'design.syncSaving': 'Saving to the printer…',
   'design.syncOk': 'Saved on the printer — shared by all screens', 'design.syncErr': 'Could not save on the printer',
-  // ---------- Klipper errors (KlippyCard, KlipperToasts, @vyron/shared/klipperErrors.js) ----------
+  // ---------- Klipper errors (KlippyCard, KlipperToasts, @vyron/shared/klipper/errors.js) ----------
   // kerr.<id>.t — what happened (title), .d — plain-language explanation, .h — what to do (steps separated by \n)
   'state.klipperConfig': 'Config error', 'state.klipperStartup': 'Klipper starting…', 'state.klipperOffline': 'Klipper not running',
   'island.klipperConfig': 'Error in printer config', 'island.klippyShow': 'Show what happened',

@@ -6,7 +6,7 @@
 // Курсор оновлює лише дві CSS-змінні раз на кадр; на сенсорних екранах (без hover) ліхтарик вимкнено.
 import { computed, onMounted, onBeforeUnmount } from 'vue'
 import { usePrinterStore } from '../../stores/printerStore'
-import { heatRgb } from '../../utils/format'
+import { heatRgb } from '@vyron/shared/format'
 
 const printer = usePrinterStore()
 const heat = computed(() => heatRgb(printer.nozzleTemp ?? 25))

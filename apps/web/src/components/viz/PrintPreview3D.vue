@@ -11,7 +11,7 @@ import { useUiStore } from '../../stores/uiStore'
 import { useOrbitCamera } from '../../composables/useOrbitCamera'
 import { useI18n } from '../../composables/useI18n'
 import { model, BED } from '../../services/gcodeModel'
-import { hexToRgb } from '../../services/theme'
+import { hexToRgb } from '@vyron/shared/theme'
 import { useDesignStore } from '../../stores/designStore'
 import { MOBILE_QUERY } from '../../composables/useMobile'
 
