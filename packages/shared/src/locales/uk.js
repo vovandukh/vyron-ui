@@ -296,7 +296,7 @@ export default {
   'scr.page.files': 'Файли',
   'scr.page.move': 'Рух',
   'scr.page.temp': 'Нагрів',
-  'scr.hello': 'Усе гаразд',
+  'scr.hello': 'Усе гаразд', 'scr.axes': 'Осі', 'scr.levelSt': 'Рівень', 'scr.pos': 'Позиція', 'scr.notLeveled': 'ні', 'scr.lastJob': 'Останній друк', 'scr.noJobs': 'Історія друку порожня',
   'scr.langHint': 'Мова цього екрана. У вебінтерфейсі мова налаштовується окремо.',
   'scr.themeHint': 'Колір спільний з вебінтерфейсом: зміна тут діє на всіх пристроях.',
   'scr.gb': 'ГБ',

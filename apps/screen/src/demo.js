@@ -57,6 +57,7 @@ export async function demoCall(method, params, { emitGcode, merge }) {
     }
     case 'server.database.post_item': db[params.namespace + '/' + params.key] = params.value; return { value: params.value }
     case 'server.files.metadata': return { size: 1200000 }
+    case 'server.history.list': return { count: 1, jobs: [{ filename: 'SSR DIN clip.gcode', status: 'completed', print_duration: 8040, end_time: Date.now() / 1000 - 3 * 3600 }] }
     case 'printer.gcode.script':
       if (/G28|M84|QUAD_GANTRY_LEVEL|Z_TILT_ADJUST|G1 /.test(params.script)) return demoMotion(params.script, merge)
       if (/^WIFI_SCAN/.test(params.script)) {

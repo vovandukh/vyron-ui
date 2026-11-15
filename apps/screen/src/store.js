@@ -36,6 +36,9 @@ export const usePrinter = defineStore('printer', () => {
   const klippy = reactive({ state: 'disconnected', message: '', info: null })
   const st = reactive({})
   const chamber = ref(null)
+  const hostname = ref('')
+  /** Останнє завдання з історії Moonraker: { filename, status, print_duration } | null; undefined — історія недоступна */
+  const lastJob = ref(undefined)
   const busy = ref('')
   const design = shallowRef(sanitizeDesign(null))
   let client = null
@@ -106,6 +109,7 @@ export const usePrinter = defineStore('printer', () => {
   async function refresh() {
     try {
       const p = await client.call('printer.info')
+      hostname.value = p.hostname || ''
       setKlippy(p.state, p.state_message || '')
       if (p.state === 'ready') await subscribe()
     } catch { setKlippy('disconnected') }
@@ -122,6 +126,15 @@ export const usePrinter = defineStore('printer', () => {
     } catch { chamber.value = null }
     const r = await client.call('printer.objects.subscribe', { objects: objs })
     merge(r.status)
+    loadLastJob()
+  }
+
+  /** Лише читання: server.history.list (якщо в moonraker.conf немає [history] — просто нічого не показуємо) */
+  async function loadLastJob() {
+    try {
+      const r = await call('server.history.list', { limit: 1, order: 'desc' })
+      lastJob.value = (r.jobs || [])[0] || null
+    } catch { lastJob.value = undefined }
   }
 
   // ---------- тема: спільна з Vyron Web через базу Moonraker ----------
@@ -171,6 +184,8 @@ export const usePrinter = defineStore('printer', () => {
       link.value = 'open'
       leveling.value = { obj: 'quad_gantry_level', kind: 'qgl' }
       startDemo({ merge, setKlippy })
+      hostname.value = 'vyron-demo'
+      loadLastJob()
       // ?demo&page=wifi — одразу відкрити сторінку налаштувань (для розробки)
       const pg = new URLSearchParams(location.search).get('page')
       if (pg) stack.value = pg === 'settings' || pg === 'move' ? ['home', pg] : ['home', 'settings', pg]
@@ -290,6 +305,7 @@ export const usePrinter = defineStore('printer', () => {
     const o = lastPrint
     lastPrint = s
     if (!o || s === o || (s === 'printing' && o === 'paused')) return
+    if (s === 'complete' || s === 'cancelled' || s === 'error') setTimeout(loadLastJob, 1500)
     const e = PRINT_EVENTS[s]
     if (e) flash(...e)
   }
@@ -329,7 +345,7 @@ export const usePrinter = defineStore('printer', () => {
 
   return {
     gcodeState, modelVer, done, filename, showModel, event, updates, refreshUpdates, runUpdate,
-    link, host, klippy, st, printState, active, progress, remaining, layer, heaters, busy, design,
+    link, host, hostname, lastJob, klippy, st, printState, active, progress, remaining, layer, heaters, busy, design,
     stack, page, dir, go, back, home,
     call, gcode, onGcode, setPreset,
     leveling, homed, position, leveled, moving, homeAll, motorsOff, level, jog,

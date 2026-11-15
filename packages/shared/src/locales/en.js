@@ -296,7 +296,7 @@ export default {
   'scr.page.files': 'Files',
   'scr.page.move': 'Move',
   'scr.page.temp': 'Heat',
-  'scr.hello': 'All good',
+  'scr.hello': 'All good', 'scr.axes': 'Axes', 'scr.levelSt': 'Level', 'scr.pos': 'Position', 'scr.notLeveled': 'no', 'scr.lastJob': 'Last print', 'scr.noJobs': 'No prints yet',
   'scr.langHint': 'Language of this screen. The web interface has its own language setting.',
   'scr.themeHint': 'The colour is shared with the web interface: a change here applies to every device.',
   'scr.gb': 'GB',

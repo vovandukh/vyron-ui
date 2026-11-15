@@ -23,6 +23,11 @@ const hot = h => h.target > 0
 const showModel = computed(() => p.showModel && p.gcodeState === 'ready')
 const pctShown = computed(() => (p.printState === 'complete' ? 100 : pct.value))
 
+// Картка очікування
+const zPos = computed(() => (p.homed.includes('z') && p.position ? p.position[2].toFixed(1) : '—'))
+const jobName = computed(() => String((p.lastJob || {}).filename || '').replace(/^.*\//, '').replace(/\.gcode$/i, ''))
+const jobTime = computed(() => (p.lastJob && p.lastJob.print_duration ? fmtDuration(p.lastJob.print_duration, t) : ''))
+
 const DOCK = [
   { id: 'move', icon: 'move' },
   { id: 'temp', icon: 'flame', soon: true },
@@ -70,9 +75,31 @@ function open(d) { if (!d.soon) p.go(d.id) }
         </div>
       </template>
       <div v-else class="idle">
-        <small>{{ t('scr.hello') }}</small>
+        <small>{{ t('scr.hello') }}<template v-if="p.hostname"> · {{ p.hostname }}</template></small>
         <b>{{ t('scr.idle') }}</b>
-        <span>{{ t('scr.idleHint') }}</span>
+        <!-- Готовність машини: які осі в нулі, чи вирівняний портал, де зараз голова -->
+        <div class="stat">
+          <span class="cell">
+            <em>{{ t('scr.axes') }}</em>
+            <span class="axes"><i v-for="a in 'xyz'" :key="a" :class="{ on: p.homed.includes(a) }">{{ a.toUpperCase() }}</i></span>
+          </span>
+          <span v-if="p.leveling" class="cell">
+            <em>{{ p.leveling.kind === 'ztilt' ? 'Z-Tilt' : 'QGL' }}</em>
+            <span class="val" :class="{ good: p.leveled }"><Icon v-if="p.leveled" name="check" size="1.4rem" :stroke="3" />{{ p.leveled ? 'OK' : t('scr.notLeveled') }}</span>
+          </span>
+          <span class="cell">
+            <em>{{ t('scr.pos') }} Z</em>
+            <span class="val">{{ zPos }}</span>
+          </span>
+        </div>
+        <div v-if="p.lastJob !== undefined" class="last">
+          <template v-if="p.lastJob">
+            <Icon :name="p.lastJob.status === 'completed' ? 'check' : 'stop'" size="1.3rem" :stroke="2.8" :class="p.lastJob.status === 'completed' ? 'good' : 'bad'" />
+            <span class="lf">{{ jobName }}</span>
+            <span class="ld">{{ jobTime }}</span>
+          </template>
+          <span v-else class="lf">{{ t('scr.noJobs') }}</span>
+        </div>
       </div>
     </section>
 
@@ -155,10 +182,26 @@ function open(d) { if (!d.soon) p.go(d.id) }
 .chips{display:flex;flex-wrap:wrap;gap:.5rem}
 .chip{padding:.35rem .8rem;border-radius:1rem;background:rgba(255,255,255,.08);font-size:1.15rem;font-weight:500;color:#d1d1d6;white-space:nowrap}
 
-.idle{display:grid;gap:.5rem;padding-left:.6rem}
-.idle small{font-size:1.15rem;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
-.idle b{font-size:2.6rem;font-weight:700;letter-spacing:-.03em;line-height:1.1}
-.idle > span{font-size:1.25rem;color:var(--dim);line-height:1.4}
+/* Очікування: та сама легка шестикутна сітка, що й під моделлю, але приглушена до правого верхнього кута */
+.hero:not(.model)::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48' viewBox='0 0 28 48'%3E%3Cpath d='M14 0 28 8v16L14 32 0 24V8zM14 32v16' fill='none' stroke='%23ffffff' stroke-opacity='.09' stroke-width='1'/%3E%3C/svg%3E") center / 2.8rem 4.8rem;
+  -webkit-mask-image:radial-gradient(ellipse 70% 80% at 100% 0,#000 10%,transparent 85%);mask-image:radial-gradient(ellipse 70% 80% at 100% 0,#000 10%,transparent 85%)}
+.idle{position:relative;flex:1;min-width:0;display:grid;gap:.45rem;padding-left:.6rem}
+.idle small{font-size:1.1rem;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.idle b{font-size:2.5rem;font-weight:700;letter-spacing:-.03em;line-height:1.1}
+.stat{display:flex;margin-top:.7rem;padding:.7rem 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.cell{flex:1;min-width:0;display:grid;gap:.3rem;padding-right:.6rem}
+.cell + .cell{padding-left:.9rem;border-left:1px solid var(--line)}
+.cell em{font-style:normal;font-size:1rem;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.val{display:flex;align-items:center;gap:.25rem;font-size:1.5rem;font-weight:600;white-space:nowrap}
+.val.good,.good{color:var(--green)}
+.bad{color:var(--dim)}
+.axes{display:flex;gap:.35rem}
+.axes i{font-style:normal;font-size:1.5rem;font-weight:600;color:var(--dim2)}
+.axes i.on{color:var(--ink)}
+.last{display:flex;align-items:center;gap:.5rem;margin-top:.2rem;font-size:1.15rem;color:var(--dim);min-width:0}
+.lf{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ld{flex:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 .temps{display:grid;gap:.7rem;align-content:stretch;grid-auto-rows:1fr}
