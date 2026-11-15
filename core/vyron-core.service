@@ -1,0 +1,29 @@
+# Vyron Core — шаблон служби systemd. install.sh підставляє @USER@, @CORE_DIR@ і @DATA@.
+# Служба лише поруч із Moonraker: не потрібна ні Klipper, ні Moonraker (жодних Requires/Before),
+# працює з низьким пріоритетом і обмеженою пам'яттю. Якщо вона впаде, принтер цього не помітить.
+[Unit]
+Description=Vyron Core (helper service next to Moonraker, never controls the printer)
+Documentation=https://github.com/vovandukh/vyron-ecosystem/tree/main/core
+After=network.target moonraker.service
+StartLimitIntervalSec=600
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=@USER@
+WorkingDirectory=@CORE_DIR@
+ExecStart=/usr/bin/python3 -m vyron_core -c @DATA@/config/vyron.conf -l @DATA@/logs/vyron-core.log
+Restart=on-failure
+RestartSec=15
+# Принтер завжди важливіший: найнижчий пріоритет процесора й диска, межа пам'яті
+Nice=15
+CPUWeight=10
+IOSchedulingClass=idle
+MemoryMax=96M
+# Без підвищення прав; системні теки лише для читання
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

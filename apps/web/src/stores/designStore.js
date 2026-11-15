@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, reactive, ref, watch } from 'vue'
 import { DEFAULT_DESIGN, PRESETS, applyDesign, sanitizeDesign, brandFor, hexToRgb } from '@vyron/shared/theme'
 import { usePrinterStore } from './printerStore'
-import { watchDesign } from '@vyron/shared/live'
+import { watchDesign, handleCoreEvent } from '@vyron/shared/live'
 
 const KEY = 'vyron-design'
 /** Moonraker database: спільний дизайн для всіх екранів принтера (ПК, планшет, екран принтера) */
@@ -100,6 +100,11 @@ export const useDesignStore = defineStore('design', () => {
     stopLive && stopLive(); stopLive = null
     if (on) stopLive = watchDesign({ call: printer.call, getUpdated: () => d.updated, onChange: () => (sync.value === 'saving' ? null : pullRemote()) })
   }, { immediate: true })
+
+  // Vyron Core повідомляє про зміну теми одразу (без чекання на опитування) і про нову збірку інтерфейсу.
+  printer.on('agent_event', e => handleCoreEvent(e, {
+    onDesign: u => { if (u !== d.updated && sync.value !== 'saving') pullRemote() }
+  }))
 
   /** Імпорт із файлу налаштувань: невідомі ключі відкидаються, числа обмежуються */
   function importDesign(raw) {
