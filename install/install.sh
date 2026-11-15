@@ -11,6 +11,7 @@
 #      З --port N Vyron стає на власний порт, а Mainsail лишається як був.
 #   2. Запис [update_manager vyron] у moonraker.conf — оновлення з Mainsail/Vyron одним кліком.
 #   3. З --core — служба Vyron Core (якщо вона є в цій версії).
+#   4. Екран принтера: Vyron Screen замість KlipperScreen (KlipperScreen лише ховається; див. screen.sh).
 # Чого НЕ робить: не чіпає Klipper, printer.cfg, не рухає принтер і не гріє. Усе, що змінює, спершу
 # копіює в резервні файли; якщо nginx не приймає нову конфігурацію — усе повертається назад.
 # Видалити: install/uninstall.sh
@@ -21,14 +22,16 @@ MAINSAIL_PORT=""
 DRY=0
 UPDATES=1
 CORE=0
+SCREEN=1
 
-usage() { sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; cat <<'EOF'
+usage() { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; cat <<'EOF'
 Параметри:
   --dry-run           нічого не змінювати, лише показати кроки
   --port N            порт для Vyron (за замовчуванням 80); якщо не 80 — Mainsail не чіпається
   --mainsail-port N   не ховати Mainsail/Fluidd, а перенести на порт N (наприклад 66)
   --no-updates        не додавати запис в Update Manager
   --core              також встановити службу Vyron Core
+  --no-screen         не чіпати екран принтера (KlipperScreen лишається)
 EOF
 }
 
@@ -39,6 +42,7 @@ while [ $# -gt 0 ]; do
     --mainsail-port) MAINSAIL_PORT="${2:-}"; shift ;;
     --no-updates) UPDATES=0 ;;
     --core) CORE=1 ;;
+    --no-screen) SCREEN=0 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Невідомий параметр: $1 (див. --help)" >&2; exit 2 ;;
   esac
@@ -255,12 +259,32 @@ if [ $MR_CHANGED = 1 ]; then
   fi
 fi
 
+# ---------- 4. Екран принтера: Vyron Screen замість KlipperScreen ----------
+SCREEN_RES="не змінювався (--no-screen)"
+if [ $SCREEN = 1 ]; then
+  say "4. Екран принтера"
+  if ! systemctl list-unit-files KlipperScreen.service 2>/dev/null | grep -q '^KlipperScreen.service'; then
+    info "KlipperScreen не встановлено — екран не чіпаю"
+    SCREEN_RES="немає KlipperScreen — не змінювався"
+  elif [ $DRY = 1 ]; then
+    bash "$REPO/install/screen.sh" --dry-run || warn "перевірка екрана завершилась помилкою (див. вище)"
+    SCREEN_RES="Vyron Screen замість KlipperScreen"
+  elif bash "$REPO/install/screen.sh"; then
+    SCREEN_RES="Vyron Screen (KlipperScreen приховано)"
+  else
+    # screen.sh сам повертає KlipperScreen, якщо щось не так; Vyron Web при цьому вже працює
+    warn "Vyron Screen не запустився — на екрані лишився KlipperScreen. Решта встановлення в порядку."
+    SCREEN_RES="KlipperScreen (Vyron Screen не запустився — див. вище)"
+  fi
+fi
+
 # ---------- підсумок ----------
 IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
 URL="http://${IP:-<IP принтера>}$([ "$PORT" = 80 ] || echo ":$PORT")"
 say "Готово$([ $DRY = 1 ] && echo ' (dry-run — нічого не змінено)')"
 info "Vyron Web:    $URL/"
 info "Vyron Screen: $URL/screen.html"
+info "Екран:        $SCREEN_RES"
 if [ $MODE = hide ]; then
   info "Mainsail:     приховано (повернути: uninstall.sh, або встановити з --mainsail-port 66)"
 elif [ $MODE = move ]; then

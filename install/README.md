@@ -24,6 +24,7 @@ cd ~ && git clone https://github.com/vovandukh/vyron-ecosystem.git
 2. **`[update_manager vyron]`** у `moonraker.conf` — оновлення через Mainsail або Vyron. Блок позначений
    маркерами; старий запис на цю саму теку (наприклад `[update_manager voron_ui]`) замінюється.
 3. **Vyron Core** — лише з `--core`.
+4. **Екран принтера** — Vyron Screen замість KlipperScreen (через `screen.sh`; KlipperScreen лише ховається).
 
 Не чіпає Klipper і `printer.cfg`, нічого не рухає й не гріє. Кожен змінений файл спершу копіюється
 (`*.vyron-bak-ДАТА`). Якщо nginx не приймає нову конфігурацію — усе повертається назад.
@@ -37,6 +38,7 @@ cd ~ && git clone https://github.com/vovandukh/vyron-ecosystem.git
 | `--mainsail-port N` | не ховати Mainsail, а перенести на порт N (наприклад 66) |
 | `--no-updates` | не додавати запис в Update Manager |
 | `--core` | також встановити службу Vyron Core |
+| `--no-screen` | не чіпати екран принтера (KlipperScreen лишається) |
 
 ## Видалення
 
@@ -56,7 +58,7 @@ cd ~ && git clone https://github.com/vovandukh/vyron-ecosystem.git
 ~/vyron-ecosystem/install/screen.sh --remove    # повернути KlipperScreen
 ```
 
-Працює окремо від `install.sh`: для екрана піднімається локальний сайт nginx на `127.0.0.1:7136`
+`install.sh` запускає цей крок сам; окремо він потрібен, щоб лише перемкнути екран. Для екрана піднімається локальний сайт nginx на `127.0.0.1:7136`
 (з мережі недоступний, Mainsail не чіпає). Ставить Chromium (якщо немає) і службу `vyron-screen`, яка
 бере налаштування дисплея й тачскріна від KlipperScreen. KlipperScreen лише вимикається; якщо
 Vyron Screen не запуститься — KlipperScreen повертається автоматично.
