@@ -310,5 +310,9 @@ export default {
   'scr.wifiHint': 'Tap a network to connect. If it connects, the printer address may change.',
   'scr.passFor': 'Password for “{ssid}”',
   'scr.join': 'Join',
-  'scr.showPass': 'Show password'
+  'scr.showPass': 'Show password',
+  'scr.page.updates': 'Updates',
+  'scr.updSystem': 'System packages',
+  'scr.check': 'Check',
+  'scr.updBusy': 'Updates are unavailable while printing'
 }

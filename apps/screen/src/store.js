@@ -1,17 +1,23 @@
 // Стан принтера для Vyron Screen: легка версія без 3D і демо-моделі вебінтерфейсу.
 // З'єднання, розбір помилок Klipper, тема й переклади — спільні (@vyron/shared), як і у Vyron Web.
 import { defineStore } from 'pinia'
-import { computed, reactive, ref, shallowRef } from 'vue'
+import { computed, reactive, ref, shallowRef, watch } from 'vue'
 import { MoonrakerClient, resolveHost } from '@vyron/shared/moonraker/client'
+import { fetchGcode } from '@vyron/shared/moonraker/api'
 import { classify } from '@vyron/shared/klipper/errors'
 import { findChamber } from '@vyron/shared/klipper/objects'
 import { applyDesign, sanitizeDesign, PRESETS } from '@vyron/shared/theme'
-import { startDemo, demoCall } from './demo'
+import { parseGcode } from '@vyron/shared/gcode/parser'
+import { model, loadModel, indexForPos } from '@vyron/shared/gcode/model'
+import { startDemo, demoCall, demoGcode, setDemoUpdateSink } from './demo'
+
+/** Найбільший G-code, який екран розбирає для візуалізації: на CB1 лише 1 ГБ пам'яті, Klipper важливіший */
+const MAX_GCODE_BYTES = 20 * 1024 * 1024
 
 /** Об'єкти Klipper, потрібні екрану (мінімум — кожне поле оновлюється по WebSocket) */
 const BASE = {
   print_stats: ['state', 'filename', 'print_duration', 'info', 'message'],
-  virtual_sdcard: ['progress', 'is_active'],
+  virtual_sdcard: ['progress', 'is_active', 'file_position'],
   display_status: ['progress'],
   extruder: ['temperature', 'target'],
   heater_bed: ['temperature', 'target'],
@@ -78,6 +84,8 @@ export const usePrinter = defineStore('printer', () => {
 
   function merge(status) {
     for (const [k, v] of Object.entries(status || {})) st[k] = { ...(st[k] || {}), ...v }
+    const s = status && status.print_stats && status.print_stats.state
+    if (s) printEvent(s)
     const w = status && status.webhooks
     if (w && w.state) setKlippy(w.state, w.state_message || '')
   }
@@ -137,6 +145,8 @@ export const usePrinter = defineStore('printer', () => {
     switch (method) {
       case 'notify_status_update': merge(params[0]); break
       case 'notify_gcode_response': emitGcode(params[0] || ''); break
+      case 'notify_update_response': updateLine(params[0] || {}); break
+      case 'notify_update_refreshed': updates.info = (params[0] || {}).version_info || updates.info; break
       case 'notify_klippy_ready': refresh(); break
       case 'notify_klippy_shutdown': refresh(); break
       case 'notify_klippy_disconnected': setKlippy('disconnected'); break
@@ -189,7 +199,99 @@ export const usePrinter = defineStore('printer', () => {
     client && client.fire('printer.emergency_stop')
   }
 
+  // ---------- візуалізація G-code поточного друку ----------
+  /** none | loading | ready | big (файл завеликий для екрана) | error */
+  const gcodeState = ref('none')
+  /** Лічильник версій моделі: великі масиви живуть поза реактивністю (shared/gcode/model) */
+  const modelVer = ref(0)
+  let loadedName = ''
+  const filename = computed(() => ps.value.filename || '')
+  /** Скільки сегментів моделі вже надруковано */
+  const done = computed(() => {
+    modelVer.value // залежність: нова модель — новий підрахунок
+    if (gcodeState.value !== 'ready' || !model.N) return 0
+    if (!active.value && printState.value === 'complete') return model.N
+    if (DEMO) return Math.floor(progress.value * model.N)
+    const pos = (st.virtual_sdcard || {}).file_position
+    return pos == null ? 0 : indexForPos(pos)
+  })
+  async function loadGcode(fn) {
+    loadedName = fn
+    gcodeState.value = 'loading'
+    try {
+      if (DEMO) loadModel(...demoGcode())
+      else {
+        const meta = await call('server.files.metadata', { filename: fn }).catch(() => ({}))
+        if (meta.size > MAX_GCODE_BYTES) { gcodeState.value = 'big'; return }
+        const { P, F, T } = parseGcode(await fetchGcode(host.value, fn))
+        if (loadedName !== fn) return
+        loadModel(P, F, T)
+      }
+      modelVer.value++
+      gcodeState.value = model.N ? 'ready' : 'error'
+    } catch { if (loadedName === fn) gcodeState.value = 'error' }
+  }
+  /** Модель показується під час друку і після завершення (готова деталь), поки не почнеться наступний друк */
+  const showModel = computed(() => active.value || printState.value === 'complete')
+  watch([filename, showModel], ([fn, on]) => { if (fn && on && fn !== loadedName) loadGcode(fn) })
+
+  // ---------- події для «пігулки» у верхній смузі (як Dynamic Island у вебінтерфейсі) ----------
+  const event = ref(null)
+  let eventTimer = 0
+  function flash(key, tone) {
+    clearTimeout(eventTimer)
+    event.value = { key, tone, at: Date.now() }
+    eventTimer = setTimeout(() => { event.value = null }, 3200)
+  }
+  const PRINT_EVENTS = {
+    printing: ['island.printStart', 'brand'], complete: ['island.printDone', 'green'], paused: ['island.paused', 'amber'],
+    cancelled: ['island.cancelled', 'dim'], error: ['island.printError', 'red']
+  }
+  // Лише справжня зміна стану друку: перший отриманий стан (при запуску екрана) подією не вважається
+  let lastPrint = null
+  function printEvent(s) {
+    const o = lastPrint
+    lastPrint = s
+    if (!o || s === o || (s === 'printing' && o === 'paused')) return
+    const e = PRINT_EVENTS[s]
+    if (e) flash(...e)
+  }
+  watch(() => klippy.state, (s, o) => {
+    if (!o || s === o) return
+    if (s === 'ready' && o !== 'disconnected') flash('island.ready', 'green')
+    else if (s === 'shutdown' || s === 'error') flash('island.klipperError', 'red')
+  })
+
+  // ---------- оновлення (Moonraker update_manager) ----------
+  const updates = reactive({ info: {}, busy: false, checking: false, log: [] })
+  function updateLine(r) {
+    if (r.message) updates.log = [...updates.log.slice(-40), String(r.message).trim()]
+    updates.busy = !r.complete
+    if (r.complete) refreshUpdates(false)
+  }
+  async function refreshUpdates(remote) {
+    updates.checking = !!remote
+    try {
+      const r = remote ? await call('machine.update.refresh', {}) : await call('machine.update.status', {})
+      updates.info = (r && r.version_info) || {}
+      if (!remote) updates.busy = !!(r && r.busy)
+    } catch { /* лишаємо попередній стан */ } finally { updates.checking = false }
+  }
+  /** name: компонент update_manager, 'system' (пакети ОС) або '*' (усе) */
+  async function runUpdate(name) {
+    updates.busy = true
+    updates.log = []
+    const m = name === '*' ? 'machine.update.full' : name === 'system' ? 'machine.update.system'
+      : name === 'klipper' ? 'machine.update.klipper' : name === 'moonraker' ? 'machine.update.moonraker' : 'machine.update.client'
+    try { await call(m, m === 'machine.update.client' ? { name } : {}) } catch (e) {
+      updates.log = [...updates.log, String((e && e.message) || e)]
+      updates.busy = false
+    }
+  }
+  if (DEMO) setDemoUpdateSink(updateLine)
+
   return {
+    gcodeState, modelVer, done, filename, showModel, event, updates, refreshUpdates, runUpdate,
     link, host, klippy, st, printState, active, progress, remaining, layer, heaters, busy, design,
     stack, page, dir, go, back, home,
     call, gcode, onGcode, setPreset,

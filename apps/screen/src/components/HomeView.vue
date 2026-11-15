@@ -6,6 +6,7 @@ import { fmtDuration } from '@vyron/shared/format'
 import { usePrinter } from '../store'
 import { t } from '../i18n'
 import Icon from './Icon.vue'
+import GcodeView from './GcodeView.vue'
 
 const emit = defineEmits(['cancel'])
 const p = usePrinter()
@@ -18,6 +19,9 @@ const file = computed(() => String((p.st.print_stats || {}).filename || '').repl
 const left = computed(() => (p.remaining == null ? '' : fmtDuration(p.remaining, t)))
 const temp = v => (v == null ? '–' : Math.round(v))
 const hot = h => h.target > 0
+/** Модель показуємо, коли G-code розібрано; інакше (завантаження, завеликий файл) — кільце прогресу */
+const showModel = computed(() => p.showModel && p.gcodeState === 'ready')
+const pctShown = computed(() => (p.printState === 'complete' ? 100 : pct.value))
 
 const DOCK = [
   { id: 'files', icon: 'files', soon: true },
@@ -30,8 +34,20 @@ function open(d) { if (!d.soon) p.go(d.id) }
 
 <template>
   <div class="home page">
-    <section class="hero glass">
-      <template v-if="p.active">
+    <section class="hero glass" :class="{ model: showModel }">
+      <!-- Модель друку (G-code) на всю картку; поверх — відсоток, файл і час. Дотик по моделі повертає ракурс. -->
+      <template v-if="showModel">
+        <GcodeView />
+        <div class="ov-top"><b>{{ pctShown }}</b><small>%</small><span v-if="p.printState === 'complete'" class="done">{{ t('state.complete') }}</span></div>
+        <div class="ov-bot">
+          <span class="file one">{{ file }}</span>
+          <span class="chips">
+            <span v-if="p.layer" class="chip">{{ t('scr.layer', p.layer) }}</span>
+            <span v-if="left" class="chip">{{ left }}</span>
+          </span>
+        </div>
+      </template>
+      <template v-else-if="p.active">
         <div class="ring">
           <svg viewBox="0 0 100 100" aria-hidden="true">
             <defs>
@@ -95,7 +111,15 @@ function open(d) { if (!d.soon) p.go(d.id) }
 
 <style scoped>
 .home{display:grid;grid-template-columns:1fr 16.5rem;grid-template-rows:1fr auto;gap:.9rem;padding:.2rem 1.2rem 1.2rem}
-.hero{min-width:0;border-radius:var(--r-lg);display:flex;align-items:center;gap:1.3rem;padding:1rem 1.4rem 1rem 1rem}
+.hero{position:relative;min-width:0;border-radius:var(--r-lg);display:flex;align-items:center;gap:1.3rem;padding:1rem 1.4rem 1rem 1rem;overflow:hidden}
+.hero.model{padding:0}
+/* Підписи поверх моделі: темні градієнти зверху й знизу, щоб текст читався на будь-якому фоні */
+.ov-top{position:absolute;left:0;top:0;right:0;padding:.8rem 1.2rem 2rem;display:flex;align-items:baseline;pointer-events:none;background:linear-gradient(180deg,rgba(6,6,7,.7),transparent)}
+.ov-top b{font-size:3rem;font-weight:700;letter-spacing:-.05em;line-height:1}
+.ov-top .done{margin-left:.8rem;padding:.25rem .7rem;border-radius:1rem;background:rgba(48,209,88,.16);color:var(--green);font-size:1.1rem;font-weight:600;align-self:center}
+.ov-top small{font-size:1.3rem;font-weight:600;color:var(--dim);margin-left:.15rem}
+.ov-bot{position:absolute;left:0;right:0;bottom:0;padding:2.2rem 1.2rem .9rem;display:grid;gap:.5rem;pointer-events:none;background:linear-gradient(0deg,rgba(6,6,7,.85),transparent)}
+.file.one{-webkit-line-clamp:1;font-size:1.3rem}
 
 .ring{position:relative;flex:none;width:12.4rem;height:12.4rem}
 .ring svg{width:100%;height:100%;transform:rotate(-90deg)}

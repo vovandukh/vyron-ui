@@ -7,23 +7,11 @@ import { SHAPE, V } from '@vyron/shared/logo'
 import { usePrinter } from '../store'
 import { t } from '../i18n'
 import Icon from './Icon.vue'
+import StatusPill from './StatusPill.vue'
 
 const emit = defineEmits(['stop'])
 const p = usePrinter()
 
-const status = computed(() => {
-  if (p.link !== 'open') return { text: t('scr.connecting'), tone: 'dim' }
-  const k = p.klippy.state
-  if (k === 'shutdown' || k === 'error') return { text: t('state.klipperError'), tone: 'red' }
-  if (k === 'startup') return { text: t('state.klipperStartup'), tone: 'amber' }
-  if (k !== 'ready') return { text: t('state.klipperOffline'), tone: 'amber' }
-  const s = p.printState
-  if (s === 'printing') return { text: t('state.printing'), tone: 'brand' }
-  if (s === 'paused') return { text: t('state.paused'), tone: 'amber' }
-  if (s === 'complete') return { text: t('state.complete'), tone: 'green' }
-  if (s === 'error') return { text: t('state.error'), tone: 'red' }
-  return { text: t('state.ready'), tone: 'green' }
-})
 const sub = computed(() => p.page !== 'home')
 const prev = computed(() => p.stack[p.stack.length - 2])
 </script>
@@ -32,7 +20,7 @@ const prev = computed(() => p.stack[p.stack.length - 2])
   <header class="tb">
     <template v-if="!sub">
       <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><path class="sh" :d="SHAPE" /><path class="v" :d="V" /></svg>
-      <span class="st" :class="'t-' + status.tone"><i></i>{{ status.text }}</span>
+      <StatusPill />
     </template>
     <template v-else>
       <button type="button" class="bk tap" @click="p.back()">
@@ -48,14 +36,6 @@ const prev = computed(() => p.stack[p.stack.length - 2])
 .logo{width:2.6rem;height:2.6rem;flex:none}
 .sh{fill:var(--brand)}
 .v{fill:none;stroke:#fff;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
-.st{flex:1;min-width:0;display:flex;align-items:center;gap:.6rem;font-size:1.45rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.st i{flex:none;width:.75rem;height:.75rem;border-radius:50%;background:currentColor}
-.t-dim{color:var(--dim)}
-.t-red{color:var(--red)}
-.t-amber{color:var(--amber)}
-.t-green{color:var(--green)}
-.t-brand{color:var(--ink)}
-.t-brand i{background:var(--coral)}
 /* «‹ Назад» — акцентним кольором теми, як системна кнопка iOS */
 .bk{flex:none;display:flex;align-items:center;gap:.1rem;height:3.6rem;margin-left:-.6rem;padding:0 .8rem 0 .2rem;border-radius:var(--r-sm);color:var(--coral);font-size:1.4rem;font-weight:500;max-width:14rem}
 .bk span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

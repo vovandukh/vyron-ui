@@ -9,10 +9,16 @@ import Row from '../components/Row.vue'
 const p = usePrinter()
 const net = ref('')
 onMounted(async () => {
+  p.refreshUpdates(false)
   try { net.value = wlanSummary((await p.call('machine.system_info')).system_info) } catch { net.value = '' }
 })
 const langName = computed(() => (LANGS.find(l => l.id === lang.value) || {}).name)
 const theme = computed(() => t('design.p.' + p.design.preset))
+/** Кількість доступних оновлень (перевірка — локальний статус Moonraker, без звернень до git) */
+const updValue = computed(() => {
+  const n = Object.entries(p.updates.info || {}).filter(([k, v]) => (k === 'system' ? v.package_count > 0 : (v.commits_behind || []).length > 0 || (v.remote_version && v.version && v.remote_version !== v.version))).length
+  return n ? String(n) : ''
+})
 </script>
 
 <template>
@@ -26,6 +32,7 @@ const theme = computed(() => t('design.p.' + p.design.preset))
       <Row icon="globe" color="var(--green)" :label="t('scr.page.language')" :value="langName" chevron @tap="p.go('language')" />
     </div>
     <div class="grp">
+      <Row icon="refresh" color="var(--teal)" :label="t('scr.page.updates')" :value="updValue" chevron @tap="p.go('updates')" />
       <Row icon="info" color="var(--gray)" :label="t('scr.page.about')" chevron @tap="p.go('about')" />
       <Row icon="power" color="var(--red)" :label="t('scr.page.system')" chevron @tap="p.go('system')" />
     </div>

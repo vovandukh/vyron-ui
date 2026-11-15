@@ -39,6 +39,7 @@ let db = {}
 /** Імітація викликів Moonraker для сторінок налаштувань */
 export async function demoCall(method, params, { emitGcode }) {
   await wait(150)
+  if (method.startsWith('machine.update.')) return demoUpdateCall(method, params)
   switch (method) {
     case 'machine.system_info':
       return { system_info: {
@@ -54,6 +55,7 @@ export async function demoCall(method, params, { emitGcode }) {
       return { value: v }
     }
     case 'server.database.post_item': db[params.namespace + '/' + params.key] = params.value; return { value: params.value }
+    case 'server.files.metadata': return { size: 1200000 }
     case 'printer.gcode.script':
       if (/^WIFI_SCAN/.test(params.script)) {
         setTimeout(() => NETS.forEach(([s, sig, sec], i) => setTimeout(() => emitGcode('// ' + s + ':' + sig + ':' + sec), 120 * i)), 900)
@@ -61,4 +63,45 @@ export async function demoCall(method, params, { emitGcode }) {
       return 'ok'
   }
   return {}
+}
+
+/** Спіральна «ваза» для демо (як у Vyron Web): 150 витків по 0.8 мм, 90 сегментів на виток. Повертає [P, F]. */
+export function demoGcode() {
+  const SEG = 90, LAYERS = 150, out = [], off = []
+  let prev = null
+  for (let s = 0; s < SEG * LAYERS; s++) {
+    const z = 0.4 + (s / SEG) * 0.8, a = (s / SEG) * Math.PI * 2
+    const r = 34 + 12 * Math.sin(z / 9) + 6 * Math.sin(a * 5) * (z / 120)
+    const p = [175 + r * Math.cos(a), 175 + r * Math.sin(a), z]
+    if (prev) { out.push(...prev, ...p); off.push(off.length) }
+    prev = p
+  }
+  return [Float32Array.from(out), off]
+}
+
+// ---------- оновлення в демо ----------
+let updateSink = () => {}
+export const setDemoUpdateSink = fn => { updateSink = fn }
+const updated = new Set()
+const demoVersions = () => fixUp({
+  klipper: { version: 'v0.13.0-560', remote_version: 'v0.13.0-573', commits_behind: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] },
+  moonraker: { version: 'v0.9.3-41', remote_version: 'v0.9.3-41', commits_behind: [] },
+  'vyron-ecosystem': { version: 'v0.2.0', remote_version: 'v0.3.0', configured_type: 'git_repo', commits_behind: [1, 2, 3] },
+  mainsail: { version: 'v2.13.2', remote_version: 'v2.13.2', configured_type: 'web' },
+  system: { package_count: 4, package_list: ['libc6', 'openssl', 'python3', 'tzdata'] }
+})
+/** Компоненти, «оновлені» в демо, показуються актуальними */
+function fixUp(v) {
+  for (const n of Object.keys(v)) {
+    if (!updated.has(n) && !updated.has('all')) continue
+    v[n] = n === 'system' ? { package_count: 0, package_list: [] } : { ...v[n], remote_version: v[n].version, commits_behind: [] }
+  }
+  return v
+}
+export function demoUpdateCall(method, params) {
+  if (method === 'machine.update.status' || method === 'machine.update.refresh') return { busy: false, version_info: demoVersions() }
+  const name = method === 'machine.update.full' ? 'all' : params.name || method.split('.').pop()
+  const steps = ['Updating ' + name + '…', 'git fetch origin', 'git reset --hard', 'Restarting service…', 'Update complete']
+  steps.forEach((m, i) => setTimeout(() => { if (i === steps.length - 1) updated.add(name); updateSink({ message: m, complete: i === steps.length - 1 }) }, 700 * (i + 1)))
+  return 'ok'
 }

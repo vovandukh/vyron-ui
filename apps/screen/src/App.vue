@@ -13,8 +13,9 @@ import ThemePage from './pages/ThemePage.vue'
 import LanguagePage from './pages/LanguagePage.vue'
 import AboutPage from './pages/AboutPage.vue'
 import SystemPage from './pages/SystemPage.vue'
+import UpdatesPage from './pages/UpdatesPage.vue'
 
-const PAGES = { settings: SettingsPage, wifi: WifiPage, theme: ThemePage, language: LanguagePage, about: AboutPage, system: SystemPage }
+const PAGES = { settings: SettingsPage, wifi: WifiPage, theme: ThemePage, language: LanguagePage, about: AboutPage, system: SystemPage, updates: UpdatesPage }
 
 const p = usePrinter()
 onMounted(() => p.start())

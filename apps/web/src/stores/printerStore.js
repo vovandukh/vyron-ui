@@ -5,8 +5,8 @@ import { fetchGcode, startPrintFile } from '@vyron/shared/moonraker/api'
 import { discoverTools, subscriptionObjects, STATE_KEYS, toolNum, findChamber, findLeveling, findMcus, findHwSensors, mcuConnections } from '@vyron/shared/klipper/objects'
 import { detectToolheads, toolheadObjects } from '@vyron/shared/klipper/toolheads'
 import { detectEddy, eddyObjects } from '@vyron/shared/klipper/eddy'
-import { parseGcode } from '../services/gcodeParser'
-import { model, loadModel, indexForPos, segEnd, layerLabel } from '../services/gcodeModel'
+import { parseGcode } from '@vyron/shared/gcode/parser'
+import { model, loadModel, indexForPos, segEnd, layerLabel } from '@vyron/shared/gcode/model'
 import {
   DEMO_DEFAULT_TOOLS, DEMO_MAX_TOOLS, DEMO_STEP, DEMO_INTERVAL, demoTools, demoToolheads, demoEddies, demoPreviewModel, resetDemoFiles, DEMO_PRINTING_FILE,
   demoGcode, demoStaticStatus, demoTickStatus, demoHwSensors, demoHostInfo, demoMcuConn
