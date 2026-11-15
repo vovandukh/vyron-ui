@@ -14,14 +14,18 @@ const RULES = [
   { id: 'timer', cat: 'mcu', re: /Timer too close|Rescheduled timer in the past|Missed scheduling of next|Stepper too far in past|Move queue overflow/i, p: (m, s) => ({ mcu: mcuOf(s) }) },
   { id: 'heaterRate', cat: 'heat', re: /Heater (\S+) not heating at expected rate/i, p: m => ({ heater: m[1] }) },
   { id: 'adc', cat: 'heat', re: /ADC out of range|thermocouple|MAX318\d\d|MAX6675/i },
-  { id: 'tmc', cat: 'driver', re: /TMC '([^']+)'|tmc (?:uart|spi) '([^']+)'|Unable to (?:read|write) tmc/i, p: m => ({ drv: m[1] || m[2] || 'TMC' }) },
+  // Ім'я драйвера шукаємо окремо: у «Unable to read tmc uart 'stepper_x'» альтернатива без лапок спрацьовує раніше за ту, що з ім'ям
+  { id: 'tmc', cat: 'driver', re: /TMC '[^']+'|tmc (?:uart|spi) '[^']+'|Unable to (?:read|write) tmc/i, p: (m, s) => ({ drv: (/tmc(?: uart| spi)? '([^']+)'/i.exec(s) || [])[1] || 'TMC' }) },
   { id: 'notHomed', cat: 'motion', re: /Must home|home axis first/i },
   { id: 'range', cat: 'motion', re: /Move out of range/i },
   { id: 'cold', cat: 'heat', re: /Extrude below minimum temp/i },
   { id: 'extLong', cat: 'motion', re: /Extrude only move too long/i },
-  { id: 'endstop', cat: 'motion', re: /Endstop (\S+) still triggered|No trigger on (\S+) after full movement/i, p: m => ({ axis: m[1] || m[2] }) },
+  // Проба — раніше за кінцевики: «No trigger on probe after full movement» інакше впало б у правило кінцевика
   { id: 'probePre', cat: 'probe', re: /Probe triggered prior to movement/i },
   { id: 'probeNone', cat: 'probe', re: /No trigger on probe after full movement/i },
+  // «still triggered» — кінцевик не відпускається (протилежне до «no trigger»), тому окремий опис
+  { id: 'endstopStuck', cat: 'motion', re: /Endstop (\S+) still triggered/i, p: m => ({ axis: m[1] }) },
+  { id: 'endstop', cat: 'motion', re: /No trigger on (\S+) after full movement/i, p: m => ({ axis: m[1] }) },
   { id: 'probeTol', cat: 'probe', re: /Probe samples exceed|samples_tolerance/i },
   { id: 'leveling', cat: 'probe', re: /Too many retries|Retries: \d+\/\d+.*(?:exceed|range)/i },
   { id: 'config', cat: 'config', re: /Option '[^']+' in section|Section '[^']+' is not a valid|Unknown pin chip name|Unable to parse option|pin \S+ used multiple times|Config error|Unable to open config file|is not a valid config section|must be specified|Error loading template/i },
