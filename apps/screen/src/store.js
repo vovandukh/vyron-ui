@@ -5,7 +5,7 @@ import { computed, reactive, ref, shallowRef, watch } from 'vue'
 import { MoonrakerClient, resolveHost } from '@vyron/shared/moonraker/client'
 import { fetchGcode } from '@vyron/shared/moonraker/api'
 import { classify } from '@vyron/shared/klipper/errors'
-import { findChamber } from '@vyron/shared/klipper/objects'
+import { findChamber, findLeveling } from '@vyron/shared/klipper/objects'
 import { applyDesign, sanitizeDesign, PRESETS } from '@vyron/shared/theme'
 import { parseGcode } from '@vyron/shared/gcode/parser'
 import { model, loadModel, indexForPos } from '@vyron/shared/gcode/model'
@@ -22,7 +22,7 @@ const BASE = {
   extruder: ['temperature', 'target'],
   heater_bed: ['temperature', 'target'],
   webhooks: ['state', 'state_message'],
-  toolhead: ['homed_axes']
+  toolhead: ['homed_axes', 'position']
 }
 const DESIGN = { namespace: 'vyron_ui', key: 'design' }
 
@@ -92,7 +92,7 @@ export const usePrinter = defineStore('printer', () => {
 
   // ---------- виклики Moonraker (у демо — імітація) ----------
   function call(method, params = {}) {
-    if (DEMO) return demoCall(method, params, { emitGcode })
+    if (DEMO) return demoCall(method, params, { emitGcode, merge })
     if (!client) return Promise.reject(new Error('not connected'))
     return client.call(method, params)
   }
@@ -117,6 +117,8 @@ export const usePrinter = defineStore('printer', () => {
       const list = (await client.call('printer.objects.list')).objects || []
       chamber.value = findChamber(list)
       if (chamber.value) objs[chamber.value] = ['temperature']
+      leveling.value = findLeveling(list)
+      if (leveling.value) objs[leveling.value.obj] = ['applied']
     } catch { chamber.value = null }
     const r = await client.call('printer.objects.subscribe', { objects: objs })
     merge(r.status)
@@ -167,10 +169,11 @@ export const usePrinter = defineStore('printer', () => {
   function start() {
     if (DEMO) {
       link.value = 'open'
+      leveling.value = { obj: 'quad_gantry_level', kind: 'qgl' }
       startDemo({ merge, setKlippy })
       // ?demo&page=wifi — одразу відкрити сторінку налаштувань (для розробки)
       const pg = new URLSearchParams(location.search).get('page')
-      if (pg) stack.value = pg === 'settings' ? ['home', 'settings'] : ['home', 'settings', pg]
+      if (pg) stack.value = pg === 'settings' || pg === 'move' ? ['home', pg] : ['home', 'settings', pg]
       return
     }
     host.value = resolveHost()
@@ -192,6 +195,40 @@ export const usePrinter = defineStore('printer', () => {
   const restart = () => run('restart', 'printer.restart')
   const restartMoonraker = () => run('moonraker', 'machine.services.restart', { service: 'moonraker' })
   const reboot = () => run('reboot', 'machine.reboot')
+
+  // ---------- рух: home, вирівнювання порталу, мотори, переміщення ----------
+  /** Об'єкт вирівнювання: { obj: 'quad_gantry_level', kind: 'qgl' } або z_tilt; null — немає */
+  const leveling = ref(null)
+  const homed = computed(() => String((st.toolhead || {}).homed_axes || ''))
+  const position = computed(() => (st.toolhead || {}).position || null)
+  const leveled = computed(() => (leveling.value ? !!(st[leveling.value.obj] || {}).applied : null))
+  /** Поточна дія руху: '' | 'home' | 'level' | 'motors' | 'jog' */
+  const moving = ref('')
+  const FEED = { xy: 3000, z: 600 }
+
+  /** G-code руху з показом помилки Klipper у «пігулці» (напр. «Спершу потрібно знайти нуль осей») */
+  async function motion(kind, script) {
+    if (moving.value || active.value) return
+    moving.value = kind
+    try { await gcode(script) } catch (e) {
+      const i = classify(String((e && e.message) || ''))
+      flash(i.id === 'generic' ? 'state.error' : 'kerr.' + i.id + '.t', 'red', i.params)
+    } finally { moving.value = '' }
+  }
+  const homeAll = () => motion('home', 'G28')
+  const motorsOff = () => motion('motors', 'M84')
+  /** Як у Vyron Web: не захомлено — спершу G28; після вирівнювання висота змінюється — G28 Z */
+  function level() {
+    const lv = leveling.value
+    if (!lv) return
+    const all = /x/.test(homed.value) && /y/.test(homed.value) && /z/.test(homed.value)
+    motion('level', (all ? '' : 'G28\n') + (lv.kind === 'ztilt' ? 'Z_TILT_ADJUST' : 'QUAD_GANTRY_LEVEL') + '\nG28 Z')
+  }
+  /** Відносне переміщення осі на dist мм (G91 → G1 → G90) */
+  function jog(axis, dist) {
+    const f = axis === 'z' ? FEED.z : FEED.xy
+    motion('jog', 'G91\nG1 ' + axis.toUpperCase() + dist + ' F' + f + '\nG90')
+  }
   const shutdown = () => run('shutdown', 'machine.shutdown')
   /** Аварійна зупинка — без очікування відповіді, як у вебінтерфейсі */
   function estop() {
@@ -238,9 +275,9 @@ export const usePrinter = defineStore('printer', () => {
   // ---------- події для «пігулки» у верхній смузі (як Dynamic Island у вебінтерфейсі) ----------
   const event = ref(null)
   let eventTimer = 0
-  function flash(key, tone) {
+  function flash(key, tone, params) {
     clearTimeout(eventTimer)
-    event.value = { key, tone, at: Date.now() }
+    event.value = { key, tone, params, at: Date.now() }
     eventTimer = setTimeout(() => { event.value = null }, 3200)
   }
   const PRINT_EVENTS = {
@@ -295,6 +332,7 @@ export const usePrinter = defineStore('printer', () => {
     link, host, klippy, st, printState, active, progress, remaining, layer, heaters, busy, design,
     stack, page, dir, go, back, home,
     call, gcode, onGcode, setPreset,
+    leveling, homed, position, leveled, moving, homeAll, motorsOff, level, jog,
     start, pause, resume, cancel, estop, firmwareRestart, restart, restartMoonraker, reboot, shutdown
   }
 })

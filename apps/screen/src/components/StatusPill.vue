@@ -22,7 +22,7 @@ const base = computed(() => {
   if (s === 'error') return { text: t('state.error'), tone: 'red' }
   return { text: t('state.ready'), tone: 'green' }
 })
-const view = computed(() => (p.event ? { text: t(p.event.key), tone: p.event.tone, ev: true } : base.value))
+const view = computed(() => (p.event ? { text: t(p.event.key, p.event.params), tone: p.event.tone, ev: true } : base.value))
 </script>
 
 <template>

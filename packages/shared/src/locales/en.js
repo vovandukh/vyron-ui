@@ -314,5 +314,6 @@ export default {
   'scr.page.updates': 'Updates',
   'scr.updSystem': 'System packages',
   'scr.check': 'Check',
-  'scr.updBusy': 'Updates are unavailable while printing'
+  'scr.updBusy': 'Updates are unavailable while printing',
+  'scr.moveBusy': 'Moving the axes is unavailable while printing.'
 }

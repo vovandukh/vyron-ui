@@ -25,7 +25,7 @@ const pctShown = computed(() => (p.printState === 'complete' ? 100 : pct.value))
 
 const DOCK = [
   { id: 'files', icon: 'files', soon: true },
-  { id: 'move', icon: 'move', soon: true },
+  { id: 'move', icon: 'move' },
   { id: 'temp', icon: 'flame', soon: true },
   { id: 'settings', icon: 'gear' }
 ]
@@ -74,6 +74,20 @@ function open(d) { if (!d.soon) p.go(d.id) }
         <small>{{ t('scr.hello') }}</small>
         <b>{{ t('scr.idle') }}</b>
         <span>{{ t('scr.idleHint') }}</span>
+        <!-- Швидкі дії перед друком: Home, вирівнювання порталу, вимкнення моторів -->
+        <span class="quick">
+          <button type="button" class="q tap" :disabled="!!p.moving" @click="p.homeAll()">
+            <Icon name="home" size="1.6rem" />{{ t('jog.homeAll') }}<i v-if="p.moving === 'home'" class="spin"></i>
+          </button>
+          <button v-if="p.leveling" type="button" class="q tap" :disabled="!!p.moving" @click="p.level()">
+            <Icon name="level" size="1.6rem" />{{ p.leveling.kind === 'ztilt' ? 'Z-Tilt' : 'QGL' }}
+            <i v-if="p.moving === 'level'" class="spin"></i>
+            <Icon v-else-if="p.leveled" name="check" size="1.4rem" :stroke="2.8" class="ok" />
+          </button>
+          <button type="button" class="q tap" :disabled="!!p.moving" :aria-label="t('jog.motorsOffAria')" @click="p.motorsOff()">
+            <Icon name="motors" size="1.6rem" />
+          </button>
+        </span>
       </div>
     </section>
 
@@ -142,7 +156,12 @@ function open(d) { if (!d.soon) p.go(d.id) }
 .idle{display:grid;gap:.5rem;padding-left:.6rem}
 .idle small{font-size:1.2rem;font-weight:600;color:var(--coral);text-transform:uppercase;letter-spacing:.08em}
 .idle b{font-size:2.6rem;font-weight:700;letter-spacing:-.03em;line-height:1.1}
-.idle span{font-size:1.25rem;color:var(--dim);line-height:1.4}
+.idle > span{font-size:1.25rem;color:var(--dim);line-height:1.4}
+.quick{display:flex;gap:.5rem;margin-top:.6rem}
+.q{height:3.6rem;display:flex;align-items:center;gap:.5rem;padding:0 1.1rem;border-radius:1.8rem;background:rgba(255,255,255,.08);border:1px solid var(--card-edge);font-size:1.25rem;font-weight:600}
+.q .ok{color:var(--green)}
+.q .spin{width:1.4rem;height:1.4rem;border-radius:50%;border:.2rem solid rgba(255,255,255,.2);border-top-color:var(--coral);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 .temps{display:grid;gap:.7rem;align-content:stretch;grid-auto-rows:1fr}
 .tile{position:relative;display:flex;align-items:center;gap:.9rem;padding:.6rem 1rem;border-radius:var(--r)}

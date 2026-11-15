@@ -9,6 +9,7 @@ export function startDemo({ merge, setKlippy }) {
     return
   }
   setKlippy('ready')
+  merge(demoMotionStatus())
   const idle = want === 'idle'
   let p = idle ? 0 : 0.37, d = 2860
   const tick = () => {
@@ -37,7 +38,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms))
 let db = {}
 
 /** Імітація викликів Moonraker для сторінок налаштувань */
-export async function demoCall(method, params, { emitGcode }) {
+export async function demoCall(method, params, { emitGcode, merge }) {
   await wait(150)
   if (method.startsWith('machine.update.')) return demoUpdateCall(method, params)
   switch (method) {
@@ -57,6 +58,7 @@ export async function demoCall(method, params, { emitGcode }) {
     case 'server.database.post_item': db[params.namespace + '/' + params.key] = params.value; return { value: params.value }
     case 'server.files.metadata': return { size: 1200000 }
     case 'printer.gcode.script':
+      if (/G28|M84|QUAD_GANTRY_LEVEL|Z_TILT_ADJUST|G1 /.test(params.script)) return demoMotion(params.script, merge)
       if (/^WIFI_SCAN/.test(params.script)) {
         setTimeout(() => NETS.forEach(([s, sig, sec], i) => setTimeout(() => emitGcode('// ' + s + ':' + sig + ':' + sec), 120 * i)), 900)
       }
@@ -103,5 +105,35 @@ export function demoUpdateCall(method, params) {
   const name = method === 'machine.update.full' ? 'all' : params.name || method.split('.').pop()
   const steps = ['Updating ' + name + '…', 'git fetch origin', 'git reset --hard', 'Restarting service…', 'Update complete']
   steps.forEach((m, i) => setTimeout(() => { if (i === steps.length - 1) updated.add(name); updateSink({ message: m, complete: i === steps.length - 1 }) }, 700 * (i + 1)))
+  return 'ok'
+}
+
+// ---------- рух у демо: позиція, захомлені осі, вирівнювання ----------
+const pos = [175, 175, 30, 0]
+let homedAxes = ''
+export const demoMotionStatus = () => ({ toolhead: { homed_axes: homedAxes, position: [...pos] }, quad_gantry_level: { applied: false } })
+async function demoMotion(script, merge) {
+  if (/M84/.test(script)) { homedAxes = ''; merge({ toolhead: { homed_axes: '' } }); return 'ok' }
+  if (/G28/.test(script) && !/QUAD|Z_TILT/.test(script)) {
+    await wait(1800)
+    homedAxes = 'xyz'; pos[0] = 350; pos[1] = 350; pos[2] = 10
+    merge({ toolhead: { homed_axes: homedAxes, position: [...pos] } })
+    return 'ok'
+  }
+  if (/QUAD_GANTRY_LEVEL|Z_TILT_ADJUST/.test(script)) {
+    merge({ quad_gantry_level: { applied: false } })
+    await wait(2800)
+    homedAxes = 'xyz'; pos[2] = 10
+    merge({ toolhead: { homed_axes: homedAxes, position: [...pos] }, quad_gantry_level: { applied: true } })
+    return 'ok'
+  }
+  const m = /G1 ([XYZ])(-?[\d.]+)/.exec(script)
+  if (m) {
+    const i = 'XYZ'.indexOf(m[1])
+    if (!homedAxes.includes(m[1].toLowerCase())) throw new Error('Must home axis first: ' + pos.slice(0, 3).join(' '))
+    await wait(250)
+    pos[i] = Math.round((pos[i] + Number(m[2])) * 100) / 100
+    merge({ toolhead: { position: [...pos] } })
+  }
   return 'ok'
 }
