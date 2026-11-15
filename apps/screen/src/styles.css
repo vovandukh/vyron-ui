@@ -65,3 +65,8 @@ button:disabled{opacity:.4;cursor:default}
 /* Тихе оновлення (shared/live.js): плавний перехід зі старої версії сторінки на нову замість мигання */
 @view-transition{navigation:auto}
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.45s;animation-timing-function:ease}
+
+/* Прокрутку пальцем веде dragScroll.js (і для тачу, і для «мишки»); нативне панорамування вимкнене,
+   щоб справжній тач не гортав двічі. Під час прокрутки кнопка під пальцем не «натискається». */
+html{touch-action:none}
+.dragging .tap:active,.dragging .row:active{transform:none!important;filter:none!important;background:transparent!important}
