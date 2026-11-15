@@ -1,6 +1,6 @@
 <script setup>
 // Картка стану Klipper поверх сцени: shutdown, помилка конфігурації, запуск, служба не запущена.
-// Сирий state_message Klipper розбирається (services/klipperErrors.js) у зрозумілий заголовок і «що перевірити»;
+// Сирий state_message Klipper розбирається (@vyron/shared/klipperErrors.js) у зрозумілий заголовок і «що перевірити»;
 // оригінальний текст — у розкривному блоці з копіюванням. Дії: FIRMWARE_RESTART / RESTART / перезапуск служби.
 // «Сховати» прибирає картку до кліку по капсулі статусу або до нової помилки.
 import { ref, computed, watch, onBeforeUnmount } from 'vue'

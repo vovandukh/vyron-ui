@@ -15,11 +15,10 @@ on:
   push:
     branches: [main]
     paths:
-      - 'src/**'
+      - 'apps/web/**'
+      - 'packages/**'
       - 'package.json'
       - 'package-lock.json'
-      - 'vite.config.js'
-      - '.env.demo'
       - '.github/workflows/deploy-demo.yml'
   workflow_dispatch:
 
@@ -59,8 +58,8 @@ jobs:
         run: |
           npm ci
           npm run build:demo
-          if grep -qE '(src|href)="\./assets/' dist-demo/index.html; then
-            echo "dist-demo/index.html references ./assets/ — single-file build is broken"; exit 1
+          if grep -qE '(src|href)="\./assets/' apps/web/dist-demo/index.html; then
+            echo "apps/web/dist-demo/index.html references ./assets/ — single-file build is broken"; exit 1
           fi
 
       - name: Publish to demo repository
@@ -69,9 +68,9 @@ jobs:
           git clone --depth 1 "https://x-access-token:${TOKEN}@github.com/${DEMO_REPO}.git" site
           cd site
           git rm -rq --ignore-unmatch .
-          cp ../dist-demo/index.html index.html
+          cp ../apps/web/dist-demo/index.html index.html
           touch .nojekyll
-          printf '# Voron UI — demo\n\nAuto-generated demo build of Voron UI (Vue 3, single-file).\nDo not edit: every push to the source repository overwrites this content.\n' > README.md
+          printf '# Vyron Web — demo\n\nAuto-generated demo build of Vyron Web (Vue 3, single-file).\nDo not edit: every push to the source repository overwrites this content.\n' > README.md
           git add -A
           if git diff --cached --quiet; then echo "Demo unchanged."; exit 0; fi
           git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
