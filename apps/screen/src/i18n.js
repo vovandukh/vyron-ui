@@ -1,7 +1,17 @@
 // Переклади Screen — ті самі словники, що й у Vyron Web (@vyron/shared/locales).
-// Мова поки українська; згодом — зі спільних налаштувань у базі Moonraker.
-import { ref } from 'vue'
+// Мову обирають на самому екрані (Налаштування → Мова); вона запам'ятовується на цьому пристрої.
+import { ref, watch } from 'vue'
 import { translate } from '@vyron/shared/i18n'
 
-export const lang = ref('uk')
+const KEY = 'vyron.screen.lang'
+let saved = 'uk'
+try { saved = localStorage.getItem(KEY) || 'uk' } catch { /* без сховища — українська */ }
+
+export const LANGS = [{ id: 'uk', name: 'Українська' }, { id: 'en', name: 'English' }]
+export const lang = ref(saved)
+watch(lang, l => {
+  document.documentElement.lang = l
+  try { localStorage.setItem(KEY, l) } catch { /* ignore */ }
+}, { immediate: true })
+
 export const t = (key, params) => translate(lang.value, key, params)

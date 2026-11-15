@@ -1,24 +1,56 @@
-/* Vyron Screen — сенсорний екран принтера.
-   Усі розміри в rem: 1rem = 1/48 ширини екрана, але не більше 1/32 висоти.
-   480×320 (TFT35) → 10px; 800×480 → 15px; 1024×600 → 18.75px — той самий макет пропорційно.
-   Легкість для слабкої графіки (SPI-екран малює процесор): без backdrop-filter, без розмитих тіней,
-   без безперервних анімацій; лише короткі переходи opacity/transform. */
+/* Vyron Screen — сенсорний екран принтера. Стиль Vyron + охайність Apple.
+   Розміри в rem: 1rem = 1/48 ширини екрана, але не більше 1/32 висоти
+   (480×320 TFT35 → 10px; 800×480 → 15px; 1024×600 → 18.75px).
+   SPI-екран малює процесор, тому: сяйва фону — статичні градієнти (малюються раз), «скло» — напівпрозора
+   заливка з тонким відблиском замість backdrop-filter, без розмитих тіней і безперервних анімацій. */
 :root{
-  --bg:#0b0b0c;--panel:#161618;--panel-hi:#1e1e21;--line:rgba(255,255,255,.08);
-  --ink:#f2f3f5;--dim:#8d929a;--red:#ff453a;--amber:#ff9f0a;--green:#34c759;--ice:#7cc7ff;
+  --bg:#060607;--ink:#f5f5f7;--dim:#8e8e93;--dim2:#636366;--line:rgba(255,255,255,.08);
+  --card:rgba(255,255,255,.06);--card-hi:rgba(255,255,255,.1);--card-edge:rgba(255,255,255,.09);
+  --group:#1c1c1e;--group-sep:rgba(84,84,88,.45);
+  --red:#ff453a;--amber:#ff9f0a;--green:#30d158;--blue:#0a84ff;--teal:#64d2ff;--purple:#bf5af2;--pink:#ff375f;--gray:#8e8e93;
   /* Тема (shared/theme.js перевизначає): фірмовий колір і акцент */
   --brand:#f03a2e;--brand-rgb:240,58,46;--coral:#ff6b5a;--accent-rgb:255,107,90;
   --btn-hi:#ff5a4c;--btn-lo:#e0321f;--on-btn:#fff;
-  --r:.9rem;--r-sm:.6rem
+  --r:1.2rem;--r-lg:1.6rem;--r-sm:.8rem;
+  --ease:cubic-bezier(.32,.72,0,1)
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{font-size:min(calc(100vw / 48),calc(100vh / 32));background:var(--bg)}
+html{font-size:min(calc(100vw / 48),calc(100vh / 32));
+  background:
+    radial-gradient(ellipse 70% 80% at 0% 110%,rgba(var(--brand-rgb),.28),transparent 65%),
+    radial-gradient(ellipse 55% 60% at 105% -10%,rgba(var(--accent-rgb),.12),transparent 60%),
+    var(--bg)}
 html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
-  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"DejaVu Sans",sans-serif;font-variant-numeric:tabular-nums;
-  user-select:none;-webkit-user-select:none;cursor:default}
-#app{height:100%}
-button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;touch-action:manipulation}
+  font-family:-apple-system,"SF Pro Display","SF Pro Text",system-ui,"Segoe UI",Roboto,"DejaVu Sans",sans-serif;
+  font-variant-numeric:tabular-nums;letter-spacing:-.01em;user-select:none;-webkit-user-select:none;cursor:default;-webkit-font-smoothing:antialiased}
+#app{height:100%;position:relative}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;touch-action:manipulation;letter-spacing:inherit}
 button:disabled{opacity:.4;cursor:default}
 /* Відгук на дотик — миттєвий і дешевий: лише масштаб і яскравість */
-.tap{transition:transform .08s ease-out,filter .08s ease-out}
-.tap:active:not(:disabled){transform:scale(.96);filter:brightness(1.15)}
+.tap{transition:transform .1s ease-out,filter .1s ease-out,background-color .1s ease-out}
+.tap:active:not(:disabled){transform:scale(.96);filter:brightness(1.2)}
+
+/* «Скло» Vyron без розмиття: заливка + світлий верхній край */
+.glass{background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.035));border:1px solid var(--card-edge);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+
+/* Сторінка під верхньою смугою */
+.page{position:absolute;left:0;right:0;top:4.6rem;bottom:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.page::-webkit-scrollbar{display:none}
+
+/* Переходи між сторінками: коротке зміщення в бік навігації (як в iOS), лише transform/opacity */
+.fwd-enter-active,.fwd-leave-active,.back-enter-active,.back-leave-active{transition:transform .22s var(--ease),opacity .22s var(--ease)}
+.fwd-enter-from{transform:translateX(30%);opacity:0}
+.fwd-leave-to{transform:translateX(-12%);opacity:0}
+.back-enter-from{transform:translateX(-12%);opacity:0}
+.back-leave-to{transform:translateX(30%);opacity:0}
+@media (prefers-reduced-motion:reduce){.fwd-enter-active,.fwd-leave-active,.back-enter-active,.back-leave-active{transition:none}}
+
+/* ===== Сторінки налаштувань у стилі iOS: великий заголовок, згруповані списки ===== */
+.set{padding:.4rem 1.4rem 1.6rem}
+.set h1{margin:.2rem .2rem 1.2rem;font-size:2.6rem;font-weight:700;letter-spacing:-.03em}
+.grp-h{margin:1.4rem 1.2rem .5rem;font-size:1.05rem;font-weight:500;color:var(--dim);text-transform:uppercase;letter-spacing:.04em}
+.grp{border-radius:var(--r);background:var(--group);overflow:hidden}
+.grp + .grp{margin-top:1.4rem}
+.grp-f{margin:.6rem 1.2rem 0;font-size:1.05rem;line-height:1.4;color:var(--dim)}
+.note{margin:1rem .4rem 0;padding:1rem 1.2rem;border-radius:var(--r);background:rgba(255,159,10,.12);color:#ffd28a;font-size:1.15rem;line-height:1.45}

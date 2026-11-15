@@ -26,7 +26,7 @@ const view = computed(() => {
 </script>
 
 <template>
-  <main class="err" :class="'t-' + view.tone">
+  <main class="page err" :class="'t-' + view.tone">
     <div class="body">
       <small v-if="view.eyebrow" class="eb">{{ view.eyebrow }}</small>
       <h1>{{ view.title }}</h1>
@@ -41,7 +41,7 @@ const view = computed(() => {
 </template>
 
 <style scoped>
-.err{--tone:var(--red);height:calc(100% - 4.6rem);display:flex;flex-direction:column;border-top:.3rem solid var(--tone)}
+.err{--tone:var(--red);display:flex;flex-direction:column;overflow:hidden;border-top:.3rem solid var(--tone)}
 .t-amber{--tone:var(--amber)}
 .body{flex:1;min-height:0;overflow-y:auto;padding:1.2rem 1.6rem .8rem;display:grid;align-content:start;gap:.7rem}
 .eb{font-size:1.2rem;font-weight:600;color:var(--tone)}
