@@ -280,5 +280,10 @@ export default {
   'files.printBusy': 'Принтер зайнятий: друк триває або на паузі',
   'files.confirmPrint': 'Запустити друк «{name}»? Переконайся, що стіл чистий і філамент заправлений.',
   'files.printStarted': 'Друк «{name}» запущено', 'files.printError': 'Не вдалося запустити друк: {msg}',
-  'preview.loading': 'завантаження…', 'preview.error': 'не вдалося відкрити: {msg}', 'preview.close': 'До поточного друку'
+  'preview.loading': 'завантаження…', 'preview.error': 'не вдалося відкрити: {msg}', 'preview.close': 'До поточного друку',
+  // ---------- Vyron Screen (сенсорний екран принтера) ----------
+  'scr.connecting': 'Підключення до принтера…', 'scr.noHost': 'Адресу принтера не визначено',
+  'scr.idle': 'Готовий до друку', 'scr.idleHint': 'Обери файл у вебінтерфейсі або на цьому екрані',
+  'scr.layer': 'Шар {n} / {total}',
+  'scr.files': 'Файли', 'scr.move': 'Рух', 'scr.temp': 'Нагрів', 'scr.more': 'Ще', 'scr.soon': 'скоро'
 }

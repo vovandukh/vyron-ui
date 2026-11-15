@@ -280,5 +280,10 @@ export default {
   'files.printBusy': 'Printer is busy: printing or paused',
   'files.confirmPrint': 'Start printing “{name}”? Make sure the bed is clear and filament is loaded.',
   'files.printStarted': 'Print of “{name}” started', 'files.printError': 'Could not start the print: {msg}',
-  'preview.loading': 'loading…', 'preview.error': 'could not open: {msg}', 'preview.close': 'Back to current print'
+  'preview.loading': 'loading…', 'preview.error': 'could not open: {msg}', 'preview.close': 'Back to current print',
+  // ---------- Vyron Screen (printer touchscreen) ----------
+  'scr.connecting': 'Connecting to the printer…', 'scr.noHost': 'Printer address is not set',
+  'scr.idle': 'Ready to print', 'scr.idleHint': 'Pick a file in the web interface or on this screen',
+  'scr.layer': 'Layer {n} / {total}',
+  'scr.files': 'Files', 'scr.move': 'Move', 'scr.temp': 'Heat', 'scr.more': 'More', 'scr.soon': 'soon'
 }

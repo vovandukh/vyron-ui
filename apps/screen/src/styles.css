@@ -1,0 +1,24 @@
+/* Vyron Screen — сенсорний екран принтера.
+   Усі розміри в rem: 1rem = 1/48 ширини екрана, але не більше 1/32 висоти.
+   480×320 (TFT35) → 10px; 800×480 → 15px; 1024×600 → 18.75px — той самий макет пропорційно.
+   Легкість для слабкої графіки (SPI-екран малює процесор): без backdrop-filter, без розмитих тіней,
+   без безперервних анімацій; лише короткі переходи opacity/transform. */
+:root{
+  --bg:#0b0b0c;--panel:#161618;--panel-hi:#1e1e21;--line:rgba(255,255,255,.08);
+  --ink:#f2f3f5;--dim:#8d929a;--red:#ff453a;--amber:#ff9f0a;--green:#34c759;--ice:#7cc7ff;
+  /* Тема (shared/theme.js перевизначає): фірмовий колір і акцент */
+  --brand:#f03a2e;--brand-rgb:240,58,46;--coral:#ff6b5a;--accent-rgb:255,107,90;
+  --btn-hi:#ff5a4c;--btn-lo:#e0321f;--on-btn:#fff;
+  --r:.9rem;--r-sm:.6rem
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:min(calc(100vw / 48),calc(100vh / 32));background:var(--bg)}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"DejaVu Sans",sans-serif;font-variant-numeric:tabular-nums;
+  user-select:none;-webkit-user-select:none;cursor:default}
+#app{height:100%}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;touch-action:manipulation}
+button:disabled{opacity:.4;cursor:default}
+/* Відгук на дотик — миттєвий і дешевий: лише масштаб і яскравість */
+.tap{transition:transform .08s ease-out,filter .08s ease-out}
+.tap:active:not(:disabled){transform:scale(.96);filter:brightness(1.15)}
