@@ -50,7 +50,7 @@ export default {
   'set.secMotion': 'Рух', 'set.secMotionHint': 'Панель руху на вкладці «Керування»',
   'set.inv': 'Інверсія осей', 'set.invHint': 'Якщо кнопка рухає вісь у протилежний бік',
   'set.fxyShort': 'Швидкість X/Y', 'set.fxyHint': 'мм/хв для кнопок руху', 'set.fzShort': 'Швидкість Z', 'set.fzHint': 'мм/хв для кнопок руху',
-  'set.secAbout': 'Про систему', 'set.ui': 'Інтерфейс', 'set.klipper': 'Klipper', 'set.moonraker': 'Moonraker', 'set.host': 'Хост', 'set.os': 'ОС', 'set.addr': 'Адреса',
+  'set.secAbout': 'Про систему', 'set.ui': 'Інтерфейс', 'set.core': 'Ядро', 'set.coreNone': 'не встановлено', 'set.klipper': 'Klipper', 'set.moonraker': 'Moonraker', 'set.host': 'Хост', 'set.os': 'ОС', 'set.addr': 'Адреса',
   'set.secNotify': 'Сповіщення', 'set.secNotifyHint': 'Як інтерфейс повідомляє про події',
   'set.toasts': 'Спливні повідомлення про помилки', 'set.toastsHint': 'Короткі картки, коли принтер не виконав команду: «Сопло ще не нагріте», «Спершу потрібно знайти нуль осей»…',
   'set.sound': 'Звук подій', 'set.soundHint': 'Коли друк завершився чи обірвався або принтер зупинився через помилку', 'set.soundTest': 'Прослухати',

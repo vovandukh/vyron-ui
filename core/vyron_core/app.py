@@ -7,6 +7,7 @@
 import asyncio
 import logging
 
+from .announce import Announce
 from .design_sync import DesignSync
 from .moonraker import MoonrakerClient
 from .ui_watch import UiWatch
@@ -17,7 +18,7 @@ log = logging.getLogger("vyron.core")
 class App:
     def __init__(self, config):
         self.config = config
-        self.features = []
+        self.features = [Announce()]
         if config.getbool("design_sync", "enabled"):
             self.features.append(DesignSync(interval=config.getfloat("design_sync", "interval", minimum=1.0)))
         if config.getbool("ui_watch", "enabled"):
