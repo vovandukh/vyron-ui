@@ -1,0 +1,10 @@
+{
+  "name": "@vyron/shared",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Logic shared by Vyron Web and Vyron Screen: Moonraker client, Klipper error parsing, themes",
+  "type": "module",
+  "exports": {
+    "./klipperErrors": "./src/klipperErrors.js"
+  }
+}

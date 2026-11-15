@@ -51,7 +51,7 @@ onActivated(loadSys)
 watch(() => printer.link, loadSys)
 const os = computed(() => { const d = (printer.hostInfo || {}).distribution || {}; return d.name || null })
 const about = computed(() => [
-  { k: 'set.ui', v: 'Vyron UI v' + uiVersion },
+  { k: 'set.ui', v: 'Vyron Web v' + uiVersion },
   { k: 'set.klipper', v: sys.value.klipper, mono: true },
   { k: 'set.moonraker', v: sys.value.moonraker, mono: true },
   { k: 'set.host', v: sys.value.hostname },

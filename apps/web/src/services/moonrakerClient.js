@@ -10,16 +10,18 @@ export const socketUrl = host => (secure() ? 'wss://' : 'ws://') + host + '/webs
 export const httpBase = host => (secure() ? 'https://' : 'http://') + host
 
 // ---------- вибір хоста принтера (жодних вшитих адрес) ----------
-const HOST_KEY = 'voronui.host'
+const HOST_KEY = 'vyron.host'
+const OLD_HOST_KEY = 'voronui.host'   // до ребрендингу — читаємо, доки не збережено новий
 
 /** Хост, збережений після ручного підключення (порожній — підключатися до хоста сторінки). */
 export function savedHost() {
-  try { return localStorage.getItem(HOST_KEY) || '' } catch { return '' }
+  try { return localStorage.getItem(HOST_KEY) || localStorage.getItem(OLD_HOST_KEY) || '' } catch { return '' }
 }
 
 /** Запам'ятати хост ручного підключення; хост самої сторінки не зберігаємо (він і так за замовчуванням). */
 export function rememberHost(host) {
   try {
+    localStorage.removeItem(OLD_HOST_KEY)
     if (host && host !== location.host) localStorage.setItem(HOST_KEY, host)
     else localStorage.removeItem(HOST_KEY)
   } catch { /* приватний режим */ }

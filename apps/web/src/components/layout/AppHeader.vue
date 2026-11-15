@@ -6,7 +6,7 @@ import { useI18n } from '../../composables/useI18n'
 import EStopButton from './EStopButton.vue'
 import HeaderMenu from './HeaderMenu.vue'
 import StatusIsland from './StatusIsland.vue'
-import logo from '../../assets/voron-logo.png'
+import VyronLogo from '../ui/VyronLogo.vue'
 
 const ui = useUiStore()
 const settings = useSettingsStore()
@@ -22,8 +22,8 @@ const ICONS = {
   hist: 'M12 7v5l3 2M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4.5v3h3',
   eng: 'M14.5 6.5a3.5 3.5 0 0 0-4.6 4.6L4.5 16.5l3 3 5.4-5.4a3.5 3.5 0 0 0 4.6-4.6l-2.2 2.2-2-2Z'
 }
-// Назва принтера в шапці та вкладці браузера — завжди «Voron 2.4» (hostname хоста, напр. bigtreetech-cb1, не показуємо).
-document.title = 'Voron 2.4'
+// Назва у вкладці браузера — бренд екосистеми (hostname хоста, напр. bigtreetech-cb1, не показуємо).
+document.title = 'Vyron'
 
 // ---------- капсула активної вкладки (аналог layoutId: одна капсула перетікає між кнопками) ----------
 const nav = ref(null)
@@ -64,7 +64,7 @@ onBeforeUnmount(() => { removeEventListener('resize', onResize); ro?.disconnect(
     <div class="lead">
       <!-- Логотип — «Додому»: вкладка «Керування» + закрити поповери й меню -->
       <button type="button" class="wm" :title="t('nav.home')" :aria-label="t('nav.home')" @click="ui.goHome()">
-        <img :src="logo" width="30" height="30" alt=""><b>VORON</b><i>2.4</i>
+        <VyronLogo :size="30" /><b>VYRON</b>
       </button>
       <StatusIsland />
     </div>
@@ -91,13 +91,11 @@ onBeforeUnmount(() => { removeEventListener('resize', onResize); ro?.disconnect(
   background:none;border:0;padding:4px 8px 4px 4px;margin:-4px -8px -4px -4px;border-radius:12px;cursor:pointer;pointer-events:auto;
   transition:transform var(--t-spring) var(--spring),background-color var(--t-fast) var(--ease-out)}
 .wm:hover{background:rgba(255,255,255,.05)}
-.wm:hover img{filter:drop-shadow(0 0 8px rgba(var(--brand-rgb),.55))}
+.wm:hover .vl{filter:drop-shadow(0 0 8px rgba(var(--brand-rgb),.5))}
 .wm:active{transform:scale(.96)}
 .wm:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
-.wm img{transition:filter var(--t-mid) var(--ease-out)}
-.wm b{color:var(--brand);font-weight:600}
-.wm i{font-style:normal;font-weight:200;color:var(--dim);max-width:220px;overflow:hidden;text-overflow:ellipsis}
-.wm img{display:block}
+.wm .vl{transition:filter var(--t-mid) var(--ease-out)}
+.wm b{color:var(--ink);font-weight:600;letter-spacing:.24em}
 
 /* Вкладки: скляна «капсула-доріжка» з однією рухомою підсвіткою */
 .nav{position:relative;display:flex;gap:2px;padding:3px;border-radius:999px;pointer-events:auto;max-width:100%;overflow-x:auto;scrollbar-width:none}

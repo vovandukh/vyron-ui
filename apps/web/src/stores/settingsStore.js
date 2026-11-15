@@ -1,12 +1,13 @@
 import { defineStore } from 'pinia'
 
-// Той самий ключ, що й в оригінальному HTML — збережені налаштування підхоплюються.
-const KEY = 'voronui'
+// Ключ Vyron; до ребрендингу налаштування лежали під 'voronui' — їх підхоплюємо, доки не збережено нові.
+const KEY = 'vyron'
+const OLD_KEY = 'voronui'
 export const DEFAULT_SETTINGS = { lang: 'uk', cEstop: true, cSys: true, invX: false, invY: false, invZ: false, fxy: 3000, fz: 300, toasts: true, sound: false }
 
 function load() {
   try {
-    const s = JSON.parse(localStorage.getItem(KEY) || '{}')
+    const s = JSON.parse(localStorage.getItem(KEY) || localStorage.getItem(OLD_KEY) || '{}')
     return s && typeof s === 'object' ? s : {}
   } catch { return {} }
 }

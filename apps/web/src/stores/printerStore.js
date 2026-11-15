@@ -12,7 +12,7 @@ import {
   demoGcode, demoStaticStatus, demoTickStatus, demoHwSensors, demoHostInfo, demoMcuConn
 } from '../services/demo'
 import { DEMO_BUILD } from '../config'
-import { classify, isGcodeError } from '../services/klipperErrors'
+import { classify, isGcodeError } from '@vyron/shared/klipperErrors'
 
 const LOG_MAX = 500
 /** Скільки тостів помилок тримаємо одночасно (старіші витісняються). */
@@ -36,7 +36,7 @@ export const usePrinterStore = defineStore('printer', () => {
   // ---------- стан Klipper і помилки ----------
   /**
    * Стан самого Klippy (окремо від WebSocket до Moonraker): state — ready | startup | shutdown | error | disconnected | null,
-   * message — state_message Klipper (текст shutdown / помилки конфігурації), info — його розбір (services/klipperErrors.js).
+   * message — state_message Klipper (текст shutdown / помилки конфігурації), info — його розбір (@vyron/shared/klipperErrors.js).
    */
   const klippy = ref({ state: null, message: '', info: null })
   /** Тости помилок G-code / друку: [{ id, at, n, src: 'gcode' | 'print', info }] — новіші в кінці */
