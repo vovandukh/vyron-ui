@@ -1,0 +1,22 @@
+# Vyron Screen на екрані принтера. Створює install/screen.sh.
+# Якщо Vyron Screen кілька разів поспіль не запускається — система сама повертає KlipperScreen.
+[Unit]
+Description=Vyron Screen (екран принтера)
+After=nginx.service moonraker.service
+Conflicts=KlipperScreen.service
+OnFailure=KlipperScreen.service
+StartLimitIntervalSec=120
+StartLimitBurst=4
+
+[Service]
+Type=simple
+User=@USER@
+@GROUPS@
+Environment=XDG_RUNTIME_DIR=/run/user/@UID@
+ExecStart=/usr/bin/xinit @KIOSK@ @URL@ -- :0 -nolisten tcp -nocursor
+Restart=on-failure
+RestartSec=3
+Nice=5
+
+[Install]
+WantedBy=multi-user.target
