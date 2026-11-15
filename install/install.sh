@@ -267,8 +267,8 @@ if [ $SCREEN = 1 ]; then
     info "KlipperScreen не встановлено — екран не чіпаю"
     SCREEN_RES="немає KlipperScreen — не змінювався"
   elif [ $DRY = 1 ]; then
-    bash "$REPO/install/screen.sh" --dry-run || warn "перевірка екрана завершилась помилкою (див. вище)"
-    SCREEN_RES="Vyron Screen замість KlipperScreen"
+    if bash "$REPO/install/screen.sh" --dry-run; then SCREEN_RES="Vyron Screen замість KlipperScreen"
+    else warn "перевірка екрана завершилась помилкою (див. вище)"; SCREEN_RES="перевірка не пройшла — див. вище"; fi
   elif bash "$REPO/install/screen.sh"; then
     SCREEN_RES="Vyron Screen (KlipperScreen приховано)"
   else

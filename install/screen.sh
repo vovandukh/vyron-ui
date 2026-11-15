@@ -116,13 +116,24 @@ say "2. Браузер"
 if command -v chromium >/dev/null || command -v chromium-browser >/dev/null; then
   ok "Chromium уже встановлено"
 else
-  PKG=chromium
-  apt-cache policy chromium 2>/dev/null | grep -q 'Candidate: [0-9]' || PKG=chromium-browser
-  apt-cache policy "$PKG" 2>/dev/null | grep -q 'Candidate: [0-9]' || die "У репозиторіях системи немає Chromium (пакет chromium)."
+  has_pkg() { apt-cache policy "$1" 2>/dev/null | grep -q 'Candidate: [0-9]'; }
   FREE_MB="$(df -m / | awk 'NR==2{print $4}')"
   [ "$FREE_MB" -gt 600 ] || die "Мало місця на диску: вільно $FREE_MB МБ, для Chromium треба ~600 МБ."
+  # На свіжій системі списки пакетів apt ще порожні — спершу оновити їх, потім шукати Chromium
+  if ! has_pkg chromium && ! has_pkg chromium-browser; then
+    if [ $DRY = 1 ]; then
+      info "списки пакетів apt ще не оновлені — під час встановлення виконаю apt-get update і поставлю chromium"
+    else
+      info "оновлюю списки пакетів (apt-get update)…"
+      sudo apt-get update -qq || warn "apt-get update завершився з помилкою — пробую далі"
+    fi
+  fi
+  PKG=chromium
+  has_pkg chromium || PKG=chromium-browser
+  if [ $DRY = 0 ] && ! has_pkg "$PKG"; then
+    die "У репозиторіях системи немає Chromium (пакет chromium). Перевір: apt-cache policy chromium"
+  fi
   info "встановлюю $PKG (~100 МБ завантаження, кілька хвилин)"
-  run sudo apt-get update -qq
   run sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends "$PKG" x11-xserver-utils x11-utils
 fi
 
