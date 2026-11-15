@@ -106,9 +106,13 @@ else
     code="$(curl -s -o /dev/null -w '%{http_code}' "$URL" || true)"; [ "$code" = 200 ] && break; sleep 1
   done
   [ "$code" = 200 ] || die "Сторінка $URL не відкривається (код $code)."
-  api="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$LPORT/server/info" || true)"
-  [ "$api" = 200 ] || warn "Moonraker через локальний сайт відповідає кодом $api — екран може не підключитися"
-  ok "сторінка відкривається, Moonraker відповідає"
+  ok "сторінка відкривається"
+  # Moonraker міг щойно перезапуститися (install.sh) — чекаємо до 30 с
+  for i in $(seq 1 15); do
+    api="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$LPORT/server/info" || true)"; [ "$api" = 200 ] && break; sleep 2
+  done
+  if [ "$api" = 200 ]; then ok "Moonraker відповідає"
+  else warn "Moonraker через локальний сайт відповідає кодом $api — екран підключиться, щойно Moonraker запрацює"; fi
 fi
 
 # 2. Chromium
