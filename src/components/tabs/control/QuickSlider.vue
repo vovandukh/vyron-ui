@@ -13,7 +13,8 @@ import { heatRgb } from '../../../utils/format'
 const props = defineProps({
   kind: { type: String, required: true },     // nozzle | bed | speed | fan
   anchor: { type: Object, default: null },    // рядок панелі, біля якого відкрито
-  panel: { type: Object, default: null }      // сама панель телеметрії
+  panel: { type: Object, default: null },     // сама панель телеметрії
+  sheet: { type: Boolean, default: false }    // телефон: нижній аркуш на всю ширину замість поповера
 })
 const emit = defineEmits(['close'])
 
@@ -76,6 +77,7 @@ const root = ref(null)
 const pos = ref({ left: 0, top: 0, origin: 'right center' })
 const GAP = 12, EDGE = 8
 function place() {
+  if (props.sheet) return
   const el = root.value, a = props.anchor, p = props.panel
   if (!el || !a || !p) return
   const ar = a.getBoundingClientRect(), pr = p.getBoundingClientRect()
@@ -113,8 +115,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="root" class="qs glass" role="dialog" :aria-label="t('qs.adjust', { name: cfg.title })"
-       :style="{ left: pos.left + 'px', top: pos.top + 'px', transformOrigin: pos.origin, '--fill': fill, '--p': pct + '%' }">
+  <div ref="root" class="qs glass" :class="{ sheet }" role="dialog" :aria-label="t('qs.adjust', { name: cfg.title })"
+       :style="sheet ? { '--fill': fill, '--p': pct + '%' } : { left: pos.left + 'px', top: pos.top + 'px', transformOrigin: pos.origin, '--fill': fill, '--p': pct + '%' }">
+    <i v-if="sheet" class="grab" aria-hidden="true"></i>
     <div class="hd">
       <b>{{ cfg.title }}</b>
       <span class="val">{{ fmt(v) }}</span>
@@ -149,7 +152,7 @@ onBeforeUnmount(() => {
 .rng:focus-visible{outline:2px solid var(--coral);outline-offset:3px}
 
 .pre{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.pre button,.exact{border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.06);color:var(--ink);font:inherit;font-size:12px;border-radius:11px;padding:9px 0;cursor:pointer;
+.pre button,.exact{border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.06);color:var(--ink);font:inherit;font-size:12px;border-radius:var(--r);padding:9px 0;cursor:pointer;
   transition:transform var(--t-spring) var(--spring),background-color var(--t-fast) var(--ease-out),border-color var(--t-fast) var(--ease-out)}
 .pre button:hover,.exact:hover{background:rgba(255,255,255,.1)}
 .pre button:active,.exact:active{transform:scale(.94)}
@@ -157,4 +160,14 @@ onBeforeUnmount(() => {
 .pre button:focus-visible,.exact:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
 .exact{padding:7px 0;color:var(--dim);font-size:11px;background:none;border-color:transparent}
 .err{color:var(--red);font-size:11px}
+/* Нижній аркуш (телефон): на всю ширину, більший слайдер і кнопки під палець */
+.qs.sheet{left:0;right:0;bottom:0;top:auto;width:auto;max-width:480px;margin:0 auto;z-index:12;padding:10px 18px calc(20px + env(safe-area-inset-bottom,0px));gap:14px;font-size:13px;
+  border-radius:var(--r-xl) var(--r-xl) 0 0;background:rgba(22,22,24,calc(1 - .06 * var(--glass-t,1)))}
+.sheet .grab{justify-self:center;width:38px;height:5px;border-radius:3px;background:rgba(255,255,255,.25)}
+.sheet .hd b{font-size:14px;color:var(--ink)}
+.sheet .val{font-size:32px}
+.sheet .rng{height:48px;border-radius:16px}
+.sheet .rng::-webkit-slider-thumb{height:30px}
+.sheet .pre button{padding:13px 0;font-size:14px}
+.sheet .exact{padding:10px 0;font-size:13px}
 </style>

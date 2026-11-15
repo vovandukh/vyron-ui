@@ -1,7 +1,9 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { usePrinterStore } from './stores/printerStore'
 import { useUiStore } from './stores/uiStore'
+import { useSettingsStore } from './stores/settingsStore'
+import { chime } from './services/sound'
 
 import PrintPreview3D from './components/viz/PrintPreview3D.vue'
 import BackdropFx from './components/viz/BackdropFx.vue'
@@ -33,6 +35,15 @@ const panels = {
 const panel = computed(() => panels[ui.view] || null)
 
 onMounted(() => printer.autoStart())
+
+// Звук подій (Налаштування → Сповіщення): друк завершено / друк обірвався / Klipper зупинився
+const settings = useSettingsStore()
+watch(() => printer.printState, (s, o) => {
+  if (!settings.sound || !o || s === o) return
+  if (s === 'complete' && o === 'printing') chime('done')
+  else if (s === 'error') chime('error')
+})
+watch(() => printer.klippy.state, (s, o) => { if (settings.sound && o && s !== o && (s === 'shutdown' || s === 'error')) chime('error') })
 </script>
 
 <template>

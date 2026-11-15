@@ -160,7 +160,7 @@ onBeforeUnmount(() => { ro?.disconnect(); clearTimeout(timer) })
 /* Розгорнута капсула: тонке кольорове світіння за тоном події */
 .ex.t-ok{border-color:rgba(52,199,89,.35);box-shadow:0 0 0 1px rgba(52,199,89,.1),0 0 22px -4px rgba(52,199,89,.45)}
 .ex.t-ok .ic{color:#34c759}
-.ex.t-info{border-color:rgba(255,107,90,.35);box-shadow:0 0 22px -4px rgba(255,107,90,.45)}
+.ex.t-info{border-color:rgba(var(--accent-rgb),.35);box-shadow:0 0 22px -4px rgba(var(--accent-rgb),.45)}
 .ex.t-info .ic{color:var(--coral)}
 .ex.t-warn{border-color:rgba(255,159,10,.4);box-shadow:0 0 22px -4px rgba(255,159,10,.45)}
 .ex.t-warn .ic{color:#ff9f0a}
@@ -187,5 +187,6 @@ onBeforeUnmount(() => { ro?.disconnect(); clearTimeout(timer) })
 
 /* Екран принтера 1024×600: шапка (лого + капсула + вкладки + STOP) має влізти в один рядок */
 @media(max-width:1100px){.islot{--isl-max:190px}}
-@media(max-width:560px){.islot{--isl-max:44vw}.eta{display:none}}
+/* Телефон: розгорнута подія не може залазити на STOP і меню праворуч (≈ 200 px разом із логотипом) */
+@media(max-width:560px){.islot{--isl-max:44vw;--isl-max-ex:calc(100vw - 206px)}.eta{display:none}}
 </style>

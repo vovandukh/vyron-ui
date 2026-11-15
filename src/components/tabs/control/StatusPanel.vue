@@ -10,6 +10,7 @@ import { heatRgb } from '../../../utils/format'
 import RollNumber from '../../ui/RollNumber.vue'
 import QuickSlider from './QuickSlider.vue'
 import PrintControls from './PrintControls.vue'
+import ToolPopover from './ToolPopover.vue'
 
 const printer = usePrinterStore()
 const ui = useUiStore()
@@ -21,7 +22,8 @@ const LAYER_STATES = ['printing', 'paused', 'complete']
 const rows = computed(() => {
   const p = printer, out = []
   const num = (id, label, value, o = {}) => { if (value != null && Number.isFinite(value)) out.push({ id, label, value, ...o }) }
-  if (p.toolObjects.length) num('nozzle', t('status.nozzle'), p.nozzleTemp, { suffix: '°', quick: true, heat: p.nozzleTemp })
+  // Одна голова: сопло показує картка голови під панеллю (як на телефоні) — рядок був би дублем
+  if (p.toolObjects.length > 1) num('nozzle', t('status.nozzle'), p.nozzleTemp, { suffix: '°', quick: true, heat: p.nozzleTemp })
   if (p.hasBed) num('bed', t('status.bed'), p.bedTemp, { suffix: '°', quick: true, heat: p.bedTemp, heatRange: [30, 100] })
   if (p.chamberObj) num('chamber', t('status.chamber'), p.chamberTemp, { suffix: '°' })
   num('speed', t('status.speed'), p.speedFactor == null ? null : p.speedFactor * 100, { suffix: '%', quick: true })
@@ -54,6 +56,8 @@ watch(() => ui.homeTick, () => { open.value = null })   // клік по лог�
 </script>
 
 <template>
+  <!-- Права колонка: панель даних і (для однієї голови) картка голови під нею -->
+  <div class="rcol">
   <Transition name="pn">
     <div v-if="rows.length" ref="panel" class="st glass">
       <TransitionGroup tag="dl" name="rw" class="dl">
@@ -74,15 +78,30 @@ watch(() => ui.homeTick, () => { open.value = null })   // клік по лог�
       </Transition>
     </div>
   </Transition>
+  <ToolPopover v-if="printer.toolCount === 1" :name="printer.toolObjects[0]" :index="0" inline class="head" />
+  </div>
   <Transition name="qs">
     <QuickSlider v-if="open && rowEls[open]" :key="open" :kind="open" :anchor="rowEls[open]" :panel="panel" @close="open = null" />
   </Transition>
 </template>
 
 <style scoped>
-.st{position:fixed;top:calc(var(--hb,72px) + 16px);right:36px;width:min(268px,40vw);margin:0;padding:6px 10px;text-align:left;pointer-events:none;border-radius:18px}
+/* Права колонка: якщо картка голови не вміщається по висоті — колонка гортається сама, решта екрана не зачіпається */
+.rcol{position:fixed;top:calc(var(--hb,72px) + 16px);right:36px;bottom:16px;width:min(268px,40vw);display:flex;flex-direction:column;gap:10px;z-index:3;
+  overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;pointer-events:none}
+.rcol::-webkit-scrollbar{display:none}
+/* Низ колонки плавно згасає — видно, що картку голови можна догорнути (на 1024×600 / 800×480) */
+.rcol{-webkit-mask-image:linear-gradient(#000 calc(100% - 22px),transparent);mask-image:linear-gradient(#000 calc(100% - 22px),transparent);padding-bottom:18px}
+.rcol>*{flex-shrink:0}
+.st{position:relative;margin:0;padding:6px 10px;text-align:left;pointer-events:none;border-radius:var(--r-lg)}
+.head{pointer-events:auto;border-radius:var(--r-lg)}
+/* Картка голови вужча, ніж на телефоні: компактні поля й кнопки */
+.head :deep(.body){padding:12px;gap:8px}
+.head :deep(.temp){font-size:24px}
+.head :deep(button),.head :deep(input){padding:7px 9px;font-size:12px}
+.head :deep(.pre button){padding:5px 0}
 .dl{display:grid;margin:0}
-.rw{position:relative;display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:9px 8px;border-radius:11px;max-height:60px;
+.rw{position:relative;display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:9px 8px;border-radius:var(--r);max-height:60px;
   transition:background-color var(--t-fast) var(--ease-out),transform var(--t-spring) var(--spring)}
 /* Розділювач між рядками — псевдоелемент, щоб не стрибав під час анімації висоти */
 .rw+.rw::before{content:'';position:absolute;left:8px;right:8px;top:0;height:1px;background:rgba(255,255,255,.06)}
@@ -118,7 +137,7 @@ dd.warn{color:#ffb35c}
 .qs-enter-from{opacity:0;transform:scale(.8)}
 .qs-leave-to{opacity:0;transform:scale(.94)}
 
-@media(max-width:700px){.st{top:auto;bottom:140px;right:14px;width:min(268px,62vw)}}
+@media(max-width:700px){.rcol{top:auto;bottom:140px;right:14px;width:min(268px,62vw)}}
 /* Низькі екрани (800×480): компактні рядки, щоб блок не заходив під смугу голів */
 @media(max-height:540px){.st{padding:4px 8px}.rw{padding:5px 8px}dd{font-size:14px}dt{font-size:11px}}
 </style>

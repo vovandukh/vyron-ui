@@ -4,11 +4,13 @@
 // Час життя — CSS-анімація смужки внизу: наведення/фокус ставлять її на паузу, кінець анімації закриває тост.
 import { usePrinterStore } from '../../stores/printerStore'
 import { useUiStore } from '../../stores/uiStore'
+import { useSettingsStore } from '../../stores/settingsStore'
 import { useI18n } from '../../composables/useI18n'
 import ErrIcon from '../ui/ErrIcon.vue'
 
 const printer = usePrinterStore()
 const ui = useUiStore()
+const settings = useSettingsStore()
 const { t } = useI18n()
 
 /** Червоні — те, що зупиняє роботу (нагрів, MCU, драйвер, обрив друку); решта — бурштинові попередження. */
@@ -28,7 +30,7 @@ function toConsole(a) {
 </script>
 
 <template>
-  <div class="kt" aria-live="assertive">
+  <div v-if="settings.toasts" class="kt" aria-live="assertive">
     <TransitionGroup name="kt">
       <article v-for="a in printer.alerts" :key="a.id" class="toast" :class="'t-' + tone(a)" role="alert" tabindex="-1">
         <span class="ic"><ErrIcon :cat="a.info.cat" :size="17" /></span>
@@ -52,13 +54,13 @@ function toConsole(a) {
 <style scoped>
 .kt{position:fixed;top:calc(var(--hb,72px) + 12px);left:50%;transform:translateX(-50%);z-index:11;width:min(420px,calc(100vw - 32px));display:grid;gap:8px;pointer-events:none}
 .toast{--tone:255,159,10;position:relative;display:flex;align-items:flex-start;gap:12px;padding:12px 12px 14px;border-radius:var(--r-lg);overflow:hidden;pointer-events:auto;color:var(--ink);font-size:12.5px;outline:none;
-  background:rgba(22,22,24,.92);border:1px solid;border-color:rgba(var(--tone),.38) rgba(255,255,255,.04) rgba(255,255,255,.03) rgba(var(--tone),.2);
+  background:rgba(22,22,24,calc(1 - 0.08 * var(--glass-t,1)));border:1px solid;border-color:rgba(var(--tone),.38) rgba(255,255,255,.04) rgba(255,255,255,.03) rgba(var(--tone),.2);
   box-shadow:0 0 34px -12px rgba(var(--tone),.55),0 20px 44px -18px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.05)}
 @supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
-  .toast{background:rgba(22,22,24,.8);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
+  .toast{background:rgba(22,22,24,calc(1 - 0.2 * var(--glass-t,1)));-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
 }
 .t-err{--tone:240,58,46}
-.ic{flex:none;width:34px;height:34px;border-radius:11px;display:grid;place-items:center;color:rgb(var(--tone));
+.ic{flex:none;width:34px;height:34px;border-radius:var(--r);display:grid;place-items:center;color:rgb(var(--tone));
   background:radial-gradient(circle at 50% 35%,rgba(var(--tone),.26),rgba(var(--tone),.08));border:1px solid rgba(var(--tone),.3)}
 .bd{flex:1;min-width:0;display:grid;gap:3px;justify-items:start}
 .eb{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgb(var(--tone))}

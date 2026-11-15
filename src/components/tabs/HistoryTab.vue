@@ -363,8 +363,8 @@ onDeactivated(() => { offs.forEach(f => f()); offs = []; clearTimeout(fileTimer)
 .view .fa button{padding:6px 10px}
 .view .del svg{width:15px;height:15px;display:block;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 /* «Друкувати»: червоний акцент, як основна дія */
-.view .pr{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(180deg,#ff5a4c,#e0321f);border-color:transparent;color:#fff;font-weight:600;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 4px 14px -6px rgba(240,58,46,.8)}
-.view .pr:not(:disabled):hover{background:linear-gradient(180deg,#ff6a5c,#e83a27);border-color:transparent}
+.view .pr{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(180deg,var(--btn-hi),var(--btn-lo));border-color:transparent;color:var(--on-btn);font-weight:600;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 4px 14px -6px rgba(var(--brand-rgb),.8)}
+.view .pr:not(:disabled):hover{background:linear-gradient(180deg,var(--btn-hi-h),var(--btn-lo-h));border-color:transparent}
 .view .pr:disabled{background:var(--surface-hi);box-shadow:none;color:var(--dim)}
 .view .pr svg{width:12px;height:12px;display:block;fill:#fff}
 .view .pr:disabled svg{fill:var(--dim)}

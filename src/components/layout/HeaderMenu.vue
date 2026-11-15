@@ -142,14 +142,14 @@ function onEnter(el) {
 
 <style scoped>
 .mnu{position:relative;pointer-events:auto}
-.mbtn{background:rgba(20,20,22,.6);border:1px solid;border-color:var(--edge-hi) var(--edge-lo) var(--edge-lo) var(--edge-hi);color:var(--ink);width:34px;height:34px;border-radius:50%;cursor:pointer;display:grid;place-items:center;
+.mbtn{background:rgba(20,20,22,calc(1 - 0.4 * var(--glass-t,1)));border:1px solid;border-color:var(--edge-hi) var(--edge-lo) var(--edge-lo) var(--edge-hi);color:var(--ink);width:34px;height:34px;border-radius:50%;cursor:pointer;display:grid;place-items:center;
   transition:transform var(--t-spring) var(--spring),color var(--t-fast) var(--ease-out),background-color var(--t-fast) var(--ease-out)}
 .mbtn:hover{color:var(--coral);background:rgba(40,40,44,.7)}
 .mbtn:active{transform:scale(.9)}
 .mbtn[aria-expanded="true"]{color:var(--coral);background:rgba(255,255,255,.1)}
 
 /* ---------- панель ---------- */
-.cc{position:fixed;right:32px;width:min(320px,calc(100vw - 32px));max-height:calc(100vh - 90px);overflow:auto;padding:10px;border-radius:22px;display:grid;grid-template-columns:minmax(0,1fr);gap:8px;z-index:30;text-align:left;color:var(--ink);font-size:13px;letter-spacing:0}
+.cc{position:fixed;right:32px;width:min(320px,calc(100vw - 32px));max-height:calc(100vh - 90px);overflow:auto;padding:10px;border-radius:var(--r-xl);display:grid;grid-template-columns:minmax(0,1fr);gap:8px;z-index:30;text-align:left;color:var(--ink);font-size:13px;letter-spacing:0}
 .tile{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:12px;display:grid;gap:10px}
 .tile-hd{display:flex;align-items:center;gap:8px;font-size:13px}
 .tile-hd b{font-weight:600}
@@ -163,14 +163,14 @@ function onEnter(el) {
 
 .host{display:flex;gap:6px}
 /* Адреса принтера лише для читання (збірка для принтера) */
-.hostRo{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:9px 11px;border-radius:11px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.06)}
+.hostRo{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:9px 11px;border-radius:var(--r);background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.06)}
 .hostRo small{color:var(--dim);font-size:11px;white-space:nowrap}
 .hostRo b{font:500 13px/1.2 var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.host input{flex:1;width:0;min-width:0;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.08);color:var(--ink);font:inherit;font-size:13px;padding:9px 11px;border-radius:11px;
+.host input{flex:1;width:0;min-width:0;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.08);color:var(--ink);font:inherit;font-size:13px;padding:9px 11px;border-radius:var(--r);
   transition:border-color var(--t-fast) var(--ease-out),box-shadow var(--t-fast) var(--ease-out)}
-.host input:focus{outline:none;border-color:rgba(255,107,90,.7);box-shadow:0 0 0 3px rgba(255,107,90,.18)}
-.pri{flex:none;border:0;border-radius:11px;padding:0 14px;font:inherit;font-size:13px;font-weight:500;color:#fff;cursor:pointer;
-  background:linear-gradient(180deg,#ff5a4c,#e0321f);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 4px 14px -6px rgba(240,58,46,.8);
+.host input:focus{outline:none;border-color:rgba(var(--accent-rgb),.7);box-shadow:0 0 0 3px rgba(var(--accent-rgb),.18)}
+.pri{flex:none;border:0;border-radius:var(--r);padding:0 14px;font:inherit;font-size:13px;font-weight:500;color:#fff;cursor:pointer;
+  background:linear-gradient(180deg,var(--btn-hi),var(--btn-lo));box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 4px 14px -6px rgba(var(--brand-rgb),.8);
   transition:transform var(--t-spring) var(--spring),filter var(--t-fast) var(--ease-out)}
 .pri:hover:not(:disabled){filter:brightness(1.08)}
 .pri:active:not(:disabled){transform:scale(.95)}
@@ -211,7 +211,7 @@ function onEnter(el) {
 .derr-leave-to{opacity:0}
 
 .list{display:grid;gap:1px;padding:2px}
-.list button{background:none;border:0;color:var(--ink);font:inherit;font-size:13px;text-align:left;padding:10px 12px;border-radius:11px;cursor:pointer;
+.list button{background:none;border:0;color:var(--ink);font:inherit;font-size:13px;text-align:left;padding:10px 12px;border-radius:var(--r);cursor:pointer;
   transition:background-color var(--t-fast) var(--ease-out),transform var(--t-spring) var(--spring)}
 .list button:hover:not(:disabled){background:rgba(255,255,255,.07)}
 .list button:active:not(:disabled){transform:scale(.98);background:rgba(255,255,255,.1)}

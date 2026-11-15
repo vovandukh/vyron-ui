@@ -106,7 +106,7 @@ const tiles = computed(() => {
 <style scoped>
 .mc{border-radius:var(--r-md);background:rgba(0,0,0,.22);border:1px solid var(--hair);
   transition:background-color var(--t-mid) var(--ease-out),border-color var(--t-mid) var(--ease-out),box-shadow var(--t-mid) var(--ease-out)}
-.mc.open{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.12);box-shadow:0 0 0 1px rgba(255,107,90,.12),0 10px 26px -14px rgba(240,58,46,.45),inset 0 1px 0 rgba(255,255,255,.04)}
+.mc.open{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.12);box-shadow:0 0 0 1px rgba(var(--accent-rgb),.12),0 10px 26px -14px rgba(var(--brand-rgb),.45),inset 0 1px 0 rgba(255,255,255,.04)}
 /* Рядок-заголовок: кнопка на всю ширину, тактильне натискання */
 .mc .mhead{display:flex;align-items:center;gap:8px;width:100%;min-width:0;padding:11px 12px;margin:0;border:0;border-radius:var(--r-md);background:transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer;
   transition:transform var(--t-spring) var(--spring),background-color var(--t-fast) var(--ease-out)}

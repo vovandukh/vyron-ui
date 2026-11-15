@@ -2,6 +2,7 @@ import { createApp, watch } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import { useSettingsStore } from './stores/settingsStore'
+import { useDesignStore } from './stores/designStore'
 import './assets/main.css'
 import logo from './assets/voron-logo.png'
 
@@ -20,5 +21,8 @@ app.use(createPinia())
 const settings = useSettingsStore()
 settings.$subscribe(() => settings.persist())
 watch(() => settings.lang, l => { document.documentElement.lang = l }, { immediate: true })
+
+// Тема інтерфейсу (сторінка «Дизайн»): застосовується до монтування, щоб перший кадр уже був у потрібних кольорах
+useDesignStore()
 
 app.mount('#app')

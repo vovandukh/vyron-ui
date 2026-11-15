@@ -11,6 +11,9 @@ import { useUiStore } from '../../stores/uiStore'
 import { useOrbitCamera } from '../../composables/useOrbitCamera'
 import { useI18n } from '../../composables/useI18n'
 import { model, BED } from '../../services/gcodeModel'
+import { hexToRgb } from '../../services/theme'
+import { useDesignStore } from '../../stores/designStore'
+import { MOBILE_QUERY } from '../../composables/useMobile'
 
 // ---------- кольори ----------
 const GRAY = [0.24, 0.26, 0.29]               // майбутні шари
@@ -25,6 +28,9 @@ const TOOL_COLORS = [
   [[0.66, 0.40, 1.00], [0.86, 0.75, 1.00]],   // T4 фіолетовий
   [[0.15, 0.80, 0.85], [0.65, 0.95, 0.95]]    // T5 бірюзовий
 ]
+const T0_VORON = TOOL_COLORS[0]
+/** Колір світіння поточного шару — акцент теми (сторінка «Дизайн») */
+let glowColor = CORAL
 
 // ---------- вигляд шарів (підібрано на реальних моделях разом із Z_SCALE_MAX у gcodeModel.js) ----------
 const LAY_DIM = 0.4        // яскравість кожного другого видимого шару — чіткі смуги між шарами
@@ -258,7 +264,7 @@ function label(text, color, size, x, y, z) {
 /** М'яка радіальна пляма (світіння) — спільна текстура для гало шару й відбиття від столу. */
 function glowPlane(tex) {
   const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
-    new THREE.MeshBasicMaterial({ map: tex, color: CORAL, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }))
+    new THREE.MeshBasicMaterial({ map: tex, color: glowColor, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }))
   m.rotation.x = -Math.PI / 2
   m.visible = false
   return m
@@ -304,7 +310,7 @@ function makeStage() {
   fx.bedGlow.position.y = 0.3
   const g = new THREE.BufferGeometry()
   g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(0), 3))
-  fx.glowLines = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: CORAL, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }))
+  fx.glowLines = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: glowColor, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }))
   fx.glowLines.visible = false
   scene.add(fx.halo, fx.bedGlow, fx.glowLines)
 }
@@ -368,6 +374,22 @@ function resize() {
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2))
   renderer.setSize(innerWidth, innerHeight, false)
   cam.aspect = innerWidth / innerHeight
+  // Мобільне «Керування» (MobileControl, той самий MOBILE_QUERY):
+  //  • телефон — картки стовпчиком знизу, модель піднята у верхню третину й трохи віддалена;
+  //  • ≥640 px (розгорнутий Fold) — праворуч панель ~380 px, модель у центрі лівої частини над карткою друку.
+  const W = innerWidth, H = innerHeight
+  const mobile = typeof matchMedia === 'function' && matchMedia(MOBILE_QUERY).matches
+  if (mobile && W >= 640) {
+    const left = W - 380 - 32                       // ширина лівої частини
+    cam.setViewOffset(W, H, Math.round((W - left) / 2 - 16), Math.round(H * 0.08), W, H)
+    cam.zoom = Math.min(0.8, (left / H) / 0.62)
+  } else if (mobile) {
+    cam.setViewOffset(W, H, 0, Math.round(H * 0.2), W, H)
+    cam.zoom = Math.min(0.78, cam.aspect / 0.62)
+  } else {
+    cam.clearViewOffset()
+    cam.zoom = 1
+  }
   cam.updateProjectionMatrix()
   kick()
 }
@@ -422,7 +444,25 @@ onMounted(() => {
   })
 })
 
+/**
+ * Тема змінилась: T0 (надрукована частина однієї голови) — від фірмового кольору до світлого акценту,
+ * світіння поточного шару — акцент. Осі X/Y лишаються семантичними (червона X, блакитна Y).
+ */
+function onTheme(e) {
+  const d = e.detail || {}, acc = hexToRgb(d.accent), br = hexToRgb(d.brand)
+  if (!acc || !br) return
+  const voron = d.accent === '#ff6b5a' && d.brand === '#f03a2e'
+  TOOL_COLORS[0] = voron ? T0_VORON : [br.map(v => v / 255), acc.map(v => (v + (255 - v) * 0.45) / 255)]
+  glowColor = voron ? CORAL : new THREE.Color(d.accent).getHex()
+  for (const m of [fx.halo, fx.bedGlow, fx.glowLines]) m?.material?.color.set(glowColor)
+  if (colAttr && model.P) repaint(0, model.N, painted)
+  if (renderer) kick()
+}
+addEventListener('vyron-theme', onTheme)
+onTheme({ detail: useDesignStore().d })   // тема вже застосована до монтування сцени
+
 onBeforeUnmount(() => {
+  removeEventListener('vyron-theme', onTheme)
   cancelAnimationFrame(raf)
   removeEventListener('resize', resize)
   disposeLines()
@@ -458,7 +498,7 @@ watch(() => ui.view, kick)
 .rv{position:fixed;right:32px;bottom:24px;z-index:4;width:42px;height:42px;padding:0;border-radius:50%;display:grid;place-items:center;color:var(--ink);cursor:pointer;
   transition:transform var(--t-spring) var(--spring),color var(--t-fast) var(--ease-out),box-shadow var(--t-mid) var(--ease-out)}
 .rv svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.rv:hover{color:var(--coral);box-shadow:var(--glass-shadow),0 0 18px -4px rgba(255,107,90,.55)}
+.rv:hover{color:var(--coral);box-shadow:var(--glass-shadow),0 0 18px -4px rgba(var(--accent-rgb),.55)}
 .rv:active{transform:scale(.92)}
 .rv:focus-visible{outline:2px solid var(--coral);outline-offset:3px}
 .rv-enter-active{transition:transform var(--t-spring) var(--spring),opacity var(--t-fast) var(--ease-out)}
