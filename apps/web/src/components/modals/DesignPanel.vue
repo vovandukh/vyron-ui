@@ -5,7 +5,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useDesignStore } from '../../stores/designStore'
 import { useConfirm } from '../../composables/useConfirm'
 import { useI18n } from '../../composables/useI18n'
-import { PRESETS, LIMITS, UPSCALE_MIN_WIDTH } from '../../services/theme'
+import { PRESETS, LIMITS, UPSCALE_MIN_WIDTH } from '@vyron/shared/theme'
 import ColorPicker from '../ui/ColorPicker.vue'
 import VyronLogo from '../ui/VyronLogo.vue'
 

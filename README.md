@@ -5,7 +5,7 @@
 | Частина | Тека | Що це | Стан |
 |---|---|---|---|
 | **Vyron Web** | [`apps/web`](apps/web) | Вебінтерфейс для ПК, ноутбука, планшета й телефона (Vue 3) | працює |
-| **Vyron Screen** | [`apps/screen`](apps/screen) | Застосунок для сенсорного екрана на принтері | заплановано |
+| **Vyron Screen** | [`apps/screen`](apps/screen) | Застосунок для сенсорного екрана на принтері (TFT35 480×320 і більші) | розробляється |
 | **Vyron Core** | [`core`](core) | Служба на хості: синхронізація між пристроями, Telegram, стеження за аномаліями, AI | заплановано |
 | **@vyron/shared** | [`packages/shared`](packages/shared) | Спільна логіка Web і Screen: розбір помилок Klipper, клієнт Moonraker, теми | наповнюється |
 | **Встановлення** | [`install`](install) | `install.sh` / `uninstall.sh` для принтера | заплановано |

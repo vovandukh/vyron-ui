@@ -1,18 +1,18 @@
 import { defineStore } from 'pinia'
 import { ref, shallowReactive, computed } from 'vue'
-import { MoonrakerClient, normalizeHost, resolveHost, rememberHost, savedHost } from '../services/moonrakerClient'
-import { fetchGcode, startPrintFile } from '../services/moonrakerApi'
-import { discoverTools, subscriptionObjects, STATE_KEYS, toolNum, findChamber, findLeveling, findMcus, findHwSensors, mcuConnections } from '../services/klipper'
-import { detectToolheads, toolheadObjects } from '../services/toolheads'
-import { detectEddy, eddyObjects } from '../services/eddy'
-import { parseGcode } from '../services/gcodeParser'
-import { model, loadModel, indexForPos, segEnd, layerLabel } from '../services/gcodeModel'
+import { MoonrakerClient, normalizeHost, resolveHost, rememberHost, savedHost } from '@vyron/shared/moonraker/client'
+import { fetchGcode, startPrintFile } from '@vyron/shared/moonraker/api'
+import { discoverTools, subscriptionObjects, STATE_KEYS, toolNum, findChamber, findLeveling, findMcus, findHwSensors, mcuConnections } from '@vyron/shared/klipper/objects'
+import { detectToolheads, toolheadObjects } from '@vyron/shared/klipper/toolheads'
+import { detectEddy, eddyObjects } from '@vyron/shared/klipper/eddy'
+import { parseGcode } from '@vyron/shared/gcode/parser'
+import { model, loadModel, indexForPos, segEnd, layerLabel } from '@vyron/shared/gcode/model'
 import {
   DEMO_DEFAULT_TOOLS, DEMO_MAX_TOOLS, DEMO_STEP, DEMO_INTERVAL, demoTools, demoToolheads, demoEddies, demoPreviewModel, resetDemoFiles, DEMO_PRINTING_FILE,
   demoGcode, demoStaticStatus, demoTickStatus, demoHwSensors, demoHostInfo, demoMcuConn
 } from '../services/demo'
 import { DEMO_BUILD } from '../config'
-import { classify, isGcodeError } from '@vyron/shared/klipperErrors'
+import { classify, isGcodeError } from '@vyron/shared/klipper/errors'
 
 const LOG_MAX = 500
 /** Скільки тостів помилок тримаємо одночасно (старіші витісняються). */
@@ -36,7 +36,7 @@ export const usePrinterStore = defineStore('printer', () => {
   // ---------- стан Klipper і помилки ----------
   /**
    * Стан самого Klippy (окремо від WebSocket до Moonraker): state — ready | startup | shutdown | error | disconnected | null,
-   * message — state_message Klipper (текст shutdown / помилки конфігурації), info — його розбір (@vyron/shared/klipperErrors.js).
+   * message — state_message Klipper (текст shutdown / помилки конфігурації), info — його розбір (@vyron/shared/klipper/errors.js).
    */
   const klippy = ref({ state: null, message: '', info: null })
   /** Тости помилок G-code / друку: [{ id, at, n, src: 'gcode' | 'print', info }] — новіші в кінці */

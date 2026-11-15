@@ -4,7 +4,7 @@
 import { computed } from 'vue'
 import { usePrinterStore } from '../../../stores/printerStore'
 import { useI18n } from '../../../composables/useI18n'
-import { shortId, mcuLoad, boardSensor } from '../../../services/toolheads'
+import { shortId, mcuLoad, boardSensor } from '@vyron/shared/klipper/toolheads'
 
 const props = defineProps({ th: { type: Object, required: true } })
 const BOARD_HOT = 75

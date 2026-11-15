@@ -6,7 +6,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { usePrinterStore } from '../../../stores/printerStore'
 import { useI18n } from '../../../composables/useI18n'
-import { mcuName } from '../../../services/klipper'
+import { mcuName } from '@vyron/shared/klipper/objects'
 import RollNumber from '../../ui/RollNumber.vue'
 import McuCard from './McuCard.vue'
 import { useUiStore } from '../../../stores/uiStore'

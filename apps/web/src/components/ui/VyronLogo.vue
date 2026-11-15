@@ -1,7 +1,7 @@
 <script setup>
 // Знак Vyron — монограма VD (assets/logo.js). Колір силуету — фірмовий колір теми (--brand),
 // тож логотип змінюється разом із дизайном.
-import { SHAPE, V } from '../../assets/logo'
+import { SHAPE, V } from '@vyron/shared/logo'
 defineProps({ size: { type: Number, default: 28 } })
 </script>
 

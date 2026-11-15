@@ -3,7 +3,7 @@ import { computed, ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { usePrinterStore } from '../../stores/printerStore'
 import { useUiStore } from '../../stores/uiStore'
 import { useI18n } from '../../composables/useI18n'
-import { toolNum } from '../../services/klipper'
+import { toolNum } from '@vyron/shared/klipper/objects'
 
 const TP = {
   nozzle: { title: 'temp.nozzle', max: 320, pre: [200, 230, 260, 280] },

@@ -5,7 +5,7 @@
 import { computed, ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { usePrinterStore } from '../../../stores/printerStore'
 import { useI18n } from '../../../composables/useI18n'
-import { toolNum } from '../../../services/klipper'
+import { toolNum } from '@vyron/shared/klipper/objects'
 import ToolBoardInfo from './ToolBoardInfo.vue'
 import EddyInfo from './EddyInfo.vue'
 

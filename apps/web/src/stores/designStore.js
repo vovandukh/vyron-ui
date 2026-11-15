@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { reactive, ref, watch } from 'vue'
-import { DEFAULT_DESIGN, PRESETS, applyDesign, sanitizeDesign, brandFor, hexToRgb } from '../services/theme'
+import { DEFAULT_DESIGN, PRESETS, applyDesign, sanitizeDesign, brandFor, hexToRgb } from '@vyron/shared/theme'
 import { usePrinterStore } from './printerStore'
 
 const KEY = 'vyron-design'

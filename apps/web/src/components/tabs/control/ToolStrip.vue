@@ -5,8 +5,8 @@
 import { ref, watch } from 'vue'
 import { usePrinterStore } from '../../../stores/printerStore'
 import { useUiStore } from '../../../stores/uiStore'
-import { toolNum } from '../../../services/klipper'
-import { heatRgb } from '../../../utils/format'
+import { toolNum } from '@vyron/shared/klipper/objects'
+import { heatRgb } from '@vyron/shared/format'
 import ToolPopover from './ToolPopover.vue'
 
 /** Мобільна розкладка: «пігулки» сіткою по 3 без скролу, меню голови розгортається під ними в потоці (а не поверх) */

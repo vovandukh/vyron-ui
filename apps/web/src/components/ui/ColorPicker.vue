@@ -2,7 +2,7 @@
 // Вибір кольору в стилі macOS: квадрат насиченості/яскравості + смуга відтінку + поле HEX.
 // Працює мишею, пальцем (pointer events) і клавіатурою (стрілки на повзунках).
 import { ref, computed, watch } from 'vue'
-import { hexToRgb, rgbToHex } from '../../services/theme'
+import { hexToRgb, rgbToHex } from '@vyron/shared/theme'
 
 const props = defineProps({ modelValue: { type: String, required: true } })
 const emit = defineEmits(['update:modelValue'])

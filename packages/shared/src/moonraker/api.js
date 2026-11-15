@@ -1,5 +1,5 @@
 // HTTP API Moonraker: файли конфігурації, G-code, мініатюри.
-import { httpBase } from './moonrakerClient'
+import { httpBase } from './client'
 
 export const encPath = p => String(p).split('/').map(encodeURIComponent).join('/')
 const url = (host, path) => httpBase(host) + path

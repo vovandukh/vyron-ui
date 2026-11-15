@@ -4,7 +4,7 @@ import App from './App.vue'
 import { useSettingsStore } from './stores/settingsStore'
 import { useDesignStore } from './stores/designStore'
 import './assets/main.css'
-import { logoDataUri } from './assets/logo'
+import { logoDataUri } from '@vyron/shared/logo'
 
 // Favicon — знак Vyron як SVG data URI: однофайлова збірка (vite-plugin-singlefile) не потребує файлу поруч з HTML.
 // Колір — фірмовий колір теми; оновлюється, коли змінюють дизайн.
