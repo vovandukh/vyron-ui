@@ -7,6 +7,7 @@ import { useConfirm } from '../../composables/useConfirm'
 import { useI18n } from '../../composables/useI18n'
 import { PRESETS, LIMITS, UPSCALE_MIN_WIDTH } from '../../services/theme'
 import ColorPicker from '../ui/ColorPicker.vue'
+import VyronLogo from '../ui/VyronLogo.vue'
 
 const design = useDesignStore()
 const { confirm } = useConfirm()
@@ -124,7 +125,7 @@ async function reset() {
             <path :d="vaseRing(14)" fill="none" stroke="#fff" stroke-width="1.2" />
           </svg>
           <div class="s-hd">
-            <span class="s-logo"><i></i>VORON</span>
+            <span class="s-logo"><VyronLogo />VYRON</span>
             <span class="s-isl"><i></i>{{ t('state.printing') }}</span>
             <span class="s-sp"></span>
             <span class="s-tabs"><b>{{ t('nav.main') }}</b><span>{{ t('nav.console') }}</span><span>{{ t('nav.hist') }}</span></span>
@@ -211,8 +212,8 @@ output i{font-style:normal;color:var(--dim);margin-left:2px;font-size:11px}
 /* шапка */
 .s-hd{left:4%;right:4%;top:5%;display:flex;align-items:center;gap:4%;font-size:clamp(6px,2.1cqw,10px)}
 .s-sp{flex:1}
-.s-logo{display:flex;align-items:center;gap:.6em;font-weight:600;letter-spacing:.15em;color:var(--brand)}
-.s-logo i{width:1.5em;height:1.5em;border-radius:.4em;background:var(--red)}
+.s-logo{display:flex;align-items:center;gap:.6em;font-weight:600;letter-spacing:.2em;color:var(--ink)}
+.s-logo .vl{width:1.6em;height:1.6em}
 .s-isl{display:flex;align-items:center;gap:.6em;padding:.45em .9em;border-radius:999px;background:#050506;border:1px solid rgba(255,255,255,.08)}
 .s-isl i{width:.7em;height:.7em;border-radius:50%;background:var(--coral);box-shadow:0 0 .8em rgba(var(--accent-rgb),.9)}
 .s-tabs{display:flex;gap:.2em;padding:.25em;border-radius:999px;background:rgba(20,20,22,calc(1 - .35 * var(--glass-t,1)));border:1px solid rgba(255,255,255,.07);color:var(--dim)}

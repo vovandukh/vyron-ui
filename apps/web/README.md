@@ -1,6 +1,6 @@
 # Vyron Web
 
-Веб-інтерфейс керування принтером Voron 2.4 (Klipper / Moonraker) на Vue 3 + Pinia + Vite. Підтримує будь-яку кількість голів (extruder, extruder1, …) і автоматично знаходить їхні CAN/USB-плати.
+Вебінтерфейс Vyron для принтерів на Klipper / Moonraker на Vue 3 + Pinia + Vite. Підтримує будь-яку кількість голів (extruder, extruder1, …) і автоматично знаходить їхні CAN/USB-плати.
 
 ```bash
 npm install

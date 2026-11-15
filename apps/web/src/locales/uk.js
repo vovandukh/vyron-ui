@@ -59,7 +59,7 @@ export default {
   'set.exported': 'Файл vyron-ui-settings.json збережено', 'set.imported': 'Налаштування імпортовано', 'set.importBad': 'Це не файл налаштувань Vyron UI',
   'set.resetConfirm': 'Скинути всі налаштування й дизайн до стандартних?', 'set.resetDone': 'Налаштування скинуто',
   'design.accent': 'Акцентний колір', 'design.accentHint': 'Кнопки, активна вкладка, прогрес, світіння фону і 3D-моделі. Помилки й STOP лишаються червоними.',
-  'design.p.voron': 'Voron', 'design.p.ember': 'Жар', 'design.p.amber': 'Бурштин', 'design.p.lime': 'Лайм', 'design.p.mint': 'М’ята',
+  'design.p.voron': 'Vyron', 'design.p.ember': 'Жар', 'design.p.amber': 'Бурштин', 'design.p.lime': 'Лайм', 'design.p.mint': 'М’ята',
   'design.p.cyan': 'Ціан', 'design.p.violet': 'Фіалка', 'design.p.rose': 'Троянда', 'design.p.mono': 'Графіт', 'design.p.custom': 'Свій',
   'design.g.glass': 'Скло', 'design.g.shape': 'Форма і розмір', 'design.g.bg': 'Фон',
   'design.glass': 'Прозорість панелей', 'design.glassHint': '0 — суцільні, 100 — найпрозоріші',
@@ -69,7 +69,7 @@ export default {
   'design.grid': 'Шестикутна сітка', 'design.gridHint': 'Яскравість сітки фону',
   'design.glow': 'Світіння', 'design.glowHint': 'Кольорове сяйво фону та віньєтка',
   'design.preview': 'Зразок', 'design.previewHint': 'Зміни одразу видно на всьому інтерфейсі',
-  'design.reset': 'Скинути дизайн', 'design.resetConfirm': 'Повернути стандартний дизайн Voron?',
+  'design.reset': 'Скинути дизайн', 'design.resetConfirm': 'Повернути стандартний дизайн Vyron?',
   'design.syncLocal': 'Збережено в цьому браузері', 'design.syncSaving': 'Збереження на принтер…',
   'design.syncOk': 'Збережено на принтері — спільне для всіх екранів', 'design.syncErr': 'Не вдалося зберегти на принтері',
   // ---------- помилки Klipper (KlippyCard, KlipperToasts, @vyron/shared/klipperErrors.js) ----------

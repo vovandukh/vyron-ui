@@ -184,7 +184,7 @@ export const demoNetworks = [
 export const demoUpdates = {
   klipper: { full_version_string: 'v0.12.0-300', commits_behind: [1, 2, 3] },
   moonraker: { full_version_string: 'v0.9.3', commits_behind: [] },
-  'voron-ui': { version: 'v0.1.0', remote_version: 'v0.2.0', configured_type: 'web' },
+  'vyron': { version: 'v0.1.0', remote_version: 'v0.2.0', configured_type: 'web' },
   system: { package_count: 0 }
 }
 

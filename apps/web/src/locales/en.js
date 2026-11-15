@@ -59,7 +59,7 @@ export default {
   'set.exported': 'Saved vyron-ui-settings.json', 'set.imported': 'Settings imported', 'set.importBad': 'Not a Vyron UI settings file',
   'set.resetConfirm': 'Reset all settings and design to defaults?', 'set.resetDone': 'Settings reset',
   'design.accent': 'Accent color', 'design.accentHint': 'Buttons, active tab, progress, background and 3D model glow. Errors and STOP stay red.',
-  'design.p.voron': 'Voron', 'design.p.ember': 'Ember', 'design.p.amber': 'Amber', 'design.p.lime': 'Lime', 'design.p.mint': 'Mint',
+  'design.p.voron': 'Vyron', 'design.p.ember': 'Ember', 'design.p.amber': 'Amber', 'design.p.lime': 'Lime', 'design.p.mint': 'Mint',
   'design.p.cyan': 'Cyan', 'design.p.violet': 'Violet', 'design.p.rose': 'Rose', 'design.p.mono': 'Graphite', 'design.p.custom': 'Custom',
   'design.g.glass': 'Glass', 'design.g.shape': 'Shape and size', 'design.g.bg': 'Background',
   'design.glass': 'Panel transparency', 'design.glassHint': '0 — solid, 100 — most transparent',
@@ -69,7 +69,7 @@ export default {
   'design.grid': 'Hexagon grid', 'design.gridHint': 'Background grid brightness',
   'design.glow': 'Glow', 'design.glowHint': 'Colored background glow and vignette',
   'design.preview': 'Sample', 'design.previewHint': 'Changes apply to the whole interface right away',
-  'design.reset': 'Reset design', 'design.resetConfirm': 'Restore the default Voron design?',
+  'design.reset': 'Reset design', 'design.resetConfirm': 'Restore the default Vyron design?',
   'design.syncLocal': 'Saved in this browser', 'design.syncSaving': 'Saving to the printer…',
   'design.syncOk': 'Saved on the printer — shared by all screens', 'design.syncErr': 'Could not save on the printer',
   // ---------- Klipper errors (KlippyCard, KlipperToasts, @vyron/shared/klipperErrors.js) ----------
