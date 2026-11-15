@@ -1,0 +1,260 @@
+#!/usr/bin/env bash
+# Vyron — встановлення на принтер (Klipper + Moonraker + nginx).
+#
+#   ~/vyron-ecosystem/install/install.sh             — встановити або полагодити (можна запускати повторно)
+#   ~/vyron-ecosystem/install/install.sh --dry-run   — лише показати, що буде зроблено
+#
+# Що робить:
+#   1. Сайт nginx «vyron»: Vyron Web на http://IP/ (порт 80), Vyron Screen на http://IP/screen.html.
+#      Mainsail/Fluidd, що стояли на 80, переносить на порт 66 (файли й оновлення Mainsail не чіпає).
+#      Із --port N Vyron стає на власний порт, а Mainsail лишається як був.
+#   2. Запис [update_manager vyron] у moonraker.conf — оновлення з Mainsail/Vyron одним кліком.
+#   3. З --core — служба Vyron Core (якщо вона є в цій версії).
+# Чого НЕ робить: не чіпає Klipper, printer.cfg, не рухає принтер і не гріє. Усе, що змінює, спершу
+# копіює в резервні файли; якщо nginx не приймає нову конфігурацію — усе повертається назад.
+# Видалити: install/uninstall.sh
+set -euo pipefail
+
+PORT=80
+MAINSAIL_PORT=66
+DRY=0
+UPDATES=1
+CORE=0
+
+usage() { sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; cat <<'EOF'
+Параметри:
+  --dry-run           нічого не змінювати, лише показати кроки
+  --port N            порт для Vyron (за замовчуванням 80); якщо не 80 — Mainsail не переноситься
+  --mainsail-port N   куди перенести Mainsail/Fluidd (за замовчуванням 66)
+  --no-updates        не додавати запис в Update Manager
+  --core              також встановити службу Vyron Core
+EOF
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --dry-run) DRY=1 ;;
+    --port) PORT="${2:-}"; shift ;;
+    --mainsail-port) MAINSAIL_PORT="${2:-}"; shift ;;
+    --no-updates) UPDATES=0 ;;
+    --core) CORE=1 ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "Невідомий параметр: $1 (див. --help)" >&2; exit 2 ;;
+  esac
+  shift
+done
+
+# ---------- спільне ----------
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=lib.sh
+. "$REPO/install/lib.sh"
+
+say "Vyron — встановлення$([ $DRY = 1 ] && echo ' (dry-run: нічого не змінюю)')"
+preflight
+valid_port "$PORT" || die "Порт Vyron «$PORT» некоректний."
+valid_port "$MAINSAIL_PORT" || die "Порт Mainsail «$MAINSAIL_PORT» некоректний."
+unsafe_port "$PORT" && die "Порт $PORT браузери блокують як небезпечний — обери інший."
+unsafe_port "$MAINSAIL_PORT" && die "Порт $MAINSAIL_PORT браузери блокують як небезпечний — обери інший (наприклад 66 або 8081)."
+[ "$PORT" != "$MAINSAIL_PORT" ] || die "Порти Vyron і Mainsail мають бути різні."
+[ -f "$REPO/index.html" ] || die "У $REPO немає index.html — це не репозиторій Vyron або збірка ще не готова."
+
+info "репозиторій:  $REPO"
+info "користувач:   $USER_NAME"
+info "printer_data: $DATA"
+info "Moonraker:    порт $MR_PORT"
+
+state_load
+
+# ---------- 1. nginx ----------
+say "1. Сайт nginx"
+SITE_AV=/etc/nginx/sites-available/vyron
+SITE_EN=/etc/nginx/sites-enabled/vyron
+
+# Хто ще слухає наш порт? Mainsail/Fluidd переносимо, стандартний сайт nginx вимикаємо, решту — не чіпаємо.
+TO_MOVE=()
+TO_DISABLE=()
+for f in /etc/nginx/sites-enabled/*; do
+  [ -e "$f" ] || continue
+  [ "$(basename "$f")" = vyron ] && continue
+  real="$(readlink -f "$f")"
+  listens_on "$real" "$PORT" || continue
+  if is_web_ui "$real"; then
+    TO_MOVE+=("$real")
+  elif [ "$(basename "$f")" = default ]; then
+    TO_DISABLE+=("$f")
+  else
+    die "Порт $PORT уже зайнятий сайтом $f (це не Mainsail/Fluidd). Запусти з --port 8080 або звільни порт."
+  fi
+done
+if [ "$PORT" != 80 ] && [ ${#TO_MOVE[@]} -gt 0 ]; then
+  die "Порт $PORT зайнятий Mainsail/Fluidd. Обери вільний порт (--port)."
+fi
+
+# Перенесення Mainsail на MAINSAIL_PORT — лише коли Vyron займає 80
+for real in "${TO_MOVE[@]+"${TO_MOVE[@]}"}"; do
+  if port_busy "$MAINSAIL_PORT"; then
+    die "Порт $MAINSAIL_PORT зайнятий іншою програмою — вкажи інший: --mainsail-port N"
+  fi
+  info "$(basename "$real"): порт $PORT → $MAINSAIL_PORT (копія: $(backup_name "$real"))"
+done
+for f in "${TO_DISABLE[@]+"${TO_DISABLE[@]}"}"; do info "стандартний сайт nginx $f вимикається (повернеться при видаленні)"; done
+
+# Встановлення вручну (до цього скрипта): Mainsail уже на іншому порту — запам'ятати, щоб uninstall повернув його на 80
+if [ "$PORT" = 80 ] && [ -z "$(state_get MOVED)" ]; then
+  for f in /etc/nginx/sites-enabled/*; do
+    [ -e "$f" ] || continue
+    real="$(readlink -f "$f")"
+    [ "$(basename "$f")" = vyron ] && continue
+    is_web_ui "$real" || continue
+    p="$(listen_port "$real")"
+    if [ -n "$p" ] && [ "$p" != 80 ]; then
+      info "$(basename "$real") уже на порту $p (перенесено раніше вручну) — запам'ятовую для відновлення"
+      LEGACY_MOVED="$real|80|$p"
+    fi
+  done
+fi
+
+ROOT_OK=1
+case "$(stat -c %A "$USER_HOME")" in
+  *[xt]) ;;
+  *) ROOT_OK=0
+     warn "nginx не зможе зайти в $USER_HOME — додаю право на прохід (chmod o+x, без права читати список файлів)." ;;
+esac
+
+CONF="$(mktemp)"
+trap 'rm -f "$CONF"' EXIT
+DEF=""; [ "$PORT" = 80 ] && DEF=" default_server"
+sed -e "s|@PORT@|$PORT|g" -e "s|@DEFAULT@|$DEF|g" -e "s|@ROOT@|$REPO|g" -e "s|@MOONRAKER_PORT@|$MR_PORT|g" \
+  "$REPO/install/nginx-vyron.conf" > "$CONF"
+
+if [ $DRY = 1 ]; then
+  info "$SITE_AV буде таким:"; sed 's/^/      | /' "$CONF"
+else
+  UNDO=()
+  # Старий сайт vyron (ручне встановлення) — у копію
+  if [ -f "$SITE_AV" ] && ! cmp -s "$CONF" "$SITE_AV"; then
+    b="$(backup_name "$SITE_AV")"; sudo cp -a "$SITE_AV" "$b"
+    UNDO+=("sudo cp -a $(printf %q "$b") $(printf %q "$SITE_AV")")
+  elif [ ! -f "$SITE_AV" ]; then
+    UNDO+=("sudo rm -f $(printf %q "$SITE_AV") $(printf %q "$SITE_EN")")
+  fi
+  sudo install -m 644 "$CONF" "$SITE_AV"
+  sudo ln -sfn "$SITE_AV" "$SITE_EN"
+
+  MOVED_NOW=""
+  for real in "${TO_MOVE[@]+"${TO_MOVE[@]}"}"; do
+    b="$(backup_name "$real")"; sudo cp -a "$real" "$b"
+    UNDO+=("sudo cp -a $(printf %q "$b") $(printf %q "$real")")
+    sudo sed -i -E "s/^([[:space:]]*listen[[:space:]]+(\[::\]:)?)$PORT([[:space:];])/\1$MAINSAIL_PORT\3/" "$real"
+    MOVED_NOW="$MOVED_NOW $real|$PORT|$MAINSAIL_PORT"
+  done
+  DISABLED_NOW=""
+  for f in "${TO_DISABLE[@]+"${TO_DISABLE[@]}"}"; do
+    t="$(readlink -f "$f")"
+    UNDO+=("sudo ln -sfn $(printf %q "$t") $(printf %q "$f")")
+    sudo rm -f "$f"
+    DISABLED_NOW="$DISABLED_NOW $f|$t"
+  done
+  [ $ROOT_OK = 1 ] || sudo chmod o+x "$USER_HOME"
+
+  if sudo nginx -t >/dev/null 2>&1; then
+    sudo systemctl reload nginx
+    ok "nginx прийняв конфігурацію й перезавантажився"
+  else
+    warn "nginx не прийняв нову конфігурацію — повертаю все назад:"
+    sudo nginx -t 2>&1 | sed 's/^/      /' || true
+    for ((i=${#UNDO[@]}-1; i>=0; i--)); do eval "${UNDO[$i]}"; done
+    die "Нічого не змінено. Надішли текст помилки вище розробникам."
+  fi
+  state_set PORT "$PORT"
+  [ -n "$MOVED_NOW" ] && state_set MOVED "$(echo "$(state_get MOVED)$MOVED_NOW" | xargs)"
+  [ -n "${LEGACY_MOVED:-}" ] && state_set MOVED "$LEGACY_MOVED"
+  [ -n "$DISABLED_NOW" ] && state_set DISABLED "$(echo "$(state_get DISABLED)$DISABLED_NOW" | xargs)"
+  [ $ROOT_OK = 1 ] || state_set HOME_OX 1
+fi
+
+# ---------- 2. Update Manager ----------
+MR_CHANGED=0
+if [ $UPDATES = 1 ]; then
+  say "2. Update Manager (moonraker.conf)"
+  ORIGIN="$(git -C "$REPO" remote get-url origin 2>/dev/null || true)"
+  BRANCH="$(git -C "$REPO" symbolic-ref --short HEAD 2>/dev/null || echo main)"
+  if [ -z "$ORIGIN" ]; then
+    warn "у $REPO немає git origin — пропускаю (оновлення вручну через git pull)"
+  else
+    SERVICES=""
+    [ $CORE = 1 ] && [ -f "$REPO/core/install.sh" ] && SERVICES="vyron-core"
+    BLOCK="$(mktemp)"
+    {
+      echo "$MARK_BEGIN"
+      echo "[update_manager vyron]"
+      echo "type: git_repo"
+      echo "channel: dev"
+      echo "path: $REPO"
+      echo "origin: $ORIGIN"
+      echo "primary_branch: $BRANCH"
+      [ -n "$SERVICES" ] && echo "managed_services: $SERVICES"
+      echo "$MARK_END"
+    } > "$BLOCK"
+    LEGACY="$(legacy_um_sections "$MR_CONF" "$REPO")"
+    NEW="$(mktemp)"
+    # Конфіг без нашого блоку й без старих записів на цей самий шлях, потім порожній рядок і наш блок
+    strip_block "$MR_CONF" | remove_sections "$LEGACY" | trim_tail > "$NEW"
+    [ -s "$NEW" ] && echo >> "$NEW"
+    cat "$BLOCK" >> "$NEW"
+    for s in $LEGACY; do info "старий запис [update_manager $s] з тим самим шляхом — прибираю (його замінює [update_manager vyron])"; done
+    if cmp -s "$NEW" "$MR_CONF"; then
+      ok "запис уже актуальний"
+    elif [ $DRY = 1 ]; then
+      info "буде додано в $MR_CONF:"; sed 's/^/      | /' "$BLOCK"
+    else
+      b="$(backup_name "$MR_CONF")"; cp -a "$MR_CONF" "$b"
+      cat "$NEW" > "$MR_CONF"
+      ok "додано [update_manager vyron] (копія старого файлу: $b)"
+      MR_CHANGED=1
+    fi
+    if [ -n "$SERVICES" ]; then
+      ASVC="$DATA/moonraker.asvc"
+      if [ -f "$ASVC" ] && ! grep -qx "vyron-core" "$ASVC"; then
+        run sh -c "echo vyron-core >> '$ASVC'"; MR_CHANGED=1
+        info "vyron-core додано в moonraker.asvc (Moonraker зможе перезапускати службу після оновлення)"
+      fi
+    fi
+    rm -f "$BLOCK" "$NEW"
+  fi
+else
+  say "2. Update Manager — пропущено (--no-updates)"
+fi
+
+# ---------- 3. Vyron Core ----------
+if [ $CORE = 1 ]; then
+  say "3. Vyron Core"
+  if [ -f "$REPO/core/install.sh" ]; then
+    if [ $DRY = 1 ]; then bash "$REPO/core/install.sh" --dry-run; else bash "$REPO/core/install.sh"; fi
+    [ $DRY = 1 ] || state_set CORE 1
+  else
+    warn "у цій версії Vyron Core ще немає — пропускаю"
+  fi
+fi
+
+# ---------- Moonraker: перечитати конфігурацію ----------
+if [ $MR_CHANGED = 1 ]; then
+  if printer_busy; then
+    warn "Іде друк — Moonraker не перезапускаю. Після друку: sudo systemctl restart moonraker"
+  else
+    sudo systemctl restart moonraker && ok "Moonraker перезапущено (Klipper не перезапускався)"
+  fi
+fi
+
+# ---------- підсумок ----------
+IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
+URL="http://${IP:-<IP принтера>}$([ "$PORT" = 80 ] || echo ":$PORT")"
+say "Готово$([ $DRY = 1 ] && echo ' (dry-run — нічого не змінено)')"
+info "Vyron Web:    $URL/"
+info "Vyron Screen: $URL/screen.html"
+MOVED_ALL="$(state_get MOVED) ${LEGACY_MOVED:-}"
+MS_PORT=""
+if [ ${#TO_MOVE[@]} -gt 0 ]; then MS_PORT="$MAINSAIL_PORT"
+elif [ -n "${MOVED_ALL// /}" ]; then MS_PORT="$(echo "$MOVED_ALL" | xargs -n1 | head -n1 | cut -d'|' -f3)"; fi
+[ "$PORT" = 80 ] && [ -n "$MS_PORT" ] && info "Mainsail:     http://${IP:-<IP>}:$MS_PORT/"
+info "Видалити:     $REPO/install/uninstall.sh"

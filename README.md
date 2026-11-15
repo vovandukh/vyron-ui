@@ -8,7 +8,60 @@
 | **Vyron Screen** | [`apps/screen`](apps/screen) | Застосунок для сенсорного екрана на принтері (TFT35 480×320 і більші) | розробляється |
 | **Vyron Core** | [`core`](core) | Служба на хості: синхронізація між пристроями, Telegram, стеження за аномаліями, AI | заплановано |
 | **@vyron/shared** | [`packages/shared`](packages/shared) | Спільна логіка Web і Screen: розбір помилок Klipper, клієнт Moonraker, теми | наповнюється |
-| **Встановлення** | [`install`](install) | `install.sh` / `uninstall.sh` для принтера | заплановано |
+| **Встановлення** | [`install`](install) | `install.sh` / `uninstall.sh` для принтера | тестується |
+
+## Встановлення на принтер
+
+**Що потрібно:** принтер із Klipper, Moonraker і Mainsail або Fluidd (звичайна установка через KIAUH).
+Усі команди виконуються на принтері — підключись до нього через SSH (наприклад, `ssh biqu@192.168.1.50`;
+логін і IP — твої).
+
+**1. Завантаж Vyron**
+
+```bash
+cd ~
+git clone https://github.com/vovandukh/vyron-ecosystem.git
+```
+
+**2. Подивись, що буде зроблено** (нічого не змінює)
+
+```bash
+~/vyron-ecosystem/install/install.sh --dry-run
+```
+
+**3. Встанови**
+
+```bash
+~/vyron-ecosystem/install/install.sh
+```
+
+Скрипт може попросити пароль користувача (для `sudo`). Наприкінці він покаже адреси:
+
+| Що | Адреса |
+|---|---|
+| Vyron Web | `http://IP-принтера/` |
+| Vyron Screen | `http://IP-принтера/screen.html` |
+| Mainsail (лишається, переїжджає на порт 66) | `http://IP-принтера:66/` |
+
+Хочеш, щоб Mainsail лишився на звичному місці, а Vyron мав свій порт —
+`~/vyron-ecosystem/install/install.sh --port 8080` (тоді Vyron на `http://IP-принтера:8080/`).
+
+**Оновлення** — як і все інше: у Mainsail чи Vyron → Оновлення → `vyron`.
+
+**Видалення** — повертає все як було (Mainsail знову на `http://IP-принтера/`):
+
+```bash
+~/vyron-ecosystem/install/uninstall.sh
+rm -rf ~/vyron-ecosystem
+```
+
+Скрипт не чіпає Klipper і `printer.cfg`, не рухає принтер і не гріє. Кожен змінений файл спершу
+зберігається в копію (`*.vyron-bak-ДАТА`). Подробиці й параметри — у [install/README.md](install/README.md).
+
+> **Поки репозиторій приватний**, принтеру потрібен ключ лише для читання:
+> `ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519 && cat ~/.ssh/id_ed25519.pub` — цей рядок додай у
+> GitHub → vyron-ecosystem → Settings → Deploy keys (без «Allow write access»), а клонуй так:
+> `git clone git@github.com:vovandukh/vyron-ecosystem.git`
 
 ## Як частини працюють разом
 
