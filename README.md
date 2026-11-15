@@ -41,12 +41,12 @@ git clone https://github.com/vovandukh/vyron-ecosystem.git
 |---|---|
 | Vyron Web | `http://IP-принтера/` |
 | Vyron Screen | `http://IP-принтера/screen.html` |
-| Mainsail (лишається, переїжджає на порт 66) | `http://IP-принтера:66/` |
 
-Хочеш, щоб Mainsail лишився на звичному місці, а Vyron мав свій порт —
-`~/vyron-ecosystem/install/install.sh --port 8080` (тоді Vyron на `http://IP-принтера:8080/`).
+Mainsail і Fluidd після встановлення приховані — на принтері працює лише Vyron. Їхні файли нікуди
+не діваються, видалення Vyron поверне все як було. Якщо Mainsail потрібен поруч — встанови з
+`--mainsail-port 66`, і він буде на `http://IP-принтера:66/`.
 
-**Оновлення** — як і все інше: у Mainsail чи Vyron → Оновлення → `vyron`.
+**Оновлення** — у Vyron → Налаштування → Оновлення → `vyron`.
 
 **Видалення** — повертає все як було (Mainsail знову на `http://IP-принтера/`):
 
