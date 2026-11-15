@@ -1,7 +1,7 @@
 {
   "name": "@vyron/shared",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Logic shared by Vyron Web and Vyron Screen: Moonraker client, Klipper object and error parsing, themes, logo, translations",
   "type": "module",
   "exports": {

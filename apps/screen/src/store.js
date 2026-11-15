@@ -182,7 +182,7 @@ export const usePrinter = defineStore('printer', () => {
     else if (s === 'open') {
       link.value = 'open'; refresh(); pullDesign()
       stopLive && stopLive()
-      stopLive = watchDesign({ call, getUpdated: () => design.value.updated, onChange: pullDesign })
+      stopLive = watchDesign({ call, getUpdated: () => design.value.updated, onChange: pullDesign, visibleOnly: false })
     } else if (s === 'lost') { link.value = 'lost'; stopLive && stopLive(); stopLive = null }
   }
 
