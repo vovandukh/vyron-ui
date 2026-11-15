@@ -1,8 +1,8 @@
 <script setup>
 // Vyron Screen: верхня смуга завжди; під нею — підключення, помилка Klipper або поточна сторінка (стек навігації).
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { usePrinter } from './store'
-import { watchBuild } from '@vyron/shared/live'
+import { watchBuild, saveResume, takeResume, revealReady } from '@vyron/shared/live'
 import { t } from './i18n'
 import TopBar from './components/TopBar.vue'
 import HomeView from './components/HomeView.vue'
@@ -27,8 +27,17 @@ onMounted(() => p.start())
 watchBuild({
   canReload: () => !ask.value && !p.busy && !p.moving,
   idle: () => (p.page === 'home' ? 4000 : 30000),
-  visibleOnly: false
+  visibleOnly: false,
+  beforeReload: () => saveResume({ stack: p.stack })
 })
+// Після тихого оновлення — та сама сторінка, що була відкрита
+const resume = takeResume()
+if (resume && Array.isArray(resume.stack) && resume.stack[0] === 'home') p.stack = resume.stack
+// Безшовно: знімок старої версії тримається, доки ця не підключиться й не покаже стан принтера
+let revealed = false
+watch(() => p.link === 'open' && (p.klippy.state !== 'ready' || !!p.st.print_stats), ok => {
+  if (ok && !revealed) { revealed = true; setTimeout(revealReady, 250) }
+}, { immediate: true })
 
 const view = computed(() => {
   if (p.page !== 'home') return 'page'
