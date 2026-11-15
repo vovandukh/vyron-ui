@@ -1,0 +1,24 @@
+# Налаштування Vyron Core. Скопіюй у ~/printer_data/config/vyron.conf, якщо хочеш щось змінити;
+# без цього файлу діють значення нижче.
+
+[core]
+# debug | info | warning
+log_level: info
+
+[moonraker]
+# Локальний сокет Moonraker (мережа не потрібна)
+socket: ~/printer_data/comms/moonraker.sock
+
+[design_sync]
+# Повідомляти всі відкриті екрани, коли тему змінено на одному з них
+enabled: true
+# Як часто перевіряти зміну, секунд (не менше 1)
+interval: 2
+
+[ui_watch]
+# Нова версія інтерфейсу (після оновлення) — одразу на всіх відкритих екранах
+enabled: true
+# Як часто перевіряти файли збірки, секунд (не менше 1)
+interval: 3
+# Тека з index.html і screen.html; порожньо — репозиторій Vyron, де лежить ядро
+root:

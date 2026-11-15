@@ -10,7 +10,7 @@ import { applyDesign, sanitizeDesign, PRESETS } from '@vyron/shared/theme'
 import { parseGcode } from '@vyron/shared/gcode/parser'
 import { model, loadModel, indexForPos } from '@vyron/shared/gcode/model'
 import { startDemo, demoCall, demoGcode, setDemoUpdateSink } from './demo'
-import { watchDesign } from '@vyron/shared/live'
+import { watchDesign, handleCoreEvent } from '@vyron/shared/live'
 
 /** Найбільший G-code, який екран розбирає для візуалізації: на CB1 лише 1 ГБ пам'яті, Klipper важливіший */
 const MAX_GCODE_BYTES = 20 * 1024 * 1024
@@ -168,7 +168,8 @@ export const usePrinter = defineStore('printer', () => {
       case 'notify_klippy_disconnected': setKlippy('disconnected'); break
       case 'notify_agent_event': {
         const e = params[0] || {}
-        if (e.agent === 'vyron-core' && e.event === 'design_changed' && (e.data || {}).updated !== design.value.updated) pullDesign()
+        // Vyron Core: тема змінилась — підтягнути одразу; нова збірка — перевірити й тихо перезавантажитись
+        handleCoreEvent(e, { onDesign: u => { if (u !== design.value.updated) pullDesign() } })
         break
       }
     }

@@ -31,6 +31,19 @@ export function watchDesign({ call, getUpdated, onChange, interval = 3000 }) {
 }
 
 const IDLE_MS = 4000
+let kick = () => {}
+
+/**
+ * Події Vyron Core (notify_agent_event), спільні для Web і Screen.
+ * ui_updated — нова збірка: перевірити одразу. design_changed — віддається onDesign(updated).
+ * @returns true, якщо подію оброблено
+ */
+export function handleCoreEvent(e, { onDesign } = {}) {
+  if (!e || e.agent !== 'vyron-core') return false
+  if (e.event === 'ui_updated') { kick(); return true }
+  if (e.event === 'design_changed' && onDesign) { onDesign((e.data || {}).updated); return true }
+  return false
+}
 
 /**
  * @param {{ canReload?: () => boolean, beforeReload?: () => void, interval?: number }} o
@@ -71,6 +84,8 @@ export function watchBuild({ canReload = () => true, beforeReload = () => {}, in
     timer = setTimeout(tick, pending ? 1000 : interval)
   }
   timer = setTimeout(tick, 1500)
+  // Vyron Core повідомив про нову збірку (подія ui_updated) — перевірити зараз, а не через interval
+  kick = () => { if (!stopped && !pending) { clearTimeout(timer); tick() } }
   return () => { stopped = true; clearTimeout(timer); EVENTS.forEach(e => removeEventListener(e, touch, { capture: true })) }
 }
 

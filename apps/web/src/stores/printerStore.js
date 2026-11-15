@@ -294,6 +294,8 @@ export const usePrinterStore = defineStore('printer', () => {
       case 'notify_filelist_changed': emit('filelist_changed', params[0] || {}); break
       case 'notify_update_response': emit('update_response', params[0]); break
       case 'notify_update_refreshed': emit('update_refreshed', params[0] || {}); break
+      // Події агентів Moonraker, зокрема Vyron Core ({ agent: 'vyron-core', event, data })
+      case 'notify_agent_event': emit('agent_event', params[0] || {}); break
     }
   }
 
