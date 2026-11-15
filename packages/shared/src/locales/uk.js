@@ -283,7 +283,7 @@ export default {
   'preview.loading': 'завантаження…', 'preview.error': 'не вдалося відкрити: {msg}', 'preview.close': 'До поточного друку',
   // ---------- Vyron Screen (сенсорний екран принтера) ----------
   'scr.connecting': 'Підключення до принтера…', 'scr.noHost': 'Адресу принтера не визначено',
-  'scr.idle': 'Готовий до друку', 'scr.idleHint': 'Обери файл у вебінтерфейсі або на цьому екрані',
+  'scr.idle': 'Готовий до друку', 'scr.idleHint': 'Запусти друк із вебінтерфейсу або слайсера',
   'scr.layer': 'Шар {n} / {total}',
   'scr.files': 'Файли', 'scr.move': 'Рух', 'scr.temp': 'Нагрів', 'scr.more': 'Ще', 'scr.soon': 'скоро',
   'scr.page.home': 'Головна',

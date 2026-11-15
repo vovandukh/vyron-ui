@@ -283,7 +283,7 @@ export default {
   'preview.loading': 'loading…', 'preview.error': 'could not open: {msg}', 'preview.close': 'Back to current print',
   // ---------- Vyron Screen (printer touchscreen) ----------
   'scr.connecting': 'Connecting to the printer…', 'scr.noHost': 'Printer address is not set',
-  'scr.idle': 'Ready to print', 'scr.idleHint': 'Pick a file in the web interface or on this screen',
+  'scr.idle': 'Ready to print', 'scr.idleHint': 'Start a print from the web interface or your slicer',
   'scr.layer': 'Layer {n} / {total}',
   'scr.files': 'Files', 'scr.move': 'Move', 'scr.temp': 'Heat', 'scr.more': 'More', 'scr.soon': 'soon',
   'scr.page.home': 'Home',
