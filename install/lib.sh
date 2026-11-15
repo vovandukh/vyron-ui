@@ -42,14 +42,19 @@ unsafe_port() {
 listens_on()  { grep -Eq "^[[:space:]]*listen[[:space:]]+(\[::\]:)?$2([[:space:];])" "$1"; }
 listen_port() { sed -nE 's/^[[:space:]]*listen[[:space:]]+([0-9]+)[[:space:];].*/\1/p' "$1" | head -n1; }
 is_web_ui()   { grep -Eiq '^[[:space:]]*root[[:space:]]+[^;]*(mainsail|fluidd)' "$1"; }
-port_busy()   { command -v ss >/dev/null && ss -ltnH "sport = :$1" 2>/dev/null | grep -q .; }
+port_busy()   { command -v ss >/dev/null && [ -n "$(ss -ltnH "sport = :$1" 2>/dev/null)" ]; }
+# Чи встановлена служба systemd (без конвеєра в grep -q: під pipefail це дає хибне «ні»)
+has_unit()    { case "$(systemctl list-unit-files "$1" 2>/dev/null)" in *"$1"*) return 0 ;; esac; return 1; }
+# Чи є пакет у репозиторіях apt
+has_pkg()     { case "$(LC_ALL=C apt-cache policy "$1" 2>/dev/null)" in *"Candidate: "[0-9]*) return 0 ;; esac; return 1; }
 backup_name() { echo "$1.vyron-bak-$TS"; }
 
 # Чи йде друк (тоді Moonraker не перезапускаємо). Невідомо — вважаємо, що ні.
 printer_busy() {
   command -v curl >/dev/null || return 1
-  curl -fsS -m 3 "http://127.0.0.1:$MR_PORT/printer/objects/query?print_stats=state" 2>/dev/null \
-    | grep -Eq '"state": ?"(printing|paused)"'
+  local r
+  r="$(curl -fsS -m 3 "http://127.0.0.1:$MR_PORT/printer/objects/query?print_stats=state" 2>/dev/null)" || return 1
+  [[ "$r" =~ \"state\":\ ?\"(printing|paused)\" ]]
 }
 
 # ---------- стан встановлення (що саме ми змінили — для uninstall) ----------
