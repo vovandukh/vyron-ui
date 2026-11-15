@@ -14,6 +14,7 @@ import unittest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from vyron_core import safety  # noqa: E402
+from vyron_core.announce import Announce  # noqa: E402
 from vyron_core.design_sync import DesignSync  # noqa: E402
 from vyron_core.moonraker import MoonrakerClient  # noqa: E402
 from vyron_core.ui_watch import UiWatch  # noqa: E402
@@ -66,6 +67,9 @@ class FakeMoonraker:
         if m == "connection.send_event":
             self.events.append(p)
             return {"jsonrpc": "2.0", "id": rid, "result": "ok"}
+        if m == "server.database.post_item":
+            self.db[(p["namespace"], p["key"])] = p["value"]
+            return {"jsonrpc": "2.0", "id": rid, "result": {"namespace": p["namespace"], "key": p["key"], "value": p["value"]}}
         if m == "server.database.get_item":
             # Як у Moonraker: "design.updated" — вкладене поле запису "design"
             root, *path = p["key"].split(".")
@@ -169,6 +173,19 @@ class DesignSyncTest(Base):
         self.run_async(c.close())
 
 
+class AnnounceTest(Base):
+    def test_writes_version_to_own_namespace(self):
+        from vyron_core import __version__
+        c = MoonrakerClient(self.sock)
+        self.run_async(c.connect())
+        task = self.loop.create_task(Announce(started=123).run(c))
+        self.run_async(asyncio.sleep(0.1))
+        self.assertEqual(self.mr.db[("vyron_core", "info")], {"version": __version__, "started": 123})
+        self.assertFalse(task.done(), "keeps running quietly until the session ends")
+        task.cancel()
+        self.run_async(c.close())
+
+
 class UiWatchTest(Base):
     def _write(self, name, text):
         with open(os.path.join(self.dir, name), "w") as f:
@@ -188,6 +205,29 @@ class UiWatchTest(Base):
         self._write("screen.html", "v2 longer")
         self.run_async(asyncio.sleep(0.4))
         self.assertEqual(self.mr.events, [{"event": "ui_updated", "data": {"files": ["index.html", "screen.html"]}}])
+        task.cancel()
+        self.run_async(c.close())
+
+    def test_update_during_core_restart_is_announced(self):
+        self._write("index.html", "v1")
+        c = MoonrakerClient(self.sock)
+        self.run_async(c.connect())
+        # Перший запуск ядра: запам'ятовує збірку, подій немає
+        task = self.loop.create_task(UiWatch(root=self.dir, interval=0.05, settle=0.05).run(c))
+        self.run_async(asyncio.sleep(0.15))
+        task.cancel()
+        self.assertEqual(self.mr.events, [])
+        self.assertIn(("vyron_core", "build"), self.mr.db)
+        # Update Manager оновив файли, поки ядро було зупинене
+        self._write("index.html", "v2 longer")
+        task = self.loop.create_task(UiWatch(root=self.dir, interval=0.05, settle=0.05).run(c))
+        self.run_async(asyncio.sleep(0.15))
+        self.assertEqual(self.mr.events, [{"event": "ui_updated", "data": {"files": ["index.html"]}}])
+        # Наступний перезапуск без змін — тиша
+        task.cancel()
+        task = self.loop.create_task(UiWatch(root=self.dir, interval=0.05, settle=0.05).run(c))
+        self.run_async(asyncio.sleep(0.15))
+        self.assertEqual(len(self.mr.events), 1)
         task.cancel()
         self.run_async(c.close())
 

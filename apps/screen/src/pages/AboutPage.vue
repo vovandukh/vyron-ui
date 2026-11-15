@@ -4,6 +4,7 @@ import { onMounted, ref } from 'vue'
 import { usePrinter } from '../store'
 import { t } from '../i18n'
 import { interfaces } from '../net'
+import { VYRON_VERSION, coreInfo } from '@vyron/shared/version'
 import Row from '../components/Row.vue'
 
 const p = usePrinter()
@@ -13,13 +14,15 @@ const nets = ref([])
 
 const short = v => String(v || '—').replace(/-g[0-9a-f]+$/, '')
 onMounted(async () => {
-  const [pi, si, sys] = await Promise.all([
+  const [pi, si, sys, core] = await Promise.all([
     p.call('printer.info').catch(() => ({})),
     p.call('server.info').catch(() => ({})),
-    p.call('machine.system_info').then(r => r.system_info || {}).catch(() => ({}))
+    p.call('machine.system_info').then(r => r.system_info || {}).catch(() => ({})),
+    coreInfo(p.call)
   ])
   rows.value = [
-    { k: 'Vyron Screen', v: 'v' + __VYRON_SCREEN_VERSION__ },
+    { k: 'Vyron Screen', v: 'v' + VYRON_VERSION },
+    { k: 'Vyron Core', v: core ? 'v' + core.version : t('set.coreNone') },
     { k: 'Klipper', v: short(pi.software_version) },
     { k: 'Moonraker', v: short(si.moonraker_version) }
   ]

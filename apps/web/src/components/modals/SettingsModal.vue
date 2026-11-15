@@ -7,7 +7,7 @@ import { usePrinterStore } from '../../stores/printerStore'
 import { useDesignStore } from '../../stores/designStore'
 import { useI18n } from '../../composables/useI18n'
 import { resolveHost } from '@vyron/shared/moonraker/client'
-import { version as uiVersion } from '../../../package.json'
+import { VYRON_VERSION as uiVersion, coreInfo } from '@vyron/shared/version'
 import GlassSelect from '../ui/GlassSelect.vue'
 import StepperInput from '../ui/StepperInput.vue'
 import SegmentedControl from '../ui/SegmentedControl.vue'
@@ -35,15 +35,16 @@ const numbers = [
 ]
 
 // ---------- про систему ----------
-const sys = ref({ klipper: null, moonraker: null, hostname: null })
+const sys = ref({ klipper: null, moonraker: null, hostname: null, core: null })
 async function loadSys() {
-  if (printer.demoMode) { sys.value = { klipper: 'v0.13.0-560-gaea1bcf', moonraker: 'v0.9.3-41-g3f9d2c1', hostname: 'voron-demo' }; return }
-  if (!printer.connected) { sys.value = { klipper: null, moonraker: null, hostname: null }; return }
-  const [p, s] = await Promise.allSettled([printer.call('printer.info'), printer.call('server.info')])
+  if (printer.demoMode) { sys.value = { klipper: 'v0.13.0-560-gaea1bcf', moonraker: 'v0.9.3-41-g3f9d2c1', hostname: 'vyron-demo', core: { version: uiVersion } }; return }
+  if (!printer.connected) { sys.value = { klipper: null, moonraker: null, hostname: null, core: null }; return }
+  const [p, s, c] = await Promise.allSettled([printer.call('printer.info'), printer.call('server.info'), coreInfo(printer.call)])
   sys.value = {
     klipper: p.status === 'fulfilled' ? p.value.software_version : null,
     hostname: p.status === 'fulfilled' ? p.value.hostname : null,
-    moonraker: s.status === 'fulfilled' ? s.value.moonraker_version : null
+    moonraker: s.status === 'fulfilled' ? s.value.moonraker_version : null,
+    core: c.status === 'fulfilled' ? c.value : null
   }
 }
 onMounted(loadSys)
@@ -52,6 +53,7 @@ watch(() => printer.link, loadSys)
 const os = computed(() => { const d = (printer.hostInfo || {}).distribution || {}; return d.name || null })
 const about = computed(() => [
   { k: 'set.ui', v: 'Vyron Web v' + uiVersion },
+  { k: 'set.core', v: printer.connected || printer.demoMode ? (sys.value.core ? 'Vyron Core v' + sys.value.core.version : t('set.coreNone')) : null },
   { k: 'set.klipper', v: sys.value.klipper, mono: true },
   { k: 'set.moonraker', v: sys.value.moonraker, mono: true },
   { k: 'set.host', v: sys.value.hostname },
