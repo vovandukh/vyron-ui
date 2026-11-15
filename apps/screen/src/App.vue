@@ -2,6 +2,7 @@
 // Vyron Screen: верхня смуга завжди; під нею — підключення, помилка Klipper або поточна сторінка (стек навігації).
 import { computed, onMounted, ref } from 'vue'
 import { usePrinter } from './store'
+import { watchBuild } from '@vyron/shared/live'
 import { t } from './i18n'
 import TopBar from './components/TopBar.vue'
 import HomeView from './components/HomeView.vue'
@@ -20,6 +21,8 @@ const PAGES = { settings: SettingsPage, wifi: WifiPage, theme: ThemePage, langua
 
 const p = usePrinter()
 onMounted(() => p.start())
+// Нова версія на принтері (Update Manager): тихо перезавантажуємось, коли на екрані головна і ніхто її не торкається
+watchBuild({ canReload: () => p.page === 'home' && !ask.value && !p.busy && !p.moving })
 
 const view = computed(() => {
   if (p.page !== 'home') return 'page'

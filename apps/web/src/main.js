@@ -5,6 +5,8 @@ import { useSettingsStore } from './stores/settingsStore'
 import { useDesignStore } from './stores/designStore'
 import './assets/main.css'
 import { logoDataUri } from '@vyron/shared/logo'
+import { watchBuild, saveResume, takeResume } from '@vyron/shared/live'
+import { useUiStore } from './stores/uiStore'
 
 // Favicon — знак Vyron як SVG data URI: однофайлова збірка (vite-plugin-singlefile) не потребує файлу поруч з HTML.
 // Колір — фірмовий колір теми; оновлюється, коли змінюють дизайн.
@@ -24,5 +26,16 @@ watch(() => settings.lang, l => { document.documentElement.lang = l }, { immedia
 // Тема інтерфейсу (сторінка «Дизайн»): застосовується до монтування, щоб перший кадр уже був у потрібних кольорах
 const design = useDesignStore()
 watch(() => design.d.brand, b => { icon.href = logoDataUri(b) }, { immediate: true })
+
+// Нова версія інтерфейсу на принтері (Update Manager): тихе перезавантаження, коли сторінкою не користуються —
+// без відкритих вікон і полів введення; відкрита вкладка повертається.
+const ui = useUiStore()
+const resume = takeResume()
+if (resume && resume.view) { ui.go(resume.view); if (resume.engSection) ui.engSection = resume.engSection }
+const typing = () => /^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '')
+watchBuild({
+  canReload: () => !ui.dialog && !ui.tempModal && !ui.cc && !typing(),
+  beforeReload: () => saveResume({ view: ui.view, engSection: ui.engSection })
+})
 
 app.mount('#app')
