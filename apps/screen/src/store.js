@@ -141,7 +141,7 @@ export const usePrinter = defineStore('printer', () => {
   // ---------- тема: спільна з Vyron Web через базу Moonraker ----------
   function useDesign(d) {
     design.value = sanitizeDesign(d)
-    applyDesign(design.value)
+    applyDesign(design.value, { layout: false })
   }
   async function pullDesign() {
     try {

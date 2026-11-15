@@ -5,7 +5,8 @@ import { useSettingsStore } from './stores/settingsStore'
 import { useDesignStore } from './stores/designStore'
 import './assets/main.css'
 import { logoDataUri } from '@vyron/shared/logo'
-import { watchBuild, saveResume, takeResume } from '@vyron/shared/live'
+import { watchBuild, saveResume, takeResume, revealReady } from '@vyron/shared/live'
+import { usePrinterStore } from './stores/printerStore'
 import { useUiStore } from './stores/uiStore'
 
 // Favicon — знак Vyron як SVG data URI: однофайлова збірка (vite-plugin-singlefile) не потребує файлу поруч з HTML.
@@ -37,5 +38,12 @@ watchBuild({
   canReload: () => !ui.dialog && !ui.tempModal && !ui.cc && !typing(),
   beforeReload: () => saveResume({ view: ui.view, engSection: ui.engSection })
 })
+
+// Безшовне оновлення: знімок старої версії тримається, доки ця не підключиться до принтера й не отримає стан
+const printer = usePrinterStore()
+let revealed = false
+watch(() => printer.link, l => {
+  if (!revealed && (l === 'ready' || l === 'shutdown' || l === 'demo')) { revealed = true; setTimeout(revealReady, 300) }
+}, { immediate: true })
 
 app.mount('#app')

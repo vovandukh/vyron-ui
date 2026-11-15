@@ -4,8 +4,21 @@
 //    читаємо з бази Moonraker лише позначку часу дизайну (одне число); повний дизайн — тільки коли вона змінилась.
 //    Якщо працює Vyron Core, сповіщення приходить миттєво, а це опитування лишається запасним шляхом.
 // 2. watchBuild: на принтері з'явилась нова збірка інтерфейсу (оновлення через Update Manager) — сторінка
-//    непомітно перезавантажується, коли нею ніхто не користується (canReload + кілька секунд без дотиків),
-//    з коротким згасанням замість різкого мигання.
+//    непомітно перезавантажується, коли нею ніхто не користується (canReload + кілька секунд без дотиків).
+//    Безшовно: View Transition між документами тримає знімок старої сторінки, доки нова не підключиться
+//    й не покаже дані (revealReady), тоді знімок плавно розчиняється. Без підтримки — звичайна заміна сторінки.
+
+/**
+ * Нова сторінка готова (підключилась і показує дані) — відпустити знімок старої.
+ * Сам знімок «тримає» скрипт у <head> index.html (подія pagereveal; ліміт 4 с).
+ */
+export function revealReady() {
+  window.__vyronReady = true
+  if (window.__vyronPlay) window.__vyronPlay()
+  // Прибрати мітку версії з адреси
+  const u = new URL(location.href)
+  if (u.searchParams.has('_v')) { u.searchParams.delete('_v'); history.replaceState(history.state, '', u.href) }
+}
 
 const DESIGN_UPDATED = { namespace: 'vyron_ui', key: 'design.updated' }
 
@@ -72,10 +85,11 @@ export function watchBuild({ canReload = () => true, beforeReload = () => {}, in
   }
   function reload() {
     try { beforeReload() } catch { /* не заважаємо оновленню */ }
-    const s = document.documentElement.style
-    s.transition = 'opacity .3s ease'
-    s.opacity = '0'
-    setTimeout(() => location.reload(), 320)
+    // Не reload, а replace на ту саму адресу з міткою версії: для такої навігації браузер робить
+    // View Transition — стара сторінка лишається знімком, доки нова не готова (див. index.html і revealReady).
+    const u = new URL(location.href)
+    u.searchParams.set('_v', Date.now().toString(36))
+    location.replace(u.href)
   }
   async function tick() {
     if (stopped) return

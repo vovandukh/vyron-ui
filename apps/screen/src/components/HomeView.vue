@@ -157,8 +157,8 @@ function open(d) { if (!d.soon) p.go(d.id) }
 .hero{position:relative;min-width:0;border-radius:var(--r-lg);display:flex;align-items:center;gap:1.3rem;padding:1rem 1.4rem 1rem 1rem;overflow:hidden}
 .hero.model{padding:0}
 /* Шестикутна сітка Vyron під моделлю: статичний SVG-візерунок, яскравіший у центрі й згасає до країв */
-.hero.model::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.9;
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48' viewBox='0 0 28 48'%3E%3Cpath d='M14 0 28 8v16L14 32 0 24V8zM14 32v16' fill='none' stroke='%23ffffff' stroke-opacity='.11' stroke-width='1'/%3E%3C/svg%3E") center / 2.8rem 4.8rem;
+.hero.model::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:calc(.45 * var(--grid-k));
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48' viewBox='0 0 28 48'%3E%3Cpath d='M14 0 28 8v16L14 32 0 24V8zM14 32v16' fill='none' stroke='%23ffffff' stroke-opacity='.22' stroke-width='1'/%3E%3C/svg%3E") center / 2.8rem 4.8rem;
   -webkit-mask-image:radial-gradient(ellipse 62% 66% at 50% 48%,#000 25%,transparent 100%);mask-image:radial-gradient(ellipse 62% 66% at 50% 48%,#000 25%,transparent 100%)}
 /* Підписи поверх моделі: темні градієнти зверху й знизу, щоб текст читався на будь-якому фоні */
 .ov-top{position:absolute;left:0;top:0;right:0;padding:.8rem 1.2rem 2rem;display:flex;align-items:baseline;pointer-events:none;background:linear-gradient(180deg,rgba(6,6,7,.7),transparent)}
@@ -183,8 +183,8 @@ function open(d) { if (!d.soon) p.go(d.id) }
 .chip{padding:.35rem .8rem;border-radius:1rem;background:rgba(255,255,255,.08);font-size:1.15rem;font-weight:500;color:#d1d1d6;white-space:nowrap}
 
 /* Очікування: та сама легка шестикутна сітка, що й під моделлю, але приглушена до правого верхнього кута */
-.hero:not(.model)::before{content:'';position:absolute;inset:0;pointer-events:none;
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48' viewBox='0 0 28 48'%3E%3Cpath d='M14 0 28 8v16L14 32 0 24V8zM14 32v16' fill='none' stroke='%23ffffff' stroke-opacity='.09' stroke-width='1'/%3E%3C/svg%3E") center / 2.8rem 4.8rem;
+.hero:not(.model)::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:calc(.5 * var(--grid-k));
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48' viewBox='0 0 28 48'%3E%3Cpath d='M14 0 28 8v16L14 32 0 24V8zM14 32v16' fill='none' stroke='%23ffffff' stroke-opacity='.18' stroke-width='1'/%3E%3C/svg%3E") center / 2.8rem 4.8rem;
   -webkit-mask-image:radial-gradient(ellipse 70% 80% at 100% 0,#000 10%,transparent 85%);mask-image:radial-gradient(ellipse 70% 80% at 100% 0,#000 10%,transparent 85%)}
 .idle{position:relative;flex:1;min-width:0;display:grid;gap:.45rem;padding-left:.6rem}
 .idle small{font-size:1.1rem;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

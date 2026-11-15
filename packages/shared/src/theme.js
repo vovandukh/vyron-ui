@@ -112,9 +112,21 @@ let lastScale = 100
 addEventListener('resize', () => { const z = effectiveScale(lastScale); document.documentElement.style.zoom = z !== 100 ? String(z / 100) : '' })
 
 /** Застосувати дизайн до документа (миттєво — використовується і для живого перегляду). */
-export function applyDesign(d) {
+export function applyDesign(d, { layout = true } = {}) {
   const root = document.documentElement
-  for (const [k, v] of Object.entries(designVars(d))) root.style.setProperty(k, v)
+  const vars = designVars(d)
+  // Скло, розмиття, заокруглення, сітка й світіння — ще й як «коефіцієнти» (1 = стандарт), щоб застосунки з
+  // власною розмітою (Vyron Screen) могли їх підхопити по-своєму
+  vars['--radius-k'] = (clamp(d.radius, ...LIMITS.radius) / 100).toFixed(2)
+  vars['--blur-k'] = (clamp(d.blur, ...LIMITS.blur) / 24).toFixed(2)
+  if (!layout) {
+    // Vyron Screen: розміри в rem і фіксований екран — радіуси в px і масштаб вебу не беремо
+    for (const k of ['--r-sm', '--r', '--r-md', '--r-lg', '--r-xl', '--glass-blur']) delete vars[k]
+    for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, v)
+    window.dispatchEvent(new CustomEvent('vyron-theme', { detail: d }))
+    return
+  }
+  for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, v)
   // Масштаб — zoom на корені: усі px-розміри інтерфейсу пропорційно, 3D-сцена лишається на весь екран.
   // Збільшення — лише на широких екранах: компонування 1024×600 / 800×480 розраховане впритул, а медіазапити zoom не враховують.
   const z = effectiveScale(d.scale)

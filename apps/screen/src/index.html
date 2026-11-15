@@ -4,6 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="google" content="notranslate">
+<script>
+// Тихе оновлення (shared/live.js): браузер робить View Transition зі старої сторінки на цю. Знімок старої
+// тримаємо (анімації на паузі), доки застосунок не підключиться й не покаже дані — revealReady(); не довше 4 с.
+addEventListener('pagereveal', function (e) {
+  var vt = e.viewTransition
+  if (!vt) return
+  var done = false
+  function play() { if (done) return; done = true; document.getAnimations().forEach(function (a) { a.play() }) }
+  window.__vyronPlay = play
+  vt.ready.then(function () {
+    if (window.__vyronReady) return
+    document.getAnimations().forEach(function (a) { a.pause() })
+    setTimeout(play, 4000)
+  }).catch(function () {})
+})
+</script>
 <title>Vyron Screen</title>
 </head>
 <body>
