@@ -263,7 +263,7 @@ fi
 SCREEN_RES="не змінювався (--no-screen)"
 if [ $SCREEN = 1 ]; then
   say "4. Екран принтера"
-  if ! systemctl list-unit-files KlipperScreen.service 2>/dev/null | grep -q '^KlipperScreen.service'; then
+  if ! has_unit KlipperScreen.service; then
     info "KlipperScreen не встановлено — екран не чіпаю"
     SCREEN_RES="немає KlipperScreen — не змінювався"
   elif [ $DRY = 1 ]; then
