@@ -123,7 +123,7 @@ onBeforeUnmount(() => hide())
   transition:border-color var(--t-fast) var(--ease-out),box-shadow var(--t-fast) var(--ease-out),transform var(--t-spring) var(--spring),background-color var(--t-fast) var(--ease-out)}
 .gs:hover{background-color:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14)}
 .gs:active{transform:scale(.97)}
-.gs.open,.gs:focus-visible{outline:none;border-color:rgba(255,107,90,.7);box-shadow:var(--ring)}
+.gs.open,.gs:focus-visible{outline:none;border-color:rgba(var(--accent-rgb),.7);box-shadow:var(--ring)}
 .gs-val{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gs-chev{flex:none;width:12px;height:12px;fill:none;stroke:var(--dim);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:transform var(--t-spring) var(--spring),stroke var(--t-fast) var(--ease-out)}
 .gs.open .gs-chev{transform:rotate(180deg);stroke:var(--coral)}
@@ -132,14 +132,14 @@ onBeforeUnmount(() => hide())
 <style>
 /* Панель списку — поза scoped: вона телепортована в body */
 .gsl{position:fixed;z-index:40;margin:0;padding:6px;list-style:none;display:grid;gap:2px;max-height:min(320px,70vh);overflow:auto;outline:none;
-  background:rgba(24,24,27,.86);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+  background:rgba(24,24,27,calc(1 - 0.14 * var(--glass-t,1)));-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
   border:1px solid;border-color:var(--edge-hi) var(--edge-lo) var(--edge-lo) var(--edge-hi);border-radius:var(--r-md);
   box-shadow:0 24px 48px -16px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.05);transform-origin:top center;font-size:13px;color:var(--ink)}
 .gsl.up{transform-origin:bottom center}
 .gsl li{position:relative;display:flex;align-items:center;gap:10px;padding:10px 12px 10px 34px;border-radius:9px;cursor:pointer;user-select:none;
   transition:background-color var(--t-fast) var(--ease-out)}
 .gsl li.hi{background:rgba(255,255,255,.08)}
-.gsl li:active{background:rgba(255,107,90,.16)}
+.gsl li:active{background:rgba(var(--accent-rgb),.16)}
 .gsl li .lb{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gsl li small{color:var(--dim);font-size:11px;letter-spacing:.04em}
 .gsl li .ck{position:absolute;left:11px;top:50%;width:15px;height:15px;margin-top:-7.5px;fill:none;stroke:var(--coral);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;opacity:0;transform:scale(.6);

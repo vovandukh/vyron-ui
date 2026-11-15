@@ -103,7 +103,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 .tpt-tools{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:6px}
 .tpb .tpt-tools button{min-width:0;min-height:0;padding:7px 2px;font-size:12px;line-height:1.2}
 .tpt-tools button small{display:block;font-size:10px;color:var(--dim)}
-.tpb .tpt-tools button.on{border-color:rgba(255,107,90,.55);background:rgba(255,107,90,.14)}
+.tpb .tpt-tools button.on{border-color:rgba(var(--accent-rgb),.55);background:rgba(var(--accent-rgb),.14)}
 .tpcur{font-size:12px;color:var(--dim)}
 .tpcur b{color:var(--ink);font-weight:300;font-size:14px}
 .tpin{font-size:28px;font-weight:200;text-align:center;padding:10px;-moz-appearance:textfield;appearance:textfield}

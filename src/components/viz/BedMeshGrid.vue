@@ -24,7 +24,7 @@ const cells = computed(() => props.matrix.slice().reverse().flatMap(r => r.map(v
    інакше не влазила і числа обрізались. На широких екранах лишається 11px, як в оригіналі. */
 .mesh{display:grid;gap:4px;align-content:start;max-height:100%;overflow:auto;font-size:11px;container-type:inline-size}
 .mesh div{padding:8px 2px;min-width:0;overflow:hidden;text-align:center;border:1px solid rgba(255,255,255,.05);border-radius:6px;font-weight:300;
-  font-size:clamp(8px,calc((100cqw - (var(--cols) - 1) * 4px) / var(--cols) / 3.3),11px)}
+  font-size:clamp(7px,calc((100cqw - (var(--cols) - 1) * 4px) / var(--cols) / 4.2),11px);letter-spacing:-.02em}
 @media(max-width:900px){.mesh div{padding:6px 0}}
 @media(max-width:700px){.mesh{max-height:180px}}
 </style>

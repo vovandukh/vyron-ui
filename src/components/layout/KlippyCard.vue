@@ -163,10 +163,10 @@ const hide = () => { ui.klippyHidden = true }
   -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 .t-wait,.t-warn{background:radial-gradient(ellipse 60% 55% at 50% 50%,rgba(255,159,10,.08),transparent 70%),rgba(6,6,7,.36)}
 .kc{--tone:240,58,46;position:relative;width:min(540px,100%);display:grid;gap:16px;padding:22px;border-radius:var(--r-xl);color:var(--ink);font-size:13px;
-  background:rgba(20,20,22,.9);border:1px solid;border-color:rgba(var(--tone),.42) rgba(255,255,255,.04) rgba(255,255,255,.03) rgba(var(--tone),.22);
+  background:rgba(20,20,22,calc(1 - 0.1 * var(--glass-t,1)));border:1px solid;border-color:rgba(var(--tone),.42) rgba(255,255,255,.04) rgba(255,255,255,.03) rgba(var(--tone),.22);
   box-shadow:0 0 0 1px rgba(var(--tone),.08),0 0 60px -18px rgba(var(--tone),.6),0 30px 70px -24px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.05)}
 @supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
-  .kc{background:rgba(20,20,22,.78);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
+  .kc{background:rgba(20,20,22,calc(1 - 0.22 * var(--glass-t,1)));-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
 }
 /* Тонкий світний «край» зверху — як розжарена кромка */
 .kc::before{content:'';position:absolute;left:22px;right:22px;top:-1px;height:1px;border-radius:1px;

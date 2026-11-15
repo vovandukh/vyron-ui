@@ -12,7 +12,9 @@ import EddyInfo from './EddyInfo.vue'
 const props = defineProps({
   name: { type: String, required: true },   // 'extruder', 'extruder1', …
   index: { type: Number, required: true },  // позиція у списку голів
-  anchor: { type: Object, required: true }  // кнопка T<n>, біля якої відкрито меню
+  anchor: { type: Object, default: null },  // кнопка T<n>, біля якої відкрито меню
+  /** Вбудована картка (телефон з однією головою): у потоці сторінки, без стрілки, позиціювання й закриття */
+  inline: { type: Boolean, default: false }
 })
 const emit = defineEmits(['close'])
 
@@ -97,6 +99,7 @@ function onKey(e) {
 
 let stripEl = null
 onMounted(() => {
+  if (props.inline) return
   place()
   addEventListener('resize', place)
   stripEl = props.anchor.closest('.tools')
@@ -106,22 +109,23 @@ onMounted(() => {
   nextTick(() => el.value?.focus())
 })
 onBeforeUnmount(() => {
+  if (props.inline) return
   removeEventListener('resize', place)
   stripEl?.removeEventListener('scroll', place)
   document.removeEventListener('pointerdown', onPointerDown, true)
   document.removeEventListener('keydown', onKey)
 })
-watch(() => props.anchor, place)
+watch(() => props.anchor, () => { if (!props.inline) place() })
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="pos" ref="el" class="tpop" role="dialog" tabindex="-1" :aria-label="'T' + num"
-         :style="{ left: pos.left + 'px', bottom: pos.bottom + 'px', width: pos.width + 'px', '--arrow': pos.arrow + 'px' }">
-      <div class="body" :style="{ maxHeight: pos.maxHeight + 'px' }">
+  <Teleport to="body" :disabled="inline">
+    <div v-if="pos || inline" ref="el" class="tpop" :class="{ inline }" :role="inline ? 'group' : 'dialog'" tabindex="-1" :aria-label="'T' + num"
+         :style="inline ? null : { left: pos.left + 'px', bottom: pos.bottom + 'px', width: pos.width + 'px', '--arrow': pos.arrow + 'px' }">
+      <div class="body" :style="inline ? null : { maxHeight: pos.maxHeight + 'px' }">
         <div class="head">
           <strong>T{{ num }}</strong>
-          <span class="state" :class="{ on: active }">{{ t(active ? 'tools.statusActive' : 'tools.statusIdle') }}</span>
+          <span v-if="!inline || printer.canSwitchTools" class="state" :class="{ on: active }">{{ t(active ? 'tools.statusActive' : 'tools.statusIdle') }}</span>
           <span class="sp"></span>
           <span class="nm" :title="name">{{ name }}</span>
         </div>
@@ -153,13 +157,13 @@ watch(() => props.anchor, place)
 
         <div v-if="msg" class="msg">{{ tm(msg) }}</div>
       </div>
-      <i class="arrow" aria-hidden="true"></i>
+      <i v-if="!inline" class="arrow" aria-hidden="true"></i>
     </div>
   </Teleport>
 </template>
 
 <style scoped>
-.tpop{position:fixed;z-index:9;background:rgba(22,22,24,.9);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);border:1px solid;border-color:var(--edge-hi) var(--edge-lo) var(--edge-lo) var(--edge-hi);border-radius:var(--r-lg);box-shadow:0 24px 48px -16px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.05);font-size:12px;color:var(--ink);outline:none}
+.tpop{position:fixed;z-index:9;background:rgba(22,22,24,calc(1 - 0.1 * var(--glass-t,1)));-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);border:1px solid;border-color:var(--edge-hi) var(--edge-lo) var(--edge-lo) var(--edge-hi);border-radius:var(--r-lg);box-shadow:0 24px 48px -16px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.05);font-size:12px;color:var(--ink);outline:none}
 .body{padding:12px;display:grid;gap:9px;overflow:auto}
 .arrow{position:absolute;bottom:-6px;left:calc(var(--arrow) - 6px);width:12px;height:12px;background:rgb(24,24,26);border-right:1px solid var(--edge-lo);border-bottom:1px solid var(--edge-lo);transform:rotate(45deg)}
 .head{display:flex;align-items:center;gap:8px;min-width:0}
@@ -173,12 +177,12 @@ watch(() => props.anchor, place)
 .tline small{color:var(--dim);font-size:12px}
 .tpop button,.tpop input{background:var(--surface-hi);border:1px solid var(--field-bd);color:var(--ink);font:inherit;font-size:12px;border-radius:var(--r);padding:7px 10px}
 .tpop input{background:var(--field-bg)}
-.tpop input:focus{outline:none;border-color:rgba(255,107,90,.7);box-shadow:var(--ring)}
+.tpop input:focus{outline:none;border-color:rgba(var(--accent-rgb),.7);box-shadow:var(--ring)}
 .tpop button{cursor:pointer;transition:transform var(--t-spring) var(--spring),background-color var(--t-fast) var(--ease-out)}
 .tpop button:active:not(:disabled){transform:scale(.95)}
 .tpop button:hover:not(:disabled){background-color:rgba(255,255,255,.1)}
 .tpop button:disabled{opacity:.35;cursor:not-allowed}
-.tpop .primary{background:linear-gradient(180deg,#ff5a4c,#e0321f);border-color:transparent;color:#fff;font-weight:600}
+.tpop .primary{background:linear-gradient(180deg,var(--btn-hi),var(--btn-lo));border-color:transparent;color:var(--on-btn);font-weight:600}
 .act{align-self:center}
 .set{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px}
 .set input{min-width:0;width:100%}
@@ -188,6 +192,12 @@ watch(() => props.anchor, place)
 .hot{color:var(--red)}
 .msg{color:var(--dim);font-size:11px}
 .tpop :focus-visible{outline:2px solid var(--coral);outline-offset:2px}
+/* Вбудована картка: у потоці, у стилі згрупованих карток мобільного «Керування» */
+.tpop.inline{position:relative;z-index:auto;border-radius:var(--r-xl);background:rgba(28,28,30,calc(1 - .25 * var(--glass-t,1)));border:.5px solid rgba(255,255,255,.08);box-shadow:0 8px 24px -16px rgba(0,0,0,.8)}
+.inline .body{padding:14px;gap:10px}
+.inline .temp{font-size:30px}
+.inline .tpop button,.inline button,.inline input{padding:10px 12px;font-size:13px}
+.inline .pre button{padding:8px 0}
 /* Низькі екрани (800×480): компактніше, щоб плата голови й BTT Eddy вміщались без прокрутки */
 @media(max-height:540px){
   .body{padding:9px 10px;gap:6px}

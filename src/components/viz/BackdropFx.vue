@@ -49,12 +49,15 @@ onBeforeUnmount(() => {
 .fx{position:fixed;inset:0;z-index:-1;pointer-events:none}
 .fx>div{position:absolute;inset:0}
 /* Тепле/холодне світіння за моделлю; колір змінюється разом із температурою сопла */
-.amb{background:radial-gradient(ellipse 42% 38% at 50% 58%,rgba(var(--amb),.13),rgba(var(--amb),.04) 55%,transparent 75%);transition:background 1.2s var(--ease-out)}
-/* Ліхтарик: яскравіша копія гексагонів, видима лише в колі навколо курсора */
-.lamp{opacity:var(--mon,0);transition:opacity .6s var(--ease-out);
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cpath d='M28 0 56 16.17V48.5L28 64.67 0 48.5V16.17ZM28 64.67V97' fill='none' stroke='%23ff8f80' stroke-opacity='.22' stroke-width='1'/%3E%3C/svg%3E");
-  -webkit-mask-image:radial-gradient(circle 190px at var(--mx,50%) var(--my,50%),#000,transparent 100%);
-  mask-image:radial-gradient(circle 190px at var(--mx,50%) var(--my,50%),#000,transparent 100%)}
+.amb{opacity:var(--glow-k,1);background:radial-gradient(ellipse 42% 38% at 50% 58%,rgba(var(--amb),.13),rgba(var(--amb),.04) 55%,transparent 75%);transition:background 1.2s var(--ease-out)}
+/* Ліхтарик: яскравіша копія гексагонів у кольорі акценту, видима лише в колі навколо курсора.
+   Колір — фон шару, а форма — перетин двох масок: сітки гексагонів і кола під курсором. */
+.lamp{opacity:calc(var(--mon,0) * min(1, var(--grid-k,1)));transition:opacity .6s var(--ease-out);background:rgba(var(--accent-rgb),.3);
+  --hex:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cpath d='M28 0 56 16.17V48.5L28 64.67 0 48.5V16.17ZM28 64.67V97' fill='none' stroke='%23000' stroke-width='1'/%3E%3C/svg%3E");
+  -webkit-mask-image:var(--hex),radial-gradient(circle 190px at var(--mx,50%) var(--my,50%),#000,transparent 100%);
+  mask-image:var(--hex),radial-gradient(circle 190px at var(--mx,50%) var(--my,50%),#000,transparent 100%);
+  -webkit-mask-size:56px 97px,100% 100%;mask-size:56px 97px,100% 100%;-webkit-mask-repeat:repeat,no-repeat;mask-repeat:repeat,no-repeat;
+  -webkit-mask-composite:source-in;mask-composite:intersect}
 /* Віньєтка: сітка м'яко тоне в темряві по краях */
-.vig{background:radial-gradient(ellipse 90% 85% at 50% 50%,transparent 58%,rgba(5,5,6,.32) 84%,rgba(5,5,6,.6) 100%)}
+.vig{opacity:min(1, var(--glow-k,1));background:radial-gradient(ellipse 90% 85% at 50% 50%,transparent 58%,rgba(5,5,6,.32) 84%,rgba(5,5,6,.6) 100%)}
 </style>

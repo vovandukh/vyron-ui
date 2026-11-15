@@ -1,28 +1,30 @@
-:root{--bg:#0a0a0b;--ink:#f2f4f5;--dim:#8a8f98;--line:rgba(255,255,255,.08);--fill:#ff6b60;--red:#f03a2e;--blue:#789cff;--mono:ui-monospace,Menlo,Consolas,monospace;
+:root{--bg:#0a0a0b;--ink:#f2f4f5;--dim:#8a8f98;--line:rgba(255,255,255,.08);--fill:#ff6b60;--red:#f03a2e;--brand:#f03a2e;--brand-rgb:240,58,46;--accent-rgb:255,107,90;--blue:#789cff;--mono:ui-monospace,Menlo,Consolas,monospace;
   /* Рух. --spring — пружина stiffness 400 / damping 30 / mass 0.8, розкладена в linear() (ледь помітний перелет ~0.7%).
      Браузери без linear() отримують --ease-out (той самий характер без перельоту). */
   --ease-out:cubic-bezier(.22,1,.36,1);
   --spring:var(--ease-out);
   --t-fast:.18s;--t-mid:.32s;--t-spring:.5s;
   /* Скло: тонований фон + блюр + відблиски країв (світліший верх/ліво, темніший низ/право — анодований алюміній) */
-  --glass-bg:rgba(20,20,22,.65);
-  --glass-solid:rgba(16,16,18,.94);
+  --glass-bg:rgba(20,20,22,calc(1 - 0.35 * var(--glass-t,1)));
+  --glass-solid:rgba(16,16,18,calc(1 - 0.06 * var(--glass-t,1)));
   --glass-blur:blur(24px) saturate(180%);
   --edge-hi:rgba(255,255,255,.08);
   --edge-lo:rgba(255,255,255,.02);
   --glass-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 18px 40px -18px rgba(0,0,0,.7);
   /* Акцент і тепло: корал гарячого сопла та крижаний холодного */
   --coral:#ff6b5a;--ice:#7cc7ff;
+  /* Тема (services/theme.js перевизначає ці значення): кнопки головної дії, текст на них, прозорість скла, сітка й світіння фону */
+  --btn-hi:#ff5a4c;--btn-lo:#e0321f;--btn-hi-h:#ff6a5c;--btn-lo-h:#e83a27;--on-btn:#fff;--glass-t:1;--grid-k:1;--glow-k:1;
   /* Єдині радіуси, поверхні й поле вводу для всього застосунку */
   --r-sm:8px;--r:11px;--r-md:14px;--r-lg:18px;--r-xl:22px;
   --field-bg:rgba(0,0,0,.28);--field-bd:rgba(255,255,255,.08);
   --surface:rgba(255,255,255,.035);--surface-hi:rgba(255,255,255,.06);--hair:rgba(255,255,255,.06);
-  --ring:0 0 0 3px rgba(255,107,90,.2)}
+  --ring:0 0 0 3px rgba(var(--accent-rgb),.2)}
 @supports (transition-timing-function:linear(0,1)){
   :root{--spring:linear(0,.1169,.3378,.5551,.7279,.849,.926,.9706,.9938,1.004,1.0072,1.007,1.0055,1.0039,1.0024,1.0014,1.0007,1.0003,1.0001,1,1)}
 }
 *{box-sizing:border-box}
-html{background:radial-gradient(ellipse 70% 60% at 10% 105%,rgba(240,58,46,.22),transparent 70%),radial-gradient(ellipse 50% 40% at 100% -5%,rgba(240,58,46,.09),transparent 70%),var(--bg)}
+html{background:radial-gradient(ellipse 70% 60% at 10% 105%,rgba(var(--brand-rgb),calc(.22 * var(--glow-k,1))),transparent 70%),radial-gradient(ellipse 50% 40% at 100% -5%,rgba(var(--brand-rgb),calc(.09 * var(--glow-k,1))),transparent 70%),var(--bg)}
 /* tabular-nums глобально: температури, координати, шари й відсотки не «стрибають» по ширині при оновленні */
 html,body{margin:0;height:100%;color:var(--ink);font-family:Montserrat,system-ui,sans-serif;overflow:hidden;font-variant-numeric:tabular-nums}
 input,button,select,textarea{font-variant-numeric:inherit}
@@ -34,7 +36,7 @@ input,button,select,textarea{font-variant-numeric:inherit}
 ::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
 ::-webkit-scrollbar-thumb{background-color:rgba(255,255,255,.14);border:2px solid transparent;background-clip:padding-box;border-radius:9px;min-height:36px}
 ::-webkit-scrollbar-thumb:hover{background-color:rgba(255,255,255,.28)}
-::-webkit-scrollbar-thumb:active{background-color:rgba(255,107,90,.6)}
+::-webkit-scrollbar-thumb:active{background-color:rgba(var(--accent-rgb),.6)}
 ::-webkit-scrollbar-button{display:none;width:0;height:0}
 /* Заокруглені контейнери: доріжка відступає від кутів, бігунок — від краю. Інакше смуга на всю висоту
    «вилазить» за заокруглення скляної панелі (панелі вкладок мають радіус 22px). */
@@ -58,16 +60,16 @@ input,button,select,textarea{font-variant-numeric:inherit}
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
 }
 /* шестикутна сітка на фоні (віньєтка, світіння й «ліхтарик» під курсором — у BackdropFx.vue) */
-html::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cpath d='M28 0 56 16.17V48.5L28 64.67 0 48.5V16.17ZM28 64.67V97' fill='none' stroke='%23ffffff' stroke-opacity='.06' stroke-width='1'/%3E%3C/svg%3E");-webkit-mask-image:radial-gradient(ellipse 75% 70% at 50% 50%,transparent 20%,#000 100%);mask-image:radial-gradient(ellipse 75% 70% at 50% 50%,transparent 20%,#000 100%)}
+html::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:var(--grid-k,1);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cpath d='M28 0 56 16.17V48.5L28 64.67 0 48.5V16.17ZM28 64.67V97' fill='none' stroke='%23ffffff' stroke-opacity='.06' stroke-width='1'/%3E%3C/svg%3E");-webkit-mask-image:radial-gradient(ellipse 75% 70% at 50% 50%,transparent 20%,#000 100%);mask-image:radial-gradient(ellipse 75% 70% at 50% 50%,transparent 20%,#000 100%)}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
 
 /* ================= Панель поверх 3D-сцени: спільна для вкладок і вікон меню ================= */
 /* Скло щільніше, ніж у дрібних блоків: панель велика, і текст на ній має читатися над будь-якою сценою */
 .view{position:fixed;top:calc(var(--hb,72px) + 16px);left:32px;right:32px;bottom:24px;z-index:5;
-  background:rgba(14,14,16,.94);border:1px solid;border-color:var(--edge-hi) var(--edge-lo) var(--edge-lo) var(--edge-hi);box-shadow:var(--glass-shadow);
+  background:rgba(14,14,16,calc(1 - 0.06 * var(--glass-t,1)));border:1px solid;border-color:var(--edge-hi) var(--edge-lo) var(--edge-lo) var(--edge-hi);box-shadow:var(--glass-shadow);
   border-radius:var(--r-xl);padding:20px;display:flex;flex-direction:column;gap:14px;overflow:auto}
 @supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
-  .view{background:rgba(18,18,20,.8);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
+  .view{background:rgba(18,18,20,calc(1 - 0.2 * var(--glass-t,1)));-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
 }
 /* Кнопки: скляні «пігулки» з пружним натисканням */
 .view button,.view select,.view input,.view textarea{background:var(--surface-hi);border:1px solid var(--field-bd);color:var(--ink);font:inherit;font-size:12px;border-radius:var(--r);padding:9px 14px}
@@ -76,12 +78,12 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .view button:active:not(:disabled){transform:scale(.96)}
 .view button:disabled{opacity:.35;cursor:not-allowed}
 /* Головна дія — кораловий градієнт (як «Підключити» у центрі керування) */
-.view button.primary,.primary{background:linear-gradient(180deg,#ff5a4c,#e0321f);border-color:transparent;color:#fff;font-weight:600;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 4px 14px -6px rgba(240,58,46,.8)}
-.view button.primary:hover:not(:disabled),.primary:hover:not(:disabled){background:linear-gradient(180deg,#ff6a5c,#e83a27);border-color:transparent}
+.view button.primary,.primary{background:linear-gradient(180deg,var(--btn-hi),var(--btn-lo));border-color:transparent;color:var(--on-btn);font-weight:600;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 4px 14px -6px rgba(var(--brand-rgb),.8)}
+.view button.primary:hover:not(:disabled),.primary:hover:not(:disabled){background:linear-gradient(180deg,var(--btn-hi-h),var(--btn-lo-h));border-color:transparent}
 /* Поля вводу: темніші за поверхню, фокус — кораловий ореол замість обведення */
 .view input,.view select,.view textarea{background:var(--field-bg);transition:border-color var(--t-fast) var(--ease-out),box-shadow var(--t-fast) var(--ease-out)}
-.view input:focus,.view select:focus,.view textarea:focus{outline:none;border-color:rgba(255,107,90,.7);box-shadow:var(--ring)}
+.view input:focus,.view select:focus,.view textarea:focus{outline:none;border-color:rgba(var(--accent-rgb),.7);box-shadow:var(--ring)}
 .view input[type=search]{-webkit-appearance:none;appearance:none}
 .view select{-webkit-appearance:none;appearance:none;padding-right:32px;cursor:pointer;
   background:var(--field-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238a8f98' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center}
@@ -133,17 +135,17 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 
 /* ================= Модальні вікна ================= */
 .modal-back{position:fixed;inset:0;z-index:13;display:grid;place-items:center;background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
-.modal{width:min(380px,92vw);border-radius:var(--r-xl);padding:20px;display:grid;gap:14px;background:rgba(22,22,24,.92);
+.modal{width:min(380px,92vw);border-radius:var(--r-xl);padding:20px;display:grid;gap:14px;background:rgba(22,22,24,calc(1 - 0.08 * var(--glass-t,1)));
   border:1px solid;border-color:var(--edge-hi) var(--edge-lo) var(--edge-lo) var(--edge-hi);box-shadow:0 30px 60px -20px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.05)}
 .modal button,.modal input{font:inherit;color:var(--ink);border-radius:var(--r);border:1px solid var(--field-bd)}
 .modal button{background:var(--surface-hi);font-size:13px;padding:12px 10px;min-height:44px;cursor:pointer;
   transition:transform var(--t-spring) var(--spring),background-color var(--t-fast) var(--ease-out)}
 .modal button:hover:not(:disabled){background-color:rgba(255,255,255,.1)}
-.modal button.primary{background:linear-gradient(180deg,#ff5a4c,#e0321f);border-color:transparent;color:#fff;font-weight:600}
-.modal button.primary:hover:not(:disabled){background:linear-gradient(180deg,#ff6a5c,#e83a27)}
+.modal button.primary{background:linear-gradient(180deg,var(--btn-hi),var(--btn-lo));border-color:transparent;color:var(--on-btn);font-weight:600}
+.modal button.primary:hover:not(:disabled){background:linear-gradient(180deg,var(--btn-hi-h),var(--btn-lo-h))}
 .modal button:active:not(:disabled){transform:scale(.96)}
 .modal input{background:var(--field-bg);transition:border-color var(--t-fast) var(--ease-out),box-shadow var(--t-fast) var(--ease-out)}
-.modal input:focus{outline:none;border-color:rgba(255,107,90,.7);box-shadow:var(--ring)}
+.modal input:focus{outline:none;border-color:rgba(var(--accent-rgb),.7);box-shadow:var(--ring)}
 /* Поява: фон темніє, вікно пружно виринає */
 .modal-enter-active{transition:opacity var(--t-mid) var(--ease-out)}
 .modal-enter-active .modal{transition:transform var(--t-spring) var(--spring),opacity var(--t-fast) var(--ease-out)}
@@ -167,3 +169,4 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 @media(max-width:900px){
   .view{left:10px;right:10px;bottom:14px;padding:14px;border-radius:var(--r-lg)}
 }
+

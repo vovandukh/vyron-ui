@@ -63,7 +63,7 @@ onBeforeUnmount(() => ro?.disconnect())
 .seg button:focus-visible{outline:2px solid var(--coral);outline-offset:-2px}
 .ind{position:absolute;left:0;top:3px;bottom:3px;border-radius:999px;pointer-events:none;
   background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.07));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 0 0 1px rgba(255,255,255,.05),0 6px 16px -8px rgba(240,58,46,.7);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 0 0 1px rgba(255,255,255,.05),0 6px 16px -8px rgba(var(--brand-rgb),.7);
   transition:transform var(--t-spring) var(--spring),width var(--t-spring) var(--spring)}
 .ind.instant{transition:none}
 @media(max-width:560px){.seg button{padding:7px 12px;font-size:11px}}

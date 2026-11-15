@@ -14,6 +14,14 @@ const { t } = useI18n()
 
 // Головки окремої вкладки не мають: деталі голови відкриваються кліком по T0…TN у смузі на «Керуванні».
 const tabs = ['main', 'console', 'mesh', 'hist', 'eng']
+/** Іконки вкладок — лише на вузьких телефонах (≤480 px), де повні назви не вміщаються */
+const ICONS = {
+  main: 'M4 7h9M17 7h3M4 17h3M11 17h9M15 4.5v5M9 14.5v5',
+  console: 'M4 5.5h16v13H4ZM7.5 10l2.5 2-2.5 2M12 14.5h4',
+  mesh: 'M3.5 9 12 4.5 20.5 9 12 13.5ZM3.5 9v6l8.5 4.5 8.5-4.5V9M7.8 11.3v6M16.2 11.3v6M12 13.5v6',
+  hist: 'M12 7v5l3 2M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4.5v3h3',
+  eng: 'M14.5 6.5a3.5 3.5 0 0 0-4.6 4.6L4.5 16.5l3 3 5.4-5.4a3.5 3.5 0 0 0 4.6-4.6l-2.2 2.2-2-2Z'
+}
 // Назва принтера в шапці та вкладці браузера — завжди «Voron 2.4» (hostname хоста, напр. bigtreetech-cb1, не показуємо).
 document.title = 'Voron 2.4'
 
@@ -63,7 +71,10 @@ onBeforeUnmount(() => { removeEventListener('resize', onResize); ro?.disconnect(
     <nav ref="nav" class="nav glass">
       <span class="pill" :class="{ on: pill.on, instant }" :style="{ transform: `translateX(${pill.x}px)`, width: pill.w + 'px' }" aria-hidden="true"></span>
       <button v-for="v in tabs" :key="v" :ref="el => { if (el) btns[v] = el }" :class="{ on: ui.view === v }"
-              :aria-current="ui.view === v ? 'page' : null" @click="ui.go(v)">{{ t('nav.' + v) }}</button>
+              :aria-current="ui.view === v ? 'page' : null" :aria-label="t('nav.' + v)" @click="ui.go(v)">
+        <svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path :d="ICONS[v]" /></svg>
+        <span class="nl">{{ t('nav.' + v) }}</span><span class="ns">{{ t('navs.' + v) }}</span>
+      </button>
     </nav>
     <div class="acts">
       <EStopButton />
@@ -80,11 +91,11 @@ onBeforeUnmount(() => { removeEventListener('resize', onResize); ro?.disconnect(
   background:none;border:0;padding:4px 8px 4px 4px;margin:-4px -8px -4px -4px;border-radius:12px;cursor:pointer;pointer-events:auto;
   transition:transform var(--t-spring) var(--spring),background-color var(--t-fast) var(--ease-out)}
 .wm:hover{background:rgba(255,255,255,.05)}
-.wm:hover img{filter:drop-shadow(0 0 8px rgba(240,58,46,.55))}
+.wm:hover img{filter:drop-shadow(0 0 8px rgba(var(--brand-rgb),.55))}
 .wm:active{transform:scale(.96)}
 .wm:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
 .wm img{transition:filter var(--t-mid) var(--ease-out)}
-.wm b{color:var(--red);font-weight:600}
+.wm b{color:var(--brand);font-weight:600}
 .wm i{font-style:normal;font-weight:200;color:var(--dim);max-width:220px;overflow:hidden;text-overflow:ellipsis}
 .wm img{display:block}
 
@@ -99,10 +110,10 @@ onBeforeUnmount(() => { removeEventListener('resize', onResize); ro?.disconnect(
 .nav button:focus-visible{outline:2px solid var(--coral);outline-offset:-2px}
 .pill{position:absolute;left:0;top:3px;bottom:3px;border-radius:999px;opacity:0;pointer-events:none;
   background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.06));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(255,255,255,.04),0 8px 20px -10px rgba(240,58,46,.75);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(255,255,255,.04),0 8px 20px -10px rgba(var(--brand-rgb),.75);
   transition:transform var(--t-spring) var(--spring),width var(--t-spring) var(--spring),opacity var(--t-mid) var(--ease-out)}
 /* Брендовий акцент: коротка коралова риска під активною вкладкою */
-.pill::after{content:'';position:absolute;left:50%;bottom:-1px;width:16px;height:2px;margin-left:-8px;border-radius:2px;background:var(--red);box-shadow:0 0 8px rgba(240,58,46,.9)}
+.pill::after{content:'';position:absolute;left:50%;bottom:-1px;width:16px;height:2px;margin-left:-8px;border-radius:2px;background:var(--brand);box-shadow:0 0 8px rgba(var(--brand-rgb),.9)}
 .pill.on{opacity:1}
 .pill.instant{transition:none}
 
@@ -121,6 +132,15 @@ onBeforeUnmount(() => { removeEventListener('resize', onResize); ro?.disconnect(
   .nav button{font-size:10px;padding:6px 9px}
   .wm{font-size:11px;gap:8px}
   .lead{gap:8px}
+}
+/* Іконки й короткі підписи вкладок — приховані, доки є місце для повних назв */
+.ni,.ns{display:none}
+@media(max-width:480px){
+  .nav{width:100%;justify-content:space-between;padding:4px}
+  /* Лише текст (короткі назви) рівними сегментами — без іконок, як сегментований перемикач iOS */
+  .nav button{flex:1 1 0;min-width:0;padding:8px 2px;font-size:11px;font-weight:500;letter-spacing:0}
+  .nl{display:none}
+  .ns{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 }
 /* Вузькі телефони: лишаємо логотип без напису, щоб капсула статусу та STOP влізли в один рядок */
 @media(max-width:420px){.wm b,.wm i{display:none}}

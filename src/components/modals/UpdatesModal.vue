@@ -91,7 +91,7 @@ function glow() {
   nextTick(() => {
     if (!updEl.value || matchMedia('(prefers-reduced-motion: reduce)').matches) return
     updEl.value.querySelectorAll('.updRow.need').forEach((el, i) => el.animate(
-      [{ backgroundColor: 'rgba(255,107,90,.28)', boxShadow: 'inset 0 0 0 1px rgba(255,107,90,.45)' }, { backgroundColor: 'rgba(255,107,90,.06)', boxShadow: 'inset 0 0 0 1px rgba(255,107,90,0)' }],
+      [{ backgroundColor: 'rgba(var(--accent-rgb),.28)', boxShadow: 'inset 0 0 0 1px rgba(var(--accent-rgb),.45)' }, { backgroundColor: 'rgba(var(--accent-rgb),.06)', boxShadow: 'inset 0 0 0 1px rgba(var(--accent-rgb),0)' }],
       { duration: 1400, delay: 120 + i * 90, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' }))
   })
 }
@@ -159,7 +159,7 @@ onDeactivated(() => { offs.forEach(f => f()); offs = [] })
 .msg{color:var(--coral);font-size:12px}
 /* Кнопка перевірки: індикатор активності з'являється зліва від тексту */
 .view .chk{display:inline-flex;align-items:center;gap:8px}
-.chk.on{color:var(--ink);border-color:rgba(255,107,90,.45);background:rgba(255,107,90,.1)}
+.chk.on{color:var(--ink);border-color:rgba(var(--accent-rgb),.45);background:rgba(var(--accent-rgb),.1)}
 .view .chk:disabled.on{opacity:1;cursor:progress}
 .spin-enter-active{transition:opacity var(--t-fast) var(--ease-out),transform var(--t-spring) var(--spring)}
 .spin-enter-from{opacity:0;transform:scale(.4)}
@@ -167,7 +167,7 @@ onDeactivated(() => { offs.forEach(f => f()); offs = [] })
 /* Підсумок: зелений «усе актуально» або кораловий «доступно N» */
 .sum{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:500;border:1px solid}
 .sum.ok{color:#8fe3a8;border-color:rgba(52,199,89,.3);background:rgba(52,199,89,.08)}
-.sum.has{color:var(--coral);border-color:rgba(255,107,90,.35);background:rgba(255,107,90,.1)}
+.sum.has{color:var(--coral);border-color:rgba(var(--accent-rgb),.35);background:rgba(var(--accent-rgb),.1)}
 .sdot{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
 .sum.has .sdot{animation:sdot 1.8s cubic-bezier(.45,0,.55,1) infinite}
 @keyframes sdot{50%{opacity:.35}}
@@ -191,8 +191,8 @@ onDeactivated(() => { offs.forEach(f => f()); offs = [] })
 .updRow .needTxt{color:var(--coral);font-weight:500}
 
 /* Є оновлення: коралова смужка ліворуч, легкий тон рядка; після перевірки — одноразове м'яке світіння */
-.updRow.need{background:rgba(255,107,90,.06)}
-.updRow.need::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--coral);box-shadow:0 0 10px rgba(255,107,90,.8)}
+.updRow.need{background:rgba(var(--accent-rgb),.06)}
+.updRow.need::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--coral);box-shadow:0 0 10px rgba(var(--accent-rgb),.8)}
 
 /* Перевірка триває: по рядках проходить м'який відблиск */
 .upd.checking .updRow::after{content:'';position:absolute;inset:0;pointer-events:none;

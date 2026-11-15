@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 
 // Той самий ключ, що й в оригінальному HTML — збережені налаштування підхоплюються.
 const KEY = 'voronui'
-export const DEFAULT_SETTINGS = { lang: 'uk', cEstop: true, cSys: true, invX: false, invY: false, invZ: false, fxy: 3000, fz: 300 }
+export const DEFAULT_SETTINGS = { lang: 'uk', cEstop: true, cSys: true, invX: false, invY: false, invZ: false, fxy: 3000, fz: 300, toasts: true, sound: false }
 
 function load() {
   try {

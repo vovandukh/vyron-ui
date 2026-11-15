@@ -67,40 +67,40 @@ const posText = i => (printer.position ? Number(printer.position[i]).toFixed(1) 
 </template>
 
 <style scoped>
-.ctl{position:fixed;left:32px;top:50%;transform:translateY(-50%);display:grid;gap:8px;padding:12px;border-radius:18px;font-size:12px;z-index:3}
+.ctl{position:fixed;left:32px;top:50%;transform:translateY(-50%);display:grid;gap:8px;padding:12px;border-radius:var(--r-lg);font-size:12px;z-index:3}
 .hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 2px 2px}
 .ttl{font-size:11px;font-weight:500;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
 /* Кнопки — світліші поверхні на склі: тактильні, з м'яким підсвічуванням і пружним натисканням */
 .ctl button{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.06);color:var(--ink);font:inherit;cursor:pointer;
   transition:transform var(--t-spring) var(--spring),color var(--t-fast) var(--ease-out),background-color var(--t-fast) var(--ease-out),border-color var(--t-fast) var(--ease-out)}
 .ctl button:hover:not(:disabled){color:var(--coral);background-color:rgba(255,255,255,.11);border-color:rgba(255,255,255,.14)}
-.ctl button:active:not(:disabled){transform:scale(.95);background-color:rgba(255,107,90,.16)}
+.ctl button:active:not(:disabled){transform:scale(.95);background-color:rgba(var(--accent-rgb),.16)}
 .ctl button:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
 .ctl button:disabled,.ctl input:disabled{opacity:.35;cursor:not-allowed}
 .hrow{display:flex;gap:6px}
-.ctl .home{width:38px;height:34px;padding:0;border-radius:11px;display:grid;place-items:center}
+.ctl .home{width:38px;height:34px;padding:0;border-radius:var(--r);display:grid;place-items:center}
 .ctl .home svg{width:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 /* Кнопка QGL / Z-Tilt: ширша, з підписом; кутова позначка стану — зелена (вирівняно) або коралова (треба вирівняти) */
 .ctl .lvl{position:relative;width:auto;display:inline-flex;gap:6px;padding:0 11px;font-size:11.5px;font-weight:600;letter-spacing:.02em}
 .ctl .lvl svg circle{fill:currentColor;stroke:none}
 .lvl .badge{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;border:2px solid #17171a}
 .lvl.ok .badge{background:#34c759;box-shadow:0 0 6px rgba(52,199,89,.7)}
-.lvl.need .badge{background:var(--coral);box-shadow:0 0 8px rgba(255,107,90,.9);animation:lvl-pulse 1.8s cubic-bezier(.45,0,.55,1) infinite}
-.ctl .lvl.need{border-color:rgba(255,107,90,.4)}
-.ctl .lvl.busy{color:var(--ink);border-color:rgba(255,107,90,.45);background-color:rgba(255,107,90,.12);cursor:progress}
+.lvl.need .badge{background:var(--coral);box-shadow:0 0 8px rgba(var(--accent-rgb),.9);animation:lvl-pulse 1.8s cubic-bezier(.45,0,.55,1) infinite}
+.ctl .lvl.need{border-color:rgba(var(--accent-rgb),.4)}
+.ctl .lvl.busy{color:var(--ink);border-color:rgba(var(--accent-rgb),.45);background-color:rgba(var(--accent-rgb),.12);cursor:progress}
 .ctl .lvl.busy:disabled{opacity:1}
 @keyframes lvl-pulse{50%{opacity:.4}}
 .ax{display:flex;align-items:center;gap:10px}
 /* Сегмент «− крок +»: одна поверхня з тонкими розділювачами */
-.seg{display:flex;border-radius:11px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.25)}
+.seg{display:flex;border-radius:var(--r);overflow:hidden;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.25)}
 .ctl .seg button{width:38px;height:38px;font-size:18px;border:0;border-radius:0;background:rgba(255,255,255,.05)}
 .ctl .seg button:first-child{border-right:1px solid rgba(255,255,255,.07)}
 .ctl .seg button:last-child{border-left:1px solid rgba(255,255,255,.07)}
 .seg input{width:50px;padding:0;margin:0;background:none;border:0;color:var(--ink);text-align:center;font:inherit;font-size:13px;font-weight:500;-moz-appearance:textfield;appearance:textfield}
-.seg input:focus{outline:none;background:rgba(255,107,90,.1)}
+.seg input:focus{outline:none;background:rgba(var(--accent-rgb),.1)}
 .seg input::-webkit-inner-spin-button,.seg input::-webkit-outer-spin-button{-webkit-appearance:none;appearance:none;margin:0}
-.al{flex:none;width:24px;height:24px;border-radius:8px;display:grid;place-items:center;font-size:12px;font-weight:700;
-  color:var(--coral);background:rgba(255,107,90,.14);box-shadow:inset 0 0 0 1px rgba(255,107,90,.3)}
+.al{flex:none;width:24px;height:24px;border-radius:var(--r-sm);display:grid;place-items:center;font-size:12px;font-weight:700;
+  color:var(--coral);background:rgba(var(--accent-rgb),.14);box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.3)}
 /* Поточна координата — яскраво й табличними цифрами */
 .pos{min-width:48px;text-align:right;color:var(--ink);font-size:13px;font-weight:300}
 .cmsg{color:var(--coral);font-size:11px;max-width:230px;padding:0 2px}

@@ -67,15 +67,15 @@ onBeforeUnmount(release)
 <style scoped>
 .st{display:inline-flex;align-items:stretch;height:38px;border-radius:var(--r);background:var(--field-bg);border:1px solid var(--field-bd);overflow:hidden;
   transition:border-color var(--t-fast) var(--ease-out),box-shadow var(--t-fast) var(--ease-out)}
-.st:focus-within{border-color:rgba(255,107,90,.7);box-shadow:var(--ring)}
+.st:focus-within{border-color:rgba(var(--accent-rgb),.7);box-shadow:var(--ring)}
 /* Кнопки −/+ (селектор з .st перебиває загальні .view button) */
 .st .sb{flex:none;width:38px;padding:0;margin:0;border:0;border-radius:0;background:transparent;color:var(--ink);cursor:pointer;display:grid;place-items:center;touch-action:manipulation;
   transition:background-color var(--t-fast) var(--ease-out),color var(--t-fast) var(--ease-out),transform var(--t-spring) var(--spring)}
 .st .sb svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
 .st .sb:hover:not(:disabled){background:rgba(255,255,255,.07);color:var(--coral)}
-.st .sb:active:not(:disabled){background:rgba(255,107,90,.16);transform:scale(.92)}
+.st .sb:active:not(:disabled){background:rgba(var(--accent-rgb),.16);transform:scale(.92)}
 .st .sb:disabled{opacity:.3;cursor:not-allowed}
-.st .sb:focus-visible{outline:none;background:rgba(255,107,90,.14);color:var(--coral)}
+.st .sb:focus-visible{outline:none;background:rgba(var(--accent-rgb),.14);color:var(--coral)}
 .sv{display:flex;align-items:center;justify-content:center;gap:4px;min-width:84px;padding:0 4px;border-left:1px solid var(--hair);border-right:1px solid var(--hair);cursor:text}
 .st .sv input{width:100%;min-width:0;padding:0;margin:0;border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--ink);font:inherit;font-size:13px;text-align:center;outline:none}
 .st .sv input:focus{box-shadow:none;border:0}

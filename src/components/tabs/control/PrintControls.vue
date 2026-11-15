@@ -65,8 +65,8 @@ async function run(kind) {
 .b:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
 .pause svg{fill:currentColor}
 /* Продовжити — головна дія, кораловий градієнт */
-.resume{background:linear-gradient(180deg,#ff5a4c,#e0321f);border-color:transparent;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 4px 14px -6px rgba(240,58,46,.8)}
-.resume:hover:not(:disabled){background:linear-gradient(180deg,#ff6a5c,#e83a27)}
+.resume{background:linear-gradient(180deg,var(--btn-hi),var(--btn-lo));border-color:transparent;color:var(--on-btn);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 4px 14px -6px rgba(var(--brand-rgb),.8)}
+.resume:hover:not(:disabled){background:linear-gradient(180deg,var(--btn-hi-h),var(--btn-lo-h))}
 .resume svg{fill:currentColor}
 /* Скасувати — руйнівна дія: червоний відтінок, але не яскравіший за STOP */
 .cancel{color:#ff8a7e;border-color:rgba(240,58,46,.35);background:rgba(240,58,46,.08)}
