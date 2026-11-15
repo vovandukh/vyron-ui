@@ -6,9 +6,9 @@
 |---|---|---|---|
 | **Vyron Web** | [`apps/web`](apps/web) | Вебінтерфейс для ПК, ноутбука, планшета й телефона (Vue 3) | працює |
 | **Vyron Screen** | [`apps/screen`](apps/screen) | Застосунок для сенсорного екрана на принтері (TFT35 480×320 і більші) | розробляється |
-| **Vyron Core** | [`core`](core) | Служба на хості: синхронізація між пристроями, Telegram, стеження за аномаліями, AI | заплановано |
+| **Vyron Core** | [`core`](core) | Служба на хості: миттєва синхронізація теми й оновлень між пристроями; далі Telegram, стеження за аномаліями | працює (`install.sh --core`) |
 | **@vyron/shared** | [`packages/shared`](packages/shared) | Спільна логіка Web і Screen: розбір помилок Klipper, клієнт Moonraker, теми | наповнюється |
-| **Встановлення** | [`install`](install) | `install.sh` / `uninstall.sh` для принтера | тестується |
+| **Встановлення** | [`install`](install) | `install.sh` / `uninstall.sh` для принтера | працює |
 
 ## Встановлення на принтер
 
