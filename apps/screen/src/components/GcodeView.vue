@@ -74,7 +74,7 @@ function project(w, h) {
   const FR = R * 1.05
   x0 = Math.min(x0, -FR); x1 = Math.max(x1, FR); y0 = Math.min(y0, -FR * TILT); y1 = Math.max(y1, FR * TILT)
   // Поля: зверху — під відсоток, знизу — під назву файлу й час (підписи лежать поверх моделі)
-  const padX = w * 0.08, padT = h * 0.16, padB = h * 0.3
+  const padX = w * 0.04, padT = h * 0.05, padB = h * 0.17
   const sc = Math.min((w - 2 * padX) / Math.max(1, x1 - x0), (h - padT - padB) / Math.max(1, y1 - y0))
   const ox = (w - (x1 - x0) * sc) / 2 - x0 * sc, oy = padT + (h - padT - padB - (y1 - y0) * sc) / 2 - y0 * sc
   S = raw
