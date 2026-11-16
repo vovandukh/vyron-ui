@@ -35,7 +35,7 @@ const NETS = [
   ['Guest', 48, ''], ['TP-Link_3F2A', 33, 'WPA2'], ['DIRECT-printer', 21, 'WPA2']
 ]
 const wait = ms => new Promise(r => setTimeout(r, ms))
-let db = { 'vyron_core/info': { version: '0.3.4', started: 0 } }
+let db = { 'vyron_core/info': { version: '0.3.4.1', started: 0 } }
 
 /** Імітація викликів Moonraker для сторінок налаштувань */
 export async function demoCall(method, params, { emitGcode, merge }) {

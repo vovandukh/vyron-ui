@@ -1,8 +1,10 @@
 // Єдина версія екосистеми Vyron — з кореневого package.json. Web, Screen і Core (core/vyron_core/__init__.py)
 // мають однакову версію; її змінюють разом.
-import { version } from '../../../package.json'
+// vyronVersion — те, що бачить користувач, може мати 4 числа для мікрофіксів (0.3.4.1). npm такого не приймає,
+// тож поле version пакетів лишається з трьох чисел.
+import pkg from '../../../package.json'
 
-export const VYRON_VERSION = version
+export const VYRON_VERSION = pkg.vyronVersion || pkg.version
 
 /**
  * Відомості про Vyron Core: ядро під час старту записує їх у власний простір бази Moonraker (vyron_core/info).
