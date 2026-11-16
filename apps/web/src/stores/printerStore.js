@@ -6,7 +6,8 @@ import { discoverTools, subscriptionObjects, STATE_KEYS, toolNum, findChamber, f
 import { tuneScript, tunePatch } from '@vyron/shared/klipper/tune'
 import { detectToolheads, toolheadObjects } from '@vyron/shared/klipper/toolheads'
 import { detectEddy, eddyObjects } from '@vyron/shared/klipper/eddy'
-import { bedShape, bedKey, DEFAULT_BED } from '@vyron/shared/klipper/bed'
+import { bedShape, bedKey, DEFAULT_BED, sanitizeBedOverride, applyBedOverride } from '@vyron/shared/klipper/bed'
+import { dbGet, dbKnown } from '@vyron/shared/moonraker/db'
 import { parseGcode } from '@vyron/shared/gcode/parser'
 import { model, loadModel, indexForPos, segEnd, layerLabel } from '@vyron/shared/gcode/model'
 import {
@@ -152,13 +153,32 @@ export const usePrinterStore = defineStore('printer', () => {
   /** Кінематика й круглий стіл карти — з налаштувань printer.cfg (лише читання) */
   const kinematics = ref('')
   const meshRound = ref(false)
-  /** Робоча область: форма й розміри з Klipper (toolhead axis_minimum/maximum). Об'єкт змінюється лише разом зі столом. */
+  /** Стіл, як його визначив Klipper (toolhead axis_minimum/maximum + kinematics) */
+  const bedAuto = computed(() => bedShape(kinematics.value, st.toolhead) || DEFAULT_BED)
+  /**
+   * Ручне налаштування столу (Налаштування → Стіл), якщо автовизначення не підходить.
+   * Зберігається в базі Moonraker (vyron_ui/bed) — однакове для всіх пристроїв цього принтера.
+   */
+  const bedOverride = ref(sanitizeBedOverride(null))
+  /** Робоча область для 3D-сцени. Об'єкт змінюється лише разом зі столом (щоб не перебудовувати сцену щокадру). */
   let bedCache = DEFAULT_BED
   const bed = computed(() => {
-    const b = bedShape(kinematics.value, st.toolhead) || DEFAULT_BED
+    const b = applyBedOverride(bedAuto.value, bedOverride.value)
     if (bedKey(b) !== bedKey(bedCache)) bedCache = b
     return bedCache
   })
+  const BED_DB = { namespace: 'vyron_ui', key: 'bed' }
+  async function loadBedOverride() {
+    bedOverride.value = sanitizeBedOverride(await dbGet((m, q) => client.call(m, q), BED_DB.namespace, BED_DB.key))
+  }
+  async function setBedOverride(o) {
+    bedOverride.value = sanitizeBedOverride(o)
+    if ((DEMO_BUILD && demoMode.value) || !client.connected) return
+    try {
+      await client.call('server.database.post_item', { ...BED_DB, value: { ...bedOverride.value } })
+      dbKnown(BED_DB.namespace)
+    } catch { /* лишається до перезавантаження сторінки */ }
+  }
   // ---------- залізо: MCU, хост ----------
   /** Усі мікроконтролери з printer.objects.list ('mcu', 'mcu EBBCan', …) */
   const mcuObjects = computed(() => findMcus(objectList.value))
@@ -216,6 +236,7 @@ export const usePrinterStore = defineStore('printer', () => {
     heaterMax.value = {}
     kinematics.value = ''
     meshRound.value = false
+    bedOverride.value = sanitizeBedOverride(null)
     hwSensors.value = []
     hostInfo.value = null
     mcuBadAt.value = {}
@@ -450,6 +471,7 @@ export const usePrinterStore = defineStore('printer', () => {
           .map(n => [n, Number((settings[n] || {}).max_temp)]).filter(([, v]) => v > 0))
         kinematics.value = String((settings.printer || {}).kinematics || '')
         meshRound.value = Number((settings.bed_mesh || {}).mesh_radius) > 0
+        loadBedOverride().catch(() => {})
         toolheads.value = detectToolheads(settings, tools, objectList.value)
         eddies.value = detectEddy(settings, tools, toolheads.value, objectList.value)
         hwSensors.value = findHwSensors(objectList.value, settings)
@@ -868,7 +890,7 @@ export const usePrinterStore = defineStore('printer', () => {
     // getters
     connected, isPrinting, printState, stateLabel, meta, activeToolName, canSwitchTools, toolCount, nozzleTemp, bedTemp, chamberTemp,
     speedFactor, fanSpeed, position, qgl, progressPct, etaSeconds, layerText, nozzleHeater, tune,
-    nozzleTarget, bedTarget, hasBed, hasFan, chamberObj, leveling, heaterMax, quickSet, kinematics, meshRound, bed,
+    nozzleTarget, bedTarget, hasBed, hasFan, chamberObj, leveling, heaterMax, quickSet, kinematics, meshRound, bed, bedAuto, bedOverride, setBedOverride,
     mcuObjects, hwSensors, hostInfo, mcuBadAt, mcuRate, mcuConn,
     // actions
     preview, openPreview, closePreview, printBusy, startPrint, demoSet, demoBed, setDemoBed,

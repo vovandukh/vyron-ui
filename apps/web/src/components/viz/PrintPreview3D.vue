@@ -328,7 +328,7 @@ function stageRound() {
   fx.stage.add(segments(major, lineMat(0xffffff, 0.07)))
   fx.stage.add(segments(circle(R, 0), lineMat(0xffffff, 0.16)))
   const vol = []
-  if (B.kin === 'delta' || B.kin === 'rotary_delta') {
+  if (B.kin !== 'polar') {   // дельта (і круглий стіл, заданий вручну)
     // Дельта: три лінії піднімаються з краю круглого столу (кути веж Klipper) і звужуються конусом
     // до меншого трикутника вгорі
     const at = (deg, r) => { const t = (deg * Math.PI) / 180; return [r * Math.cos(t), -r * Math.sin(t)] }

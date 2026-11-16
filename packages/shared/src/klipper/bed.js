@@ -32,6 +32,38 @@ export function bedShape(kinematics, toolhead) {
   }
 }
 
+// ---------- ручне налаштування (якщо автовизначення не підходить) ----------
+// Зберігається в базі Moonraker (vyron_ui/bed): { mode: 'auto' | 'rect' | 'round', w, d, dia, h } — мм.
+// Порожні розміри беруться з автовизначення. Центр і початок координат лишаються як у Klipper.
+
+export const BED_MODES = ['auto', 'rect', 'round']
+const SIZE = [20, 3000]
+
+export function sanitizeBedOverride(raw) {
+  const o = { mode: 'auto' }
+  if (!raw || typeof raw !== 'object') return o
+  if (BED_MODES.includes(raw.mode)) o.mode = raw.mode
+  for (const k of ['w', 'd', 'dia', 'h']) {
+    const v = Number(raw[k])
+    if (Number.isFinite(v) && v >= SIZE[0] && v <= SIZE[1]) o[k] = Math.round(v)
+  }
+  return o
+}
+
+/** Стіл з урахуванням ручного налаштування o поверх автовизначеного auto. */
+export function applyBedOverride(auto, o) {
+  if (!o || o.mode === 'auto') return auto
+  const h = o.h || auto.h
+  if (o.mode === 'round') {
+    const r = (o.dia || Math.min(auto.w, auto.d)) / 2
+    return { ...auto, round: true, x0: auto.cx - r, x1: auto.cx + r, y0: auto.cy - r, y1: auto.cy + r, w: 2 * r, d: 2 * r, r, h }
+  }
+  const w = o.w || auto.w, d = o.d || auto.d
+  // Прямокутний: початок координат — передній лівий кут; із круглого автостолу — навколо того самого центру
+  const x0 = auto.round ? auto.cx - w / 2 : auto.x0, y0 = auto.round ? auto.cy - d / 2 : auto.y0
+  return { ...auto, round: false, x0, x1: x0 + w, y0, y1: y0 + d, w, d, cx: x0 + w / 2, cy: y0 + d / 2, r: Math.min(w, d) / 2, h }
+}
+
 /** Ключ для порівняння: щоб сцену перебудовувати лише тоді, коли стіл справді змінився. */
 export const bedKey = b => (b ? [b.round ? 'o' : 'r', b.x0, b.x1, b.y0, b.y1, Math.round(b.h)].join(':') : '')
 
