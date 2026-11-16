@@ -28,7 +28,11 @@ const LOGO = logoSvg('var(--brand)', { fx: true })
         <Icon name="back" size="2rem" :stroke="2.6" /><span>{{ t('scr.page.' + prev) }}</span>
       </button>
     </template>
-    <button type="button" class="stop tap" :aria-label="t('estop.label')" @click="emit('stop')">STOP</button>
+    <div class="rt">
+      <!-- Налаштування — на головній, поруч зі STOP (як в iOS); на підсторінках тут лише STOP -->
+      <button v-if="!sub" type="button" class="gear tap" :aria-label="t('scr.page.settings')" @click="p.go('settings')"><Icon name="gear" size="1.9rem" /></button>
+      <button type="button" class="stop tap" :aria-label="t('estop.label')" @click="emit('stop')">STOP</button>
+    </div>
   </header>
 </template>
 
@@ -38,6 +42,8 @@ const LOGO = logoSvg('var(--brand)', { fx: true })
 /* «‹ Назад» — акцентним кольором теми, як системна кнопка iOS */
 .bk{flex:none;display:flex;align-items:center;gap:.1rem;height:3.6rem;margin-left:-.6rem;padding:0 .8rem 0 .2rem;border-radius:var(--r-sm);color:var(--coral);font-size:1.4rem;font-weight:500;max-width:14rem}
 .bk span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stop{margin-left:auto;flex:none;height:3.2rem;padding:0 1.5rem;border-radius:1.6rem;font-size:1.25rem;font-weight:700;letter-spacing:.06em;color:#fff;
+.rt{margin-left:auto;flex:none;display:flex;align-items:center;gap:.6rem}
+.gear{width:3.2rem;height:3.2rem;border-radius:50%;display:grid;place-items:center;background:var(--btn);border:1px solid var(--btn-edge);color:var(--tile-ink)}
+.stop{flex:none;height:3.2rem;padding:0 1.5rem;border-radius:1.6rem;font-size:1.25rem;font-weight:700;letter-spacing:.06em;color:#fff;
   background:#e5342a}
 </style>
