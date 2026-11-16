@@ -108,7 +108,7 @@ const act = s => { tap(); printer.rpc(s) }
             <circle cx="32" cy="32" :r="R" class="trk" />
             <circle cx="32" cy="32" :r="R" class="bar" :stroke-dasharray="C" :stroke-dashoffset="dash" />
           </svg>
-          <b><RollNumber :value="pct" /><small>%</small></b>
+          <b><RollNumber :value="pct" fade /><small>%</small></b>
         </div>
         <div class="info">
           <span class="st"><i></i>{{ tm(printer.stateLabel) }}</span>

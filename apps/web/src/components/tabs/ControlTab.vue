@@ -49,7 +49,7 @@ const job = computed(() => {
       <JogControls v-else />
       <!-- Відсотки й підсумок друку — одна колонка від низу: довший підсумок сам піднімає відсотки -->
       <div class="bl" :class="{ hj: job }">
-        <div class="pct"><RollNumber :value="printer.progressPct" /><small>%</small></div>
+        <div class="pct"><RollNumber :value="printer.progressPct" fade /><small>%</small></div>
         <div v-if="job" class="job">
           <b :title="job.name">{{ job.name }}</b>
           <span v-for="l in job.lines" :key="l">{{ l }}</span>
@@ -68,7 +68,7 @@ const job = computed(() => {
 .bl.hj{bottom:20px}
 .pct{position:relative;display:flex;align-items:baseline;font-size:clamp(70px,min(16vw,calc((50vw - 270px) / 2)),130px);font-weight:200;line-height:1;letter-spacing:-.04em;pointer-events:none;--rn-h:1.04em}
 /* Анодований метал: вертикальний градієнт на кожній цифрі одометра (клітинка = своя «пластина») */
-.pct :deep(.rn-strip>span){background:linear-gradient(180deg,#ffffff 0%,#eef0f3 34%,#b9bec6 72%,#8a9099 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.pct :deep(.rn-strip>span),.pct :deep(.rn-fv){background:linear-gradient(180deg,#ffffff 0%,#eef0f3 34%,#b9bec6 72%,#8a9099 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 /* М'яке тепле світіння позаду (окремий шар, без дорогого filter на великому тексті) */
 .pct::before{content:'';position:absolute;left:-18%;right:-30%;top:-10%;bottom:-25%;z-index:-1;border-radius:50%;
   background:radial-gradient(closest-side,rgba(var(--brand-rgb),.16),rgba(var(--brand-rgb),.05) 60%,transparent)}
