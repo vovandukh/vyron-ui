@@ -19,8 +19,9 @@ import MovePage from './pages/MovePage.vue'
 import HeatPage from './pages/HeatPage.vue'
 import FilesPage from './pages/FilesPage.vue'
 import FilePage from './pages/FilePage.vue'
+import TunePage from './pages/TunePage.vue'
 
-const PAGES = { settings: SettingsPage, wifi: WifiPage, theme: ThemePage, language: LanguagePage, about: AboutPage, system: SystemPage, updates: UpdatesPage, move: MovePage, temp: HeatPage, files: FilesPage, file: FilePage }
+const PAGES = { settings: SettingsPage, wifi: WifiPage, theme: ThemePage, language: LanguagePage, about: AboutPage, system: SystemPage, updates: UpdatesPage, move: MovePage, temp: HeatPage, files: FilesPage, file: FilePage, tune: TunePage }
 
 const p = usePrinter()
 onMounted(() => p.start())
