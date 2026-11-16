@@ -80,3 +80,12 @@ const pct = (k, d) => printer.tune(k, (v.value[k] || 0) + d)
 .inline .seg button{height:40px;min-width:46px}
 .inline .num{min-width:70px}
 </style>
+<style scoped>
+/* Невисокі екрани (1024×600, 800×480): компактніше, без підказки — щоб не налізти на відсотки знизу */
+@media(max-height:700px){
+  .ctl:not(.inline){top:calc(50% - 30px);gap:6px;padding:10px}
+  .ctl:not(.inline) .seg button{height:30px}
+  .ctl:not(.inline) .lbl{font-size:11px}
+  .ctl:not(.inline) .hint{display:none}
+}
+</style>

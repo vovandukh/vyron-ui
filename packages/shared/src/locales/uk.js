@@ -52,6 +52,7 @@ export default {
   'set.fxyShort': 'Швидкість X/Y', 'set.fxyHint': 'мм/хв для кнопок руху', 'set.fzShort': 'Швидкість Z', 'set.fzHint': 'мм/хв для кнопок руху',
   'set.secAbout': 'Про систему', 'set.ui': 'Інтерфейс', 'set.core': 'Ядро', 'set.coreNone': 'не встановлено', 'set.klipper': 'Klipper', 'set.moonraker': 'Moonraker', 'set.host': 'Хост', 'set.os': 'ОС', 'set.addr': 'Адреса',
   'tune.title': 'Під час друку', 'tune.open': 'Налаштувати', 'tune.z': 'Z-зсув', 'tune.speed': 'Швидкість', 'tune.flow': 'Потік', 'tune.fan': 'Обдув', 'tune.reset': 'Скинути зсув Z', 'tune.hint': 'Зсув Z діє одразу — підкручуй, дивлячись на перший шар', 'tune.mm': 'мм', 'common.done': 'Готово',
+  'job.elapsed': 'минуло {t}', 'job.layer': 'шар {l}', 'job.fil': '{m} м філаменту',
   'set.secNotify': 'Сповіщення', 'set.secNotifyHint': 'Як інтерфейс повідомляє про події',
   'set.toasts': 'Спливні повідомлення про помилки', 'set.toastsHint': 'Короткі картки, коли принтер не виконав команду: «Сопло ще не нагріте», «Спершу потрібно знайти нуль осей»…',
   'set.sound': 'Звук подій', 'set.soundHint': 'Коли друк завершився чи обірвався або принтер зупинився через помилку', 'set.soundTest': 'Прослухати',
