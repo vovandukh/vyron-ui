@@ -4,6 +4,7 @@ import { DEFAULT_DESIGN, PRESETS, applyDesign, sanitizeDesign, brandFor, hexToRg
 import { usePrinterStore } from './printerStore'
 import { watchDesign, handleCoreEvent } from '@vyron/shared/live'
 import { dbGet, dbKnown } from '@vyron/shared/moonraker/db'
+import { DEMO_BUILD } from '../config'
 
 const KEY = 'vyron-design'
 /** Moonraker database: спільний дизайн для всіх екранів принтера (ПК, планшет, екран принтера) */
@@ -55,7 +56,7 @@ export const useDesignStore = defineStore('design', () => {
     touch()
   }
 
-  const canSync = () => printer.connected && !printer.demoMode
+  const canSync = () => printer.connected && !(DEMO_BUILD && printer.demoMode)
   async function pushRemote() {
     if (!canSync()) { sync.value = 'local'; return }
     sync.value = 'saving'
@@ -96,7 +97,7 @@ export const useDesignStore = defineStore('design', () => {
 
   // Тема, змінена на іншому пристрої (екран принтера, інший браузер), — підхоплюємо без перезавантаження.
   // Поки триває власний запис (saving), не втручаємось: інакше чужа версія перебила б щойно зроблену зміну.
-  const live = computed(() => printer.connected && !printer.demoMode)
+  const live = computed(() => printer.connected && !(DEMO_BUILD && printer.demoMode))
   let stopLive = null
   watch(live, on => {
     stopLive && stopLive(); stopLive = null

@@ -18,26 +18,20 @@ export default {
 
   'state.printing': 'Друк', 'state.paused': 'Пауза', 'state.standby': 'Очікування', 'state.complete': 'Готово',
   'state.cancelled': 'Скасовано', 'state.error': 'Помилка', 'state.connecting': 'Підключення…', 'state.connected': 'З’єднано',
-  'state.ready': 'Готовий', 'state.klipperError': 'Помилка Klipper', 'state.lost': 'Немає зв’язку', 'state.demo': 'Демо',
+  'state.ready': 'Готовий', 'state.klipperError': 'Помилка Klipper', 'state.lost': 'Немає зв’язку',
 
-  'conn.placeholder': 'адреса принтера', 'conn.aria': 'Адреса принтера', 'conn.connect': 'Підключити', 'conn.demo': 'Демо',
+  'conn.placeholder': 'адреса принтера', 'conn.aria': 'Адреса принтера', 'conn.connect': 'Підключити',
   'conn.connectingTo': 'Підключення до {host}…', 'conn.connectedTo': 'Підключено · {host}',
   'conn.wsError': 'Не вдалося з’єднатися — перевір адресу і чи увімкнений принтер', 'conn.lost': 'Зв’язок з принтером втрачено — підключаємося знову…',
   'conn.addrError': 'Помилка адреси: {msg}',
-  'cc.title': 'Центр керування', 'cc.connection': 'Підключення', 'cc.demo': 'Демо-режим', 'cc.demoHint': 'Імітація друку без принтера',
-  'cc.demoErr': 'Імітація помилок', 'cc.demoErrHint': 'Подивитися, як інтерфейс показує збої Klipper',
-  'demoErr.g.klippy': 'Стан Klipper', 'demoErr.g.gcode': 'Помилки G-code',
-  'demoErr.mcu': 'Втрата MCU', 'demoErr.timer': 'Timer too close', 'demoErr.heater': 'Нагрівач', 'demoErr.adc': 'Термістор',
-  'demoErr.estop': 'M112', 'demoErr.config': 'Помилка конфігу', 'demoErr.startup': 'Запуск', 'demoErr.offline': 'Служба зупинена',
-  'demoErr.home': 'Не захомлено', 'demoErr.range': 'За межами', 'demoErr.cold': 'Холодне сопло', 'demoErr.probe': 'Проба',
-  'demoErr.qgl': 'QGL', 'demoErr.macro': 'Макрос', 'demoErr.unknown': 'Невідома команда',
+  'cc.title': 'Центр керування',
   'cc.connected': 'Підключено', 'cc.notConnected': 'Не підключено',
   'cc.address': 'Адреса',
   'cc.open': 'Центр керування · підключення',
-  'island.demo': 'Демо-режим активний', 'island.connected': 'Підключено · {host}', 'island.lost': 'Зв’язок втрачено',
+  'island.connected': 'Підключено · {host}', 'island.lost': 'Зв’язок втрачено',
   'island.ready': 'Klipper готовий', 'island.klipperError': 'Помилка Klipper', 'island.qgl': 'Вирівнювання QGL завершено', 'island.ztilt': 'Вирівнювання Z-Tilt завершено',
   'view.reset': 'Скинути ракурс', 'nav.home': 'На головну — Керування',
-  'island.detail': '{state} · {host}', 'island.demoHost': 'локальна імітація', 'island.noHost': 'хост не задано', 'island.peekTitle': 'Стан і адреса принтера',
+  'island.detail': '{state} · {host}', 'island.noHost': 'хост не задано', 'island.peekTitle': 'Стан і адреса принтера',
   'island.printStart': 'Друк розпочато', 'island.printDone': 'Друк завершено', 'island.paused': 'Друк на паузі',
   'island.printError': 'Помилка друку', 'island.cancelled': 'Друк скасовано',
   // ---------- налаштування → дизайн (DesignPanel, services/theme.js) ----------
@@ -53,7 +47,6 @@ export default {
   'set.secAbout': 'Про систему', 'set.ui': 'Інтерфейс', 'set.core': 'Ядро', 'set.coreNone': 'не встановлено', 'set.klipper': 'Klipper', 'set.moonraker': 'Moonraker', 'set.host': 'Хост', 'set.os': 'ОС', 'set.addr': 'Адреса',
   'tune.title': 'Під час друку', 'tune.open': 'Налаштувати', 'tune.z': 'Z-зсув', 'tune.speed': 'Швидкість', 'tune.flow': 'Потік', 'tune.fan': 'Обдув', 'tune.reset': 'Скинути зсув Z', 'tune.hint': 'Зсув Z діє одразу — підкручуй, дивлячись на перший шар', 'tune.mm': 'мм', 'common.done': 'Готово',
   'scr.needHome': 'Стрілки ввімкнуться після Home — принтер має знати, де нуль осей', 'heat.material': 'Матеріал', 'scr.print': 'Друкувати', 'scr.printQ': 'Почати друк цього файлу?', 'scr.est': 'Час друку', 'scr.fil': 'Філамент', 'scr.layerH': 'Шар', 'scr.filesBusy': 'Іде друк — новий файл можна запустити після нього', 'scr.today': 'сьогодні', 'scr.deleteQ': 'Видалити «{name}» з принтера? Повернути файл не вийде.', 'heat.off': 'Вимкнути нагрів', 'heat.now': 'зараз', 'heat.hint': 'Пресет задає сопло й стіл разом. Klipper не дасть перевищити max_temp із printer.cfg',
-  'conn.help.t': 'Браузер не пустив до принтера з цієї сторінки', 'conn.help.1': 'Дозволь для цього сайту «Небезпечний вміст»: значок ліворуч від адреси → Налаштування сайту → Небезпечний вміст → Дозволити. Онови сторінку', 'conn.help.2': 'У moonraker.conf у розділі [authorization] додай cors_domains: {origin} і перезапусти Moonraker', 'conn.help.3': 'Якщо браузер спитає дозвіл на доступ до пристроїв у локальній мережі — дозволь', 'conn.help.alt': 'Найпростіше — відкрити Vyron прямо з принтера: http://IP-принтера/', 'cc.heads': 'Голів у демо', 'cc.demoState': 'Стан друку', 'cc.ds.printing': 'Друк', 'cc.ds.paused': 'Пауза', 'cc.ds.complete': 'Готово', 'cc.ds.idle': 'Без друку', 'demo.screenChip': 'Екран принтера', 'cc.screens': 'Екрани принтера', 'cc.screensHint': 'Vyron Screen на сенсорному дисплеї', 'cc.ready': 'готово', 'cc.bed': 'Стіл', 'cc.bed.rect': 'Прямокутний', 'cc.bed.round': 'Круглий (дельта)', 'cc.feedback': 'Відгук і побажання', 'cc.screensMore': 'Інші дисплеї (800×480, 1024×600) — згодом',
   'job.elapsed': 'минуло {t}', 'job.layer': 'шар {l}', 'job.fil': '{m} м філаменту',
   'set.secNotify': 'Сповіщення', 'set.secNotifyHint': 'Як інтерфейс повідомляє про події',
   'set.toasts': 'Спливні повідомлення про помилки', 'set.toastsHint': 'Короткі картки, коли принтер не виконав команду: «Сопло ще не нагріте», «Спершу потрібно знайти нуль осей»…',
@@ -162,7 +155,7 @@ export default {
   'kerr.shutdownNow.h': 'Натисни «Перезапустити принтер»',
 
   'meta.notConnected': 'Не підключено', 'meta.noFile': 'Немає активного файлу',
-  'meta.gcodeError': 'Не вдалося завантажити G-code: {msg}', 'meta.demo': 'Демо · імітація друку',
+  'meta.gcodeError': 'Не вдалося завантажити G-code: {msg}',
 
   'print.controls': 'Керування друком', 'print.pause': 'Пауза', 'print.resume': 'Продовжити', 'print.cancel': 'Скасувати',
   'print.pausing': 'Пауза…', 'print.resuming': 'Продовження…', 'print.cancelling': 'Скасування…',
@@ -179,7 +172,7 @@ export default {
   'jog.home': 'Home усіх осей', 'jog.motorsOff': 'Вимкнути мотори (M84)', 'jog.motorsOffAria': 'Вимкнути мотори',
   'jog.badDistance': 'Введи коректну відстань більше 0', 'jog.stepAll': 'Крок переміщення', 'mob.data': 'Дані', 'mob.head': 'Голова', 'mob.heads': 'Голови', 'jog.homeAll': 'Home', 'jog.motorsShort': 'Мотори',
 
-  'msg.demoNoExec': 'Демо: команда не виконується', 'msg.notConnected': 'Немає підключення',
+  'msg.notConnected': 'Немає підключення',
   'msg.notConnectedPrinter': 'Немає підключення до принтера', 'msg.notWhilePrinting': 'Не під час друку',
   'msg.invalidWs': 'Принтер надіслав незрозумілу відповідь',
 
@@ -188,8 +181,6 @@ export default {
   'tools.found': 'Знайдено головок: {n}',
   'tools.none': 'Головки ще не знайдено',
 
-  'tools.demoMode': 'Демо-режим · команди до принтера не надсилаються',
-  'tools.demoSelected': 'Демо · вибрано T{i}',
   'tools.sent': 'Надіслано вибір T{i}', 'tools.board': 'Плата голови ·',
   'tools.aria': 'Температура T{i}',
   'tools.activate': 'Активувати', 'tools.badTemp': 'Вкажи температуру 0–320 °C',
@@ -224,7 +215,7 @@ export default {
   'hw.mhz': 'МГц', 'hw.retransmit': 'Retransmits', 'hw.invalid': 'Invalid',
   'hw.bus.ok': 'Зв’язок стабільний', 'hw.bus.warn': 'Частина даних губиться — перевір кабель і роз’єми шини', 'hw.bus.off': 'Плата не відповідає',
   'eng.klipper': 'Klipper', 'eng.host': 'Хост', 'eng.state': 'Стан', 'eng.cpu': 'Процесор', 'eng.cpuTemp': 'Температура CPU',
-  'eng.mem': 'Пам’ять', 'eng.uptime': 'Аптайм', 'eng.memVal': '{p}% з {gb} ГБ', 'eng.demoUptime': '3 доби',
+  'eng.mem': 'Пам’ять', 'eng.uptime': 'Аптайм', 'eng.memVal': '{p}% з {gb} ГБ',
   'eng.confirmRestart': 'Перечитати конфігурацію й перезапустити Klipper?', 'eng.confirmFw': 'Перезапустити принтер (FIRMWARE_RESTART)? Плати керування буде скинуто, поточний друк перерветься.',
 
   'cfg.search': 'Пошук файлу', 'cfg.new': '+ Нова', 'cfg.unsaved': '● не збережено', 'cfg.find': 'Знайти',
@@ -257,7 +248,6 @@ export default {
   'net.sent': 'Команду надіслано. Якщо підключення вдасться, ця сторінка втратить зв’язок — відкрий принтер за новою IP-адресою.',
   'net.setupSummary': 'Одноразове налаштування для підключення',
   'net.setupNote': 'Для цього на принтері потрібне розширення gcode_shell_command (встановлюється через KIAUH). Приклад нижче не перевірено саме на твоєму принтері; якщо nmcli попросить права адміністратора, доведеться налаштувати sudo або polkit.',
-  'net.demoIface': 'wlan0 · 192.168.1.50 (демо)',
 
   'set.lang': 'Мова', 'set.cEstop': 'Запитувати підтвердження аварійної зупинки',
   'set.cSys': 'Запитувати підтвердження системних дій (перезапуск, вимкнення)',

@@ -96,10 +96,10 @@ export const usePrinterStore = defineStore('printer', () => {
   const connected = computed(() => ['open', 'ready', 'shutdown'].includes(link.value))
   const printState = computed(() => (st.print_stats || {}).state)
   /** Чи йде реальний друк (у демо — ні, щоб керування лишалось доступним). */
-  const isPrinting = computed(() => !demoMode.value && printState.value === 'printing')
+  const isPrinting = computed(() => !(DEMO_BUILD && demoMode.value) && printState.value === 'printing')
 
   const stateLabel = computed(() => {
-    if (demoMode.value) return { key: 'state.demo' }
+    if ((DEMO_BUILD && demoMode.value)) return { key: 'state.demo' }
     switch (link.value) {
       case 'idle': return { key: 'state.standby' }
       case 'connecting': return { key: 'state.connecting' }
@@ -115,7 +115,7 @@ export const usePrinterStore = defineStore('printer', () => {
   })
 
   const meta = computed(() => {
-    if (demoMode.value) return { key: 'meta.demo' }
+    if ((DEMO_BUILD && demoMode.value)) return { key: 'meta.demo' }
     if (metaOverride.value) return metaOverride.value
     const fn = (st.print_stats || {}).filename
     if (gcodeError.value && fn === gcodeError.value.name) return { key: 'meta.gcodeError', params: { msg: gcodeError.value.msg } }
@@ -250,7 +250,7 @@ export const usePrinterStore = defineStore('printer', () => {
    * з порожньою сценою. Хост сторінки тут не беремо: у демо-збірці на GitHub Pages це не принтер.
    */
   function exitDemo() {
-    if (!demoMode.value) return
+    if (!(DEMO_BUILD && demoMode.value)) return
     stopDemo()
     demoMode.value = false
     clearState()
@@ -330,18 +330,18 @@ export const usePrinterStore = defineStore('printer', () => {
       // Причину зупинки показує картка Klipper — той самий текст у тостах зайвий
       if (info) alerts.value = alerts.value.filter(a => a.info.head !== info.head)
     }
-    if (!demoMode.value && ['open', 'ready', 'shutdown'].includes(link.value)) link.value = state === 'ready' ? 'ready' : bad ? 'shutdown' : 'open'
+    if (!(DEMO_BUILD && demoMode.value) && ['open', 'ready', 'shutdown'].includes(link.value)) link.value = state === 'ready' ? 'ready' : bad ? 'shutdown' : 'open'
     if (klippyBusy.value) {
       if (state === 'startup' || state === 'disconnected') busyTransit = true
       else if (busyTransit) finishBusy()
     }
     clearTimeout(klippyTimer)
-    if (!demoMode.value && (state === 'startup' || state === 'disconnected')) klippyTimer = setTimeout(refreshKlippy, KLIPPY_POLL)
+    if (!(DEMO_BUILD && demoMode.value) && (state === 'startup' || state === 'disconnected')) klippyTimer = setTimeout(refreshKlippy, KLIPPY_POLL)
   }
 
   /** Запит стану: server.info (працює й без Klipper) → printer.info з текстом state_message. */
   async function refreshKlippy() {
-    if (demoMode.value || !client.connected) return
+    if ((DEMO_BUILD && demoMode.value) || !client.connected) return
     clearTimeout(klippyTimer)
     try {
       const s = await client.call('server.info')
@@ -421,14 +421,14 @@ export const usePrinterStore = defineStore('printer', () => {
     unknown: '!! Unknown command:"G29"'
   }
   function demoError(kind) {
-    if (!DEMO_BUILD || !demoMode.value) return false
+    if (!DEMO_BUILD || !(DEMO_BUILD && demoMode.value)) return false
     if (DEMO_GCODE[kind]) { log(DEMO_GCODE[kind]); pushAlert(DEMO_GCODE[kind], 'gcode'); return true }
     if (kind === 'ready') { setKlippy('ready'); return true }
     const e = DEMO_KLIPPY[kind]
     if (!e) return false
     setKlippy(e[0], e[1])
     // Демо-запуск сам доходить до «готовий» (у справжньому Klipper так само, без дій користувача)
-    if (kind === 'startup') setTimeout(() => { if (demoMode.value && klippy.value.state === 'startup') setKlippy('ready') }, 6000)
+    if (kind === 'startup') setTimeout(() => { if ((DEMO_BUILD && demoMode.value) && klippy.value.state === 'startup') setKlippy('ready') }, 6000)
     return true
   }
 
@@ -502,8 +502,8 @@ export const usePrinterStore = defineStore('printer', () => {
     // Друк обірвався з помилкою: print_stats.message — причина (дублікат рядка «!!» відсіє pushAlert)
     const ps = st.print_stats || {}
     if (ps.state === 'error' && prevPrint && prevPrint !== 'error' && ps.message) pushAlert(ps.message, 'print')
-    if (patch.webhooks && !demoMode.value) setKlippy(st.webhooks.state, st.webhooks.state_message)
-    if (demoMode.value) return
+    if (patch.webhooks && !(DEMO_BUILD && demoMode.value)) setKlippy(st.webhooks.state, st.webhooks.state_message)
+    if ((DEMO_BUILD && demoMode.value)) return
     metaOverride.value = null
     maybeLoadGcode()
     const pos = (st.virtual_sdcard || {}).file_position
@@ -550,7 +550,7 @@ export const usePrinterStore = defineStore('printer', () => {
   }
   function setDemoBed(kind) {
     demoBed.value = kind === 'round' ? 'round' : 'rect'
-    if (demoMode.value) applyDemoBed()
+    if ((DEMO_BUILD && demoMode.value)) applyDemoBed()
   }
 
   function startDemo(n) {
@@ -634,7 +634,7 @@ export const usePrinterStore = defineStore('printer', () => {
     v = Math.round(Number(v))
     if (!Number.isFinite(v) || v < 0) return false
     const tool = activeToolName.value
-    if (demoMode.value) {
+    if ((DEMO_BUILD && demoMode.value)) {
       if (kind === 'nozzle' && tool) demoHeat.targets[tool] = v
       else if (kind === 'bed') demoHeat.targets.heater_bed = v
       else if (kind === 'speed') mergeStatus({ gcode_move: { speed_factor: v / 100 } })
@@ -655,7 +655,7 @@ export const usePrinterStore = defineStore('printer', () => {
    * kind: 'z' (v — приріст, мм) | 'zreset' | 'speed' | 'flow' | 'fan' (v — нове значення, %).
    */
   function tune(kind, v) {
-    if (demoMode.value) { mergeStatus(tunePatch(st, kind, v)); return true }
+    if ((DEMO_BUILD && demoMode.value)) { mergeStatus(tunePatch(st, kind, v)); return true }
     const script = tuneScript(kind, v)
     return script ? rpc(script) : false
   }
@@ -665,7 +665,7 @@ export const usePrinterStore = defineStore('printer', () => {
    * Щоб відвідувач побачив і «друк завершено», і очікування, а не лише нескінченний друк.
    */
   function demoSet(state) {
-    if (!demoMode.value) return
+    if (!(DEMO_BUILD && demoMode.value)) return
     if (state === 'idle') {
       Object.assign(demoJob, { file: null, state: 'standby', k: 0, pos: null, progress: 0 })
       applyModel({ P: new Float32Array(0), F: [], T: null })
@@ -730,12 +730,12 @@ export const usePrinterStore = defineStore('printer', () => {
       const s = savedPrint
       applyModel(s)
       const pos = (st.virtual_sdcard || {}).file_position
-      done.value = !demoMode.value && pos != null ? indexForPos(pos) : s.done
+      done.value = !(DEMO_BUILD && demoMode.value) && pos != null ? indexForPos(pos) : s.done
     } else if (model.P) {
       applyModel({ P: new Float32Array(0), F: [] })
     }
     savedPrint = null
-    if (!demoMode.value) maybeLoadGcode()
+    if (!(DEMO_BUILD && demoMode.value)) maybeLoadGcode()
   }
 
   /**
@@ -751,8 +751,8 @@ export const usePrinterStore = defineStore('printer', () => {
 
   /** G-code від кнопок керування. Повертає false і пише причину в ctlMsg, якщо команда не пішла. */
   function rpc(script) {
-    if (demoMode.value || !client.connected) {
-      ctlMsg.value = { key: demoMode.value ? 'msg.demoNoExec' : 'msg.notConnected' }
+    if ((DEMO_BUILD && demoMode.value) || !client.connected) {
+      ctlMsg.value = { key: (DEMO_BUILD && demoMode.value) ? 'msg.demoNoExec' : 'msg.notConnected' }
       return false
     }
     ctlMsg.value = null
@@ -770,10 +770,10 @@ export const usePrinterStore = defineStore('printer', () => {
     if (!cmd) return
     cmdHistory.value.push(cmd)
     log('> ' + cmd, 'c')
-    const dm = DEMO_BUILD && demoMode.value && /^DEMO_ERRORs+(w+)$/i.exec(cmd)
+    const dm = DEMO_BUILD && demoMode.value && /^DEMO_ERROR\s+(\w+)$/i.exec(cmd)
     if (dm && demoError(dm[1].toLowerCase())) return
-    if (demoMode.value || !client.connected) {
-      log({ key: demoMode.value ? 'msg.demoNoExec' : 'msg.notConnectedPrinter' }, 'e')
+    if ((DEMO_BUILD && demoMode.value) || !client.connected) {
+      log({ key: (DEMO_BUILD && demoMode.value) ? 'msg.demoNoExec' : 'msg.notConnectedPrinter' }, 'e')
       return
     }
     client.fire('printer.gcode.script', { script: cmd })
@@ -789,7 +789,7 @@ export const usePrinterStore = defineStore('printer', () => {
     const name = toolObjects.value[i]
     if (!name || !canSwitchTools.value) return
     const n = toolNum(name)
-    if (demoMode.value) {
+    if ((DEMO_BUILD && demoMode.value)) {
       activeTool.value = i
       toolStatus.value = { key: 'tools.demoSelected', params: { i: n } }
       return
@@ -850,7 +850,7 @@ export const usePrinterStore = defineStore('printer', () => {
 
   async function printAction(kind) {
     if (!['pause', 'resume', 'cancel'].includes(kind)) return
-    if (demoMode.value) {
+    if ((DEMO_BUILD && demoMode.value)) {
       if (kind === 'pause' && demoJob.state === 'printing') demoJob.state = 'paused'
       else if (kind === 'resume' && demoJob.state === 'paused') demoJob.state = 'printing'
       else if (kind === 'cancel') demoJob.state = 'cancelled'

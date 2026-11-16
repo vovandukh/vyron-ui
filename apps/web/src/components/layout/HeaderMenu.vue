@@ -1,14 +1,18 @@
 <script setup>
 // Центр керування (у дусі macOS Control Center): підключення до принтера, демо-режим і меню системи.
 // Відкривається лише кнопкою «…» — стан у ui.cc.
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, defineAsyncComponent } from 'vue'
 import { usePrinterStore } from '../../stores/printerStore'
 import { useUiStore } from '../../stores/uiStore'
 import { useConfirm } from '../../composables/useConfirm'
 import { useI18n } from '../../composables/useI18n'
-import { normalizeHost, savedHost, resolveHost, mixedContentRisk } from '@vyron/shared/moonraker/client'
-import { DEMO_MAX_TOOLS } from '../../services/demo'
+import { resolveHost } from '@vyron/shared/moonraker/client'
 import { DEMO_BUILD } from '../../config'
+
+// Демо-частини (ручне підключення, перемикач і налаштування демо, екрани принтера) — окремі компоненти,
+// які підключаються лише в демо-збірці: у збірці для принтера цього коду немає зовсім.
+const DemoTile = DEMO_BUILD ? defineAsyncComponent(() => import('./DemoTile.vue')) : null
+const DemoLinks = DEMO_BUILD ? defineAsyncComponent(() => import('./DemoLinks.vue')) : null
 
 const printer = usePrinterStore()
 const ui = useUiStore()
@@ -25,51 +29,11 @@ const onKey = e => {
 onMounted(() => { document.addEventListener('click', onDoc); document.addEventListener('keydown', onKey) })
 onBeforeUnmount(() => { document.removeEventListener('click', onDoc); document.removeEventListener('keydown', onKey) })
 
-// ---------- підключення ----------
-const host = ref(printer.host || savedHost() || '')
-watch(() => printer.host, h => { if (h) host.value = h })
-
-// Демо на https (GitHub Pages): після невдалої спроби підключитись до принтера в мережі — підказка, що дозволити
-const tried = ref(false)
-const origin = location.origin
-const showHelp = computed(() => DEMO_BUILD && tried.value && !printer.demoMode && mixedContentRisk(normalizeHost(host.value)) &&
-  !['open', 'ready', 'shutdown', 'connecting'].includes(printer.link))
-// Кількість голів у демо: 1–6 (сегменти), для перевірки інтерфейсу з різними принтерами
-// Екрани принтера (Vyron Screen): готові моделі зі сторінкою-пристроєм у демо (у dev — сервер екрана на :5200)
-const SCREENS = [{ id: 'tft35', name: 'BTT TFT35 SPI', spec: '3.5″ · 480×320', href: import.meta.env.DEV ? 'http://localhost:5200/?demo' : './screens/tft35.html' }]
-const scrOpen = ref(false)
-const DEMO_STATES = ['printing', 'paused', 'complete', 'idle']
-const demoStateOf = () => { const s = printer.printState; return s === 'standby' || !s ? 'idle' : s }
-const HEADS = Array.from({ length: Math.min(6, DEMO_MAX_TOOLS) }, (_, i) => i + 1)
-
-function connect() {
-  const h = normalizeHost(host.value)
-  if (!h) return
-  tried.value = true
-  host.value = h
-  printer.connect(h, { remember: true })
-}
 /** Адреса, до якої підключено (або буде підключено) — для показу на принтері */
 const shownHost = computed(() => printer.host || resolveHost())
 /** Заголовок плитки: на принтері — сам стан з'єднання («Підключено»), у демо-збірці — «Підключення» */
 const LINK_TITLE = { open: 'cc.connected', ready: 'cc.connected', shutdown: 'cc.connected', connecting: 'state.connecting', lost: 'state.lost' }
 const linkTitle = computed(() => (DEMO_BUILD ? 'cc.connection' : LINK_TITLE[printer.link] || 'cc.notConnected'))
-const toggleDemo = () => (printer.demoMode ? printer.exitDemo() : printer.startDemo())
-
-// ---------- демо: імітація помилок Klipper (лише в демо-збірці та в демо-режимі) ----------
-// Стан Klipper — картка з причиною й перезапуском; G-code — тости. Види — як у printer.demoError().
-const DEMO_ERR = [
-  { g: 'klippy', items: ['mcu', 'timer', 'heater', 'adc', 'estop', 'config', 'startup', 'offline'] },
-  { g: 'gcode', items: ['home', 'range', 'cold', 'probe', 'qgl', 'macro', 'unknown'] }
-]
-const errOpen = ref(false)
-function demoErr(kind, group) {
-  ui.closeCc()
-  // Сховану картку повертає лише нова помилка стану Klipper; G-code помилка — тільки тост (як на справжньому принтері)
-  if (group === 'klippy') ui.klippyHidden = false
-  printer.demoError(kind)
-}
-
 // ---------- меню ----------
 function nav(v) { ui.go(v) }
 
@@ -109,85 +73,16 @@ function onEnter(el) {
             <b>{{ t(linkTitle) }}</b>
             <span class="st">{{ tm(printer.stateLabel) }}</span>
           </div>
-          <!-- На принтері інтерфейс бере адресу зі сторінки сам — лише показуємо її; ручне підключення — тільки в демо-збірці -->
-          <form v-if="DEMO_BUILD" class="host" @submit.prevent="connect">
-            <input v-model="host" :placeholder="t('conn.placeholder')" :aria-label="t('conn.aria')"
-                   autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="url">
-            <button type="submit" class="pri" :disabled="printer.link === 'connecting'">{{ t('conn.connect') }}</button>
-          </form>
-          <div v-if="showHelp" class="help" role="note">
-            <b>{{ t('conn.help.t') }}</b>
-            <ol><li>{{ t('conn.help.1') }}</li><li>{{ t('conn.help.2', { origin }) }}</li><li>{{ t('conn.help.3') }}</li></ol>
-            <small>{{ t('conn.help.alt') }}</small>
-          </div>
-          <div v-if="!DEMO_BUILD" class="hostRo">
+          <!-- На принтері інтерфейс бере адресу зі сторінки сам — лише показуємо її; ручне підключення і демо — у демо-збірці -->
+          <component :is="DemoTile" v-if="DemoTile" />
+          <div v-else class="hostRo">
             <small>{{ t('cc.address') }}</small>
             <b :title="shownHost">{{ shownHost || t('island.noHost') }}</b>
           </div>
-          <!-- Перемикач демо — лише в демо-збірці (GitHub Pages); у збірці для принтера демо немає -->
-          <button v-if="DEMO_BUILD" type="button" class="tgl" role="switch" :aria-checked="String(printer.demoMode)" @click="toggleDemo">
-            <span class="tgl-tx"><b>{{ t('cc.demo') }}</b><small>{{ t('cc.demoHint') }}</small></span>
-            <span class="sw" :class="{ on: printer.demoMode }" aria-hidden="true"><i></i></span>
-          </button>
-          <!-- Імітація помилок: розкривається, щоб не роздувати центр керування -->
-          <template v-if="DEMO_BUILD && printer.demoMode">
-            <div class="heads">
-              <small>{{ t('cc.heads') }}</small>
-              <div class="hseg" role="radiogroup" :aria-label="t('cc.heads')">
-                <button v-for="n in HEADS" :key="n" type="button" role="radio" :aria-checked="String(printer.toolCount === n)" :class="{ on: printer.toolCount === n }" @click="printer.startDemo(n)">{{ n }}</button>
-              </div>
-            </div>
-            <!-- Форма столу: прямокутний або круглий (дельта) -->
-            <div class="heads">
-              <small>{{ t('cc.bed') }}</small>
-              <div class="hseg" role="radiogroup" :aria-label="t('cc.bed')">
-                <button v-for="b in ['rect', 'round']" :key="b" type="button" role="radio" :aria-checked="String(printer.demoBed === b)" :class="{ on: printer.demoBed === b }" @click="printer.setDemoBed(b)">{{ t('cc.bed.' + b) }}</button>
-              </div>
-            </div>
-            <!-- Стан демо-друку: побачити і «готово», і очікування, а не лише нескінченний друк -->
-            <div class="heads">
-              <small>{{ t('cc.demoState') }}</small>
-              <div class="hseg" role="radiogroup" :aria-label="t('cc.demoState')">
-                <button v-for="s in DEMO_STATES" :key="s" type="button" role="radio" :aria-checked="String(demoStateOf() === s)" :class="{ on: demoStateOf() === s }" @click="printer.demoSet(s)">{{ t('cc.ds.' + s) }}</button>
-              </div>
-            </div>
-            <button type="button" class="tgl derr-hd" :aria-expanded="String(errOpen)" @click="errOpen = !errOpen">
-              <span class="tgl-tx"><b>{{ t('cc.demoErr') }}</b><small>{{ t('cc.demoErrHint') }}</small></span>
-              <span class="chev" :class="{ on: errOpen }" aria-hidden="true"></span>
-            </button>
-            <Transition name="derr">
-              <div v-if="errOpen" class="derr">
-                <div v-for="grp in DEMO_ERR" :key="grp.g" class="dg">
-                  <small>{{ t('demoErr.g.' + grp.g) }}</small>
-                  <div class="chips">
-                    <button v-for="k in grp.items" :key="k" type="button" :class="'c-' + grp.g" @click="demoErr(k, grp.g)">{{ t('demoErr.' + k) }}</button>
-                  </div>
-                </div>
-              </div>
-            </Transition>
-          </template>
         </section>
 
         <div class="list" role="menu">
-          <!-- Демо: екрани принтера — розгортається список готових дисплеїв із посиланням на сторінку-пристрій -->
-          <template v-if="DEMO_BUILD">
-            <button role="menuitem" class="scr-hd" :aria-expanded="String(scrOpen)" @click="scrOpen = !scrOpen">
-              <span>{{ t('cc.screens') }}<small>{{ t('cc.screensHint') }}</small></span>
-              <span class="chev" :class="{ on: scrOpen }" aria-hidden="true"></span>
-            </button>
-            <Transition name="derr">
-              <div v-if="scrOpen" class="scrs">
-                <a v-for="s in SCREENS" :key="s.id" class="scr" :href="s.href" target="_blank" rel="noopener">
-                  <i class="scr-ic" aria-hidden="true"></i>
-                  <span class="scr-tx"><b>{{ s.name }}</b><small>{{ s.spec }} · <em>{{ t('cc.ready') }}</em></small></span>
-                  <span class="scr-go" aria-hidden="true">↗</span>
-                </a>
-                <small class="scr-more">{{ t('cc.screensMore') }}</small>
-              </div>
-            </Transition>
-            <a role="menuitem" class="fb" href="https://github.com/vovandukh/vyron/issues" target="_blank" rel="noopener">{{ t('cc.feedback') }} ↗</a>
-            <hr>
-          </template>
+          <component :is="DemoLinks" v-if="DemoLinks" />
           <button role="menuitem" @click="nav('set')">{{ t('menu.settings') }}</button>
           <button role="menuitem" @click="nav('upd')">{{ t('menu.updates') }}</button>
           <button role="menuitem" @click="nav('net')">{{ t('menu.net') }}</button>
@@ -220,76 +115,10 @@ function onEnter(el) {
 .dot.l-lost,.dot.l-shutdown{background:var(--red);box-shadow:0 0 8px rgba(240,58,46,.6)}
 @keyframes blink{50%{opacity:.3}}
 
-.host{display:flex;gap:6px}
-.scr-hd{display:flex!important;align-items:center;justify-content:space-between;gap:10px}
-.scr-hd > span:first-child{display:grid;gap:1px}
-.scr-hd small{font-size:11px;color:var(--dim);font-weight:400}
-.scrs{display:grid;gap:6px;padding:4px 6px 8px}
-.scr{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);color:var(--ink);text-decoration:none;transition:background-color var(--t-fast) var(--ease-out)}
-.scr:hover{background:rgba(255,255,255,.1)}
-.scr-ic{flex:none;width:34px;height:23px;border-radius:4px;border:1.5px solid rgba(255,255,255,.35);background:linear-gradient(135deg,rgba(var(--brand-rgb),.35),rgba(var(--accent-rgb),.12));box-shadow:inset 0 0 0 2px #0e0e10}
-.scr-tx{flex:1;min-width:0;display:grid;gap:1px}
-.scr-tx b{font-size:13px;font-weight:600}
-.scr-tx small{font-size:11px;color:var(--dim)}
-.scr-tx em{font-style:normal;color:#30d158}
-.scr-go{color:var(--dim);font-size:15px}
-.scr-more{font-size:11px;color:var(--dim);padding:0 4px}
-.help{display:grid;gap:6px;padding:10px 12px;border-radius:var(--r);background:rgba(255,159,10,.1);border:1px solid rgba(255,159,10,.25);font-size:12px;line-height:1.45;color:#ffd9a0}
-.help b{color:#ffcf85;font-size:12.5px}
-.help ol{margin:0;padding-left:18px;display:grid;gap:4px}
-.help small{color:var(--dim);font-size:11.5px}
-.heads{display:grid;gap:6px}
-.heads small{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
-.hseg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;padding:2px;border-radius:9px;background:rgba(118,118,128,.24)}
-.hseg button{border:0;background:none;color:var(--ink);font:inherit;font-size:12.5px;font-weight:600;padding:6px 0;border-radius:7px;cursor:pointer}
-.hseg button.on{background:rgba(255,255,255,.16);box-shadow:0 1px 3px rgba(0,0,0,.35)}
 /* Адреса принтера лише для читання (збірка для принтера) */
 .hostRo{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:9px 11px;border-radius:var(--r);background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.06)}
 .hostRo small{color:var(--dim);font-size:11px;white-space:nowrap}
 .hostRo b{font:500 13px/1.2 var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.host input{flex:1;width:0;min-width:0;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.08);color:var(--ink);font:inherit;font-size:13px;padding:9px 11px;border-radius:var(--r);
-  transition:border-color var(--t-fast) var(--ease-out),box-shadow var(--t-fast) var(--ease-out)}
-.host input:focus{outline:none;border-color:rgba(var(--accent-rgb),.7);box-shadow:0 0 0 3px rgba(var(--accent-rgb),.18)}
-.pri{flex:none;border:0;border-radius:var(--r);padding:0 14px;font:inherit;font-size:13px;font-weight:500;color:#fff;cursor:pointer;
-  background:linear-gradient(180deg,var(--btn-hi),var(--btn-lo));box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 4px 14px -6px rgba(var(--brand-rgb),.8);
-  transition:transform var(--t-spring) var(--spring),filter var(--t-fast) var(--ease-out)}
-.pri:hover:not(:disabled){filter:brightness(1.08)}
-.pri:active:not(:disabled){transform:scale(.95)}
-.pri:disabled{opacity:.5;cursor:wait}
-
-/* Перемикач у стилі iOS: увесь рядок — одна кнопка role=switch */
-.tgl{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;background:none;border:0;padding:2px 0;color:inherit;font:inherit;text-align:left;cursor:pointer;border-radius:10px}
-.tgl-tx{display:grid;gap:2px}
-.tgl-tx b{font-weight:500;font-size:13px}
-.tgl-tx small{color:var(--dim);font-size:11px}
-.sw{flex:none;position:relative;width:44px;height:26px;border-radius:13px;background:rgba(255,255,255,.14);transition:background-color var(--t-mid) var(--ease-out)}
-.sw i{position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.35);transition:transform var(--t-spring) var(--spring),width var(--t-fast) var(--ease-out)}
-.sw.on{background:#34c759}
-.sw.on i{transform:translateX(18px)}
-.tgl:active .sw i{width:26px}
-.tgl:active .sw.on i{transform:translateX(14px)}
-
-/* Імітація помилок (демо): шеврон розкриття і «чипи» видів помилок */
-.derr-hd{padding-top:10px;border-top:1px solid rgba(255,255,255,.06);border-radius:0}
-.chev{flex:none;width:8px;height:8px;margin-right:8px;border-right:1.6px solid var(--dim);border-bottom:1.6px solid var(--dim);transform:rotate(45deg);
-  transition:transform var(--t-spring) var(--spring),border-color var(--t-fast) var(--ease-out)}
-.chev.on{transform:rotate(-135deg);border-color:var(--coral)}
-.derr{display:grid;gap:10px}
-.dg{display:grid;gap:6px}
-.dg small{color:var(--dim);font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
-.chips{display:flex;flex-wrap:wrap;gap:5px}
-.chips button{font:inherit;font-size:11.5px;padding:6px 10px;border-radius:999px;cursor:pointer;color:var(--ink);
-  transition:transform var(--t-spring) var(--spring),background-color var(--t-fast) var(--ease-out),border-color var(--t-fast) var(--ease-out)}
-.chips .c-klippy{background:rgba(240,58,46,.1);border:1px solid rgba(240,58,46,.32)}
-.chips .c-klippy:hover{background:rgba(240,58,46,.2);border-color:rgba(240,58,46,.6)}
-.chips .c-gcode{background:rgba(255,159,10,.08);border:1px solid rgba(255,159,10,.3)}
-.chips .c-gcode:hover{background:rgba(255,159,10,.17);border-color:rgba(255,159,10,.6)}
-.chips button:active{transform:scale(.93)}
-.chips button:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
-.derr-enter-active{transition:opacity var(--t-mid) var(--ease-out),transform var(--t-spring) var(--spring)}
-.derr-leave-active{transition:opacity .14s var(--ease-out)}
-.derr-enter-from{opacity:0;transform:translateY(-6px)}
-.derr-leave-to{opacity:0}
 
 .list{display:grid;gap:1px;padding:2px}
 .list button{background:none;border:0;color:var(--ink);font:inherit;font-size:13px;text-align:left;padding:10px 12px;border-radius:var(--r);cursor:pointer;
@@ -297,10 +126,8 @@ function onEnter(el) {
 .list button:hover:not(:disabled){background:rgba(255,255,255,.07)}
 .list button:active:not(:disabled){transform:scale(.98);background:rgba(255,255,255,.1)}
 .list button:disabled{opacity:.35;cursor:not-allowed}
-.list .fb{display:block;color:var(--dim);font-size:13px;text-decoration:none;padding:10px 12px;border-radius:var(--r);transition:background-color var(--t-fast),color var(--t-fast)}
-.list .fb:hover{background:rgba(255,255,255,.07);color:var(--ink)}
 .list hr{border:0;border-top:1px solid rgba(255,255,255,.07);margin:4px 8px;width:auto}
-.mbtn:focus-visible,.list button:focus-visible,.tgl:focus-visible,.pri:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
+.mbtn:focus-visible,.list button:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
 
 /* Поява — пружина масштабування від кнопки-джерела; зникнення — коротке і без перельоту */
 .cc-enter-active{transition:transform var(--t-spring) var(--spring),opacity var(--t-fast) var(--ease-out)}

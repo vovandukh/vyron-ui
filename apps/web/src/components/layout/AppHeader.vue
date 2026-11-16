@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, nextTick, onMounted, onBeforeUnmount, defineAsyncComponent } from 'vue'
 import { useUiStore } from '../../stores/uiStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useI18n } from '../../composables/useI18n'
@@ -8,8 +8,8 @@ import HeaderMenu from './HeaderMenu.vue'
 import StatusIsland from './StatusIsland.vue'
 import VyronLogo from '../ui/VyronLogo.vue'
 import { DEMO_BUILD } from '../../config'
-// Демо: видимий вхід на сторінку екрана принтера (найунікальніша частина — не ховаємо її в меню)
-const screenHref = import.meta.env.DEV ? 'http://localhost:5200/?demo' : './screens/tft35.html'
+// Демо: капсула «Екран принтера ↗» — лише в демо-збірці (у збірці для принтера цього коду немає)
+const DemoScreenChip = DEMO_BUILD ? defineAsyncComponent(() => import('./DemoScreenChip.vue')) : null
 
 const ui = useUiStore()
 const settings = useSettingsStore()
@@ -80,7 +80,7 @@ onBeforeUnmount(() => { removeEventListener('resize', onResize); ro?.disconnect(
       </button>
     </nav>
     <div class="acts">
-      <a v-if="DEMO_BUILD" class="scrchip" :href="screenHref" target="_blank" rel="noopener"><i aria-hidden="true"></i>{{ t('demo.screenChip') }} ↗</a>
+      <component :is="DemoScreenChip" v-if="DemoScreenChip" />
       <EStopButton />
       <HeaderMenu />
     </div>
@@ -120,12 +120,6 @@ onBeforeUnmount(() => { removeEventListener('resize', onResize); ro?.disconnect(
 .pill.instant{transition:none}
 
 .acts{display:flex;gap:8px;align-items:center;pointer-events:auto}
-/* Демо: «Екран принтера ↗» — скляна капсула поруч зі статусом */
-.scrchip{pointer-events:auto;display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px 0 9px;border-radius:999px;font-size:12px;font-weight:600;color:var(--ink);text-decoration:none;white-space:nowrap;
-  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);transition:background-color var(--t-fast) var(--ease-out),border-color var(--t-fast) var(--ease-out)}
-.scrchip:hover{background:rgba(255,255,255,.11);border-color:rgba(var(--accent-rgb),.45)}
-.scrchip i{width:16px;height:11px;border-radius:2px;border:1.4px solid currentColor;background:linear-gradient(135deg,rgba(var(--brand-rgb),.5),transparent);opacity:.85}
-@media(max-width:1100px){.scrchip{display:none}}
 /* 1024×600: усе в один рядок — компактніші вкладки та проміжки */
 @media(max-width:1100px){
   .hd{gap:12px}

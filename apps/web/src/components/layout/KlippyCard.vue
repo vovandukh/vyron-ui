@@ -4,6 +4,7 @@
 // оригінальний текст — у розкривному блоці з копіюванням. Дії: FIRMWARE_RESTART / RESTART / перезапуск служби.
 // «Сховати» прибирає картку до кліку по капсулі статусу або до нової помилки.
 import { ref, computed, watch, onBeforeUnmount } from 'vue'
+import { DEMO_BUILD } from '../../config'
 import { usePrinterStore } from '../../stores/printerStore'
 import { useUiStore } from '../../stores/uiStore'
 import { useI18n } from '../../composables/useI18n'
@@ -32,7 +33,7 @@ onBeforeUnmount(() => clearTimeout(slowTimer))
 // Нова помилка (інший текст) знову показує сховану картку
 watch(() => k.value.state + '|' + k.value.message, () => { if (bad.value) ui.klippyHidden = false })
 
-const live = computed(() => printer.connected || printer.demoMode)
+const live = computed(() => printer.connected || (DEMO_BUILD && printer.demoMode))
 // Після успішного перезапуску картка ще мить показує всі етапи виконаними — і лише тоді зникає
 const flash = ref(null)
 let flashTimer = 0

@@ -38,7 +38,7 @@ const numbers = [
 // ---------- про систему ----------
 const sys = ref({ klipper: null, moonraker: null, hostname: null, core: null })
 async function loadSys() {
-  if (printer.demoMode) { sys.value = { klipper: 'v0.13.0-560-gaea1bcf', moonraker: 'v0.9.3-41-g3f9d2c1', hostname: 'vyron-demo', core: { version: uiVersion } }; return }
+  if (DEMO_BUILD && printer.demoMode) { sys.value = { klipper: 'v0.13.0-560-gaea1bcf', moonraker: 'v0.9.3-41-g3f9d2c1', hostname: 'vyron-demo', core: { version: uiVersion } }; return }
   if (!printer.connected) { sys.value = { klipper: null, moonraker: null, hostname: null, core: null }; return }
   const [p, s, c] = await Promise.allSettled([printer.call('printer.info'), printer.call('server.info'), coreInfo(printer.call)])
   sys.value = {
@@ -60,7 +60,7 @@ const about = computed(() => [
   { k: 'set.moonraker', v: sys.value.moonraker, mono: true },
   { k: 'set.host', v: sys.value.hostname },
   { k: 'set.os', v: os.value },
-  { k: 'set.addr', v: printer.demoMode ? t('island.demoHost') : printer.host || resolveHost(), mono: true }
+  { k: 'set.addr', v: DEMO_BUILD && printer.demoMode ? t('island.demoHost') : printer.host || resolveHost(), mono: true }
 ])
 // ---------- дані: експорт / імпорт / скидання (налаштування + дизайн одним файлом) ----------
 const { confirm } = useConfirm()
