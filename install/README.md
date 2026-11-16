@@ -23,7 +23,7 @@ cd ~ && git clone https://github.com/vovandukh/vyron-ecosystem.git
    решта репозиторію назовні не видно.
 2. **`[update_manager vyron]`** у `moonraker.conf` — оновлення через Mainsail або Vyron. Блок позначений
    маркерами; старий запис на цю саму теку (наприклад `[update_manager voron_ui]`) замінюється.
-3. **Vyron Core** — лише з `--core`.
+3. **Vyron Core** — ставиться за замовчуванням (без нього: `--no-core`). Сам переходить на новий код після оновлення.
 4. **Екран принтера** — Vyron Screen замість KlipperScreen (через `screen.sh`; KlipperScreen лише ховається).
 
 Не чіпає Klipper і `printer.cfg`, нічого не рухає й не гріє. Кожен змінений файл спершу копіюється
@@ -37,7 +37,7 @@ cd ~ && git clone https://github.com/vovandukh/vyron-ecosystem.git
 | `--port N` | Vyron на власному порту; Mainsail лишається на 80 |
 | `--mainsail-port N` | не ховати Mainsail, а перенести на порт N (наприклад 66) |
 | `--no-updates` | не додавати запис в Update Manager |
-| `--core` | також встановити службу Vyron Core |
+| `--no-core` | не встановлювати службу Vyron Core |
 | `--no-screen` | не чіпати екран принтера (KlipperScreen лишається) |
 
 ## Видалення

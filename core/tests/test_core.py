@@ -15,6 +15,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from vyron_core import safety  # noqa: E402
 from vyron_core.announce import Announce  # noqa: E402
+from vyron_core.code_watch import CodeWatch  # noqa: E402
 from vyron_core.design_sync import DesignSync  # noqa: E402
 from vyron_core.moonraker import MoonrakerClient  # noqa: E402
 from vyron_core.ui_watch import UiWatch  # noqa: E402
@@ -184,6 +185,27 @@ class AnnounceTest(Base):
         self.assertFalse(task.done(), "keeps running quietly until the session ends")
         task.cancel()
         self.run_async(c.close())
+
+
+class CodeWatchTest(Base):
+    def test_reload_when_own_code_changes(self):
+        with open(os.path.join(self.dir, "a.py"), "w") as f:
+            f.write("x = 1\n")
+        hits = []
+        c = MoonrakerClient(self.sock)
+        self.run_async(c.connect())
+        task = self.loop.create_task(CodeWatch(root=self.dir, interval=0.05, settle=0.05, on_change=lambda: hits.append(1)).run(c))
+        self.run_async(asyncio.sleep(0.2))
+        self.assertEqual(hits, [], "no reload while the code is unchanged")
+        with open(os.path.join(self.dir, "a.py"), "w") as f:
+            f.write("x = 22\n")
+        self.run_async(asyncio.sleep(0.3))
+        self.assertEqual(hits, [1])
+        self.assertTrue(task.done())
+        self.run_async(c.close())
+
+    def test_default_root_is_the_package(self):
+        self.assertTrue(os.path.isfile(os.path.join(CodeWatch().root, "code_watch.py")))
 
 
 class UiWatchTest(Base):

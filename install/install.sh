@@ -10,7 +10,7 @@
 #      З --mainsail-port N Mainsail не ховається, а переїжджає на порт N.
 #      З --port N Vyron стає на власний порт, а Mainsail лишається як був.
 #   2. Запис [update_manager vyron] у moonraker.conf — оновлення з Mainsail/Vyron одним кліком.
-#   3. З --core — служба Vyron Core (якщо вона є в цій версії).
+#   3. Служба Vyron Core (миттєва синхронізація теми й оновлень між екранами); --no-core — без неї.
 #   4. Екран принтера: Vyron Screen замість KlipperScreen (KlipperScreen лише ховається; див. screen.sh).
 # Чого НЕ робить: не чіпає Klipper, printer.cfg, не рухає принтер і не гріє. Усе, що змінює, спершу
 # копіює в резервні файли; якщо nginx не приймає нову конфігурацію — усе повертається назад.
@@ -21,7 +21,7 @@ PORT=80
 MAINSAIL_PORT=""
 DRY=0
 UPDATES=1
-CORE=0
+CORE=1
 SCREEN=1
 
 usage() { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; cat <<'EOF'
@@ -30,7 +30,7 @@ usage() { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; cat <<'EOF'
   --port N            порт для Vyron (за замовчуванням 80); якщо не 80 — Mainsail не чіпається
   --mainsail-port N   не ховати Mainsail/Fluidd, а перенести на порт N (наприклад 66)
   --no-updates        не додавати запис в Update Manager
-  --core              також встановити службу Vyron Core
+  --no-core           не встановлювати службу Vyron Core
   --no-screen         не чіпати екран принтера (KlipperScreen лишається)
 EOF
 }
@@ -42,6 +42,7 @@ while [ $# -gt 0 ]; do
     --mainsail-port) MAINSAIL_PORT="${2:-}"; shift ;;
     --no-updates) UPDATES=0 ;;
     --core) CORE=1 ;;
+    --no-core) CORE=0 ;;
     --no-screen) SCREEN=0 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Невідомий параметр: $1 (див. --help)" >&2; exit 2 ;;
@@ -195,8 +196,6 @@ if [ $UPDATES = 1 ]; then
   if [ -z "$ORIGIN" ]; then
     warn "у $REPO немає git origin — пропускаю (оновлення вручну через git pull)"
   else
-    SERVICES=""
-    [ $CORE = 1 ] && [ -f "$REPO/core/install.sh" ] && SERVICES="vyron-core"
     BLOCK="$(mktemp)"
     {
       echo "$MARK_BEGIN"
@@ -206,7 +205,6 @@ if [ $UPDATES = 1 ]; then
       echo "path: $REPO"
       echo "origin: $ORIGIN"
       echo "primary_branch: $BRANCH"
-      [ -n "$SERVICES" ] && echo "managed_services: $SERVICES"
       echo "$MARK_END"
     } > "$BLOCK"
     LEGACY="$(legacy_um_sections "$MR_CONF" "$REPO")"
@@ -226,12 +224,12 @@ if [ $UPDATES = 1 ]; then
       ok "додано [update_manager vyron] (копія старого файлу: $b)"
       MR_CHANGED=1
     fi
-    if [ -n "$SERVICES" ]; then
-      ASVC="$DATA/moonraker.asvc"
-      if [ -f "$ASVC" ] && ! grep -qx "vyron-core" "$ASVC"; then
-        run sh -c "echo vyron-core >> '$ASVC'"; MR_CHANGED=1
-        info "vyron-core додано в moonraker.asvc (Moonraker зможе перезапускати службу після оновлення)"
-      fi
+    # Старі встановлення додавали vyron-core в moonraker.asvc і managed_services — Moonraker такого не приймає
+    # (попередження). Core тепер сам перезапускається, коли оновлюється його код, тож запис прибираємо.
+    ASVC="$DATA/moonraker.asvc"
+    if [ -f "$ASVC" ] && grep -qx "vyron-core" "$ASVC"; then
+      info "прибираю vyron-core з moonraker.asvc (більше не потрібен)"
+      [ $DRY = 1 ] || { sed -i '/^vyron-core$/d' "$ASVC"; MR_CHANGED=1; }
     fi
     rm -f "$BLOCK" "$NEW"
   fi
