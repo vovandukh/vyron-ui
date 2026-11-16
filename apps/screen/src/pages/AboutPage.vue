@@ -1,6 +1,7 @@
 <script setup>
 // Про систему: версії програм, хост і залізо (лише читання).
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
+import { whenOnline } from '../online'
 import { usePrinter } from '../store'
 import { t } from '../i18n'
 import { interfaces } from '../net'
@@ -13,7 +14,7 @@ const hw = ref([])
 const nets = ref([])
 
 const short = v => String(v || '—').replace(/-g[0-9a-f]+$/, '')
-onMounted(async () => {
+whenOnline(async () => {
   const [pi, si, sys, core] = await Promise.all([
     p.call('printer.info').catch(() => ({})),
     p.call('server.info').catch(() => ({})),

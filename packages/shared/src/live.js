@@ -12,7 +12,25 @@
  * Нова сторінка готова (підключилась і показує дані) — відпустити знімок старої.
  * Сам знімок «тримає» скрипт у <head> index.html (подія pagereveal; ліміт 4 с).
  */
-export function revealReady() {
+const held = []
+const HOLD_MAX = 2500
+
+/**
+ * Відкрита сторінка ще вантажить свої дані (список оновлень, файли конфігурації…) — знімок старої версії
+ * тримається, доки promise не завершиться (не довше HOLD_MAX), щоб не показати порожню сторінку.
+ */
+export function holdReveal(p) {
+  if (!window.__vyronReady && p && typeof p.then === 'function') held.push(p)
+  return p
+}
+
+export async function revealReady() {
+  if (window.__vyronReady) return
+  // Дати сторінці мить, щоб почати власні запити, і дочекатися їх
+  await new Promise(r => setTimeout(r, 50))
+  if (held.length) await Promise.race([Promise.allSettled(held), new Promise(r => setTimeout(r, HOLD_MAX))])
+  // Ще кадр — щоб отримані дані встигли намалюватися під знімком
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
   window.__vyronReady = true
   if (window.__vyronPlay) window.__vyronPlay()
   // Прибрати мітку версії з адреси
