@@ -168,7 +168,8 @@ function open(d) { if (!d.soon) p.go(d.id) }
 <style scoped>
 .home{display:grid;grid-template-columns:1fr 16.5rem;grid-template-rows:1fr auto;gap:.9rem;padding:.2rem 1.2rem 1.2rem}
 .hero{position:relative;min-width:0;border-radius:var(--r-lg);display:flex;align-items:center;gap:1.3rem;padding:1rem 1.4rem 1rem 1rem;overflow:hidden}
-.hero.model{padding:0}
+/* Без картки нічого не обрізаємо: інакше кути скляних плашок зрізались би під радіус зони */
+.hero.model{padding:0;overflow:visible;border-radius:0}
 /* Підписи поверх моделі; знизу — легке затемнення, щоб назва читалась, якщо модель заходить під неї */
 /* Плашка друку: те саме скло, що й плитки температур; відсоток великий, решта — дрібніше й тьмяніше */
 .job{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:1rem;padding:.75rem 1rem .9rem;border-radius:var(--r);overflow:hidden;pointer-events:none}
