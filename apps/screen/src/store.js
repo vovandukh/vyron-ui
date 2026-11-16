@@ -11,6 +11,7 @@ import { parseGcode } from '@vyron/shared/gcode/parser'
 import { model, loadModel, indexForPos } from '@vyron/shared/gcode/model'
 import { startDemo, demoCall, demoGcode, setDemoUpdateSink } from './demo'
 import { watchDesign, handleCoreEvent } from '@vyron/shared/live'
+import { dbGet, dbKnown } from '@vyron/shared/moonraker/db'
 import { TUNE_OBJECTS, tuneScript, tunePatch } from '@vyron/shared/klipper/tune'
 import { heaterScript, HEAT_OFF } from '@vyron/shared/klipper/heat'
 
@@ -151,17 +152,15 @@ export const usePrinter = defineStore('printer', () => {
     applyDesign(design.value, { layout: false })
   }
   async function pullDesign() {
-    try {
-      const r = await call('server.database.get_item', DESIGN)
-      useDesign(r && r.value)
-    } catch { /* тему ще ніхто не зберігав — лишається стандартна */ }
+    const v = await dbGet(call, DESIGN.namespace, DESIGN.key)
+    if (v !== undefined) useDesign(v) // інакше тему ще ніхто не зберігав — лишається стандартна
   }
   /** Вибір пресета на екрані: застосовується одразу й записується в базу — підхоплять усі пристрої */
   async function setPreset(id) {
     const p = PRESETS.find(x => x.id === id)
     if (!p) return
     useDesign({ ...design.value, preset: p.id, accent: p.accent, brand: p.brand, updated: Date.now() })
-    try { await call('server.database.post_item', { ...DESIGN, value: { ...design.value } }) } catch { /* лишається локально до наступного підключення */ }
+    try { await call('server.database.post_item', { ...DESIGN, value: { ...design.value } }); dbKnown(DESIGN.namespace) } catch { /* лишається локально до наступного підключення */ }
     if (DEMO) { try { localStorage.setItem(DEMO_DESIGN_KEY, JSON.stringify(design.value)) } catch { /* приватний режим */ } }
   }
 

@@ -70,6 +70,7 @@ export async function demoCall(method, params, { emitGcode, merge }) {
       } }
     case 'server.info': return { moonraker_version: 'v0.9.3-41-g3f9d2c1', klippy_state: 'ready' }
     case 'printer.info': return { software_version: 'v0.13.0-560-gaea1bcf', hostname: 'vyron-demo', state: 'ready' }
+    case 'server.database.list': return { namespaces: [...new Set(Object.keys(db).map(k => k.split('/')[0]))] }
     case 'server.database.get_item': {
       const v = db[params.namespace + '/' + params.key]
       if (!v) throw new Error('Key not found')

@@ -3,6 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { DEFAULT_DESIGN, PRESETS, applyDesign, sanitizeDesign, brandFor, hexToRgb } from '@vyron/shared/theme'
 import { usePrinterStore } from './printerStore'
 import { watchDesign, handleCoreEvent } from '@vyron/shared/live'
+import { dbGet, dbKnown } from '@vyron/shared/moonraker/db'
 
 const KEY = 'vyron-design'
 /** Moonraker database: спільний дизайн для всіх екранів принтера (ПК, планшет, екран принтера) */
@@ -60,25 +61,26 @@ export const useDesignStore = defineStore('design', () => {
     sync.value = 'saving'
     try {
       await printer.call('server.database.post_item', { ...DB, value: { ...d } })
+      dbKnown(DB.namespace)
       sync.value = 'synced'
     } catch { sync.value = 'error' }
   }
   async function pullRemote() {
     if (!canSync()) { sync.value = 'local'; return }
-    try {
-      const r = await printer.call('server.database.get_item', DB)
-      const remote = sanitizeDesign(r && r.value)
-      if (remote.updated > d.updated) {
-        applyingRemote = true
-        Object.assign(d, remote)
-        sync.value = 'synced'
-      } else if (d.updated > remote.updated) pushRemote()
-      else sync.value = 'synced'
-    } catch {
+    const v = await dbGet((m, p) => printer.call(m, p), DB.namespace, DB.key)
+    if (v === undefined) {
       // Запису ще немає (перший запуск) — створюємо, якщо користувач уже щось змінював
       if (d.updated) pushRemote()
       else sync.value = 'synced'
+      return
     }
+    const remote = sanitizeDesign(v)
+    if (remote.updated > d.updated) {
+      applyingRemote = true
+      Object.assign(d, remote)
+      sync.value = 'synced'
+    } else if (d.updated > remote.updated) pushRemote()
+    else sync.value = 'synced'
   }
 
   watch(d, () => {

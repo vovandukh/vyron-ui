@@ -38,6 +38,8 @@ export async function revealReady() {
   if (u.searchParams.has('_v')) { u.searchParams.delete('_v'); history.replaceState(history.state, '', u.href) }
 }
 
+import { dbGet } from './moonraker/db.js'
+
 const DESIGN_UPDATED = { namespace: 'vyron_ui', key: 'design.updated' }
 
 /** @returns функція зупинки */
@@ -49,8 +51,7 @@ export function watchDesign({ call, getUpdated, onChange, interval = 3000, visib
     if (shown() && !busy) {
       busy = true
       try {
-        const r = await call('server.database.get_item', DESIGN_UPDATED)
-        const u = Number(r && r.value) || 0
+        const u = Number(await dbGet(call, DESIGN_UPDATED.namespace, DESIGN_UPDATED.key)) || 0
         if (u && u !== getUpdated()) await onChange(u)
       } catch { /* дизайн ще ніхто не зберігав */ } finally { busy = false }
     }
