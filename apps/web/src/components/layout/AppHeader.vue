@@ -70,7 +70,6 @@ onBeforeUnmount(() => { removeEventListener('resize', onResize); ro?.disconnect(
         <VyronLogo :size="30" /><b>VYRON</b>
       </button>
       <StatusIsland />
-      <a v-if="DEMO_BUILD" class="scrchip" :href="screenHref" target="_blank" rel="noopener"><i aria-hidden="true"></i>{{ t('demo.screenChip') }} ↗</a>
     </div>
     <nav ref="nav" class="nav glass">
       <span class="pill" :class="{ on: pill.on, instant }" :style="{ transform: `translateX(${pill.x}px)`, width: pill.w + 'px' }" aria-hidden="true"></span>
@@ -81,6 +80,7 @@ onBeforeUnmount(() => { removeEventListener('resize', onResize); ro?.disconnect(
       </button>
     </nav>
     <div class="acts">
+      <a v-if="DEMO_BUILD" class="scrchip" :href="screenHref" target="_blank" rel="noopener"><i aria-hidden="true"></i>{{ t('demo.screenChip') }} ↗</a>
       <EStopButton />
       <HeaderMenu />
     </div>

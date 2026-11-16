@@ -67,7 +67,7 @@ watch(() => ui.homeTick, () => { open.value = null })   // клік по лог�
              @click="r.quick && toggle(r.id)" @keydown.enter.space.prevent="r.quick && toggle(r.id)">
           <dt>{{ r.label }}</dt>
           <dd :class="{ ok: r.ok === true, warn: r.ok === false }">
-            <RollNumber v-if="r.value != null" :value="r.value" :decimals="r.decimals || 0" :suffix="r.suffix" />
+            <RollNumber v-if="r.value != null" :value="r.value" :decimals="r.decimals || 0" :suffix="r.suffix" fade />
             <template v-else>{{ r.text }}</template>
           </dd>
         </div>
