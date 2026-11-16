@@ -40,12 +40,22 @@ export function startDemo({ merge, setKlippy }) {
 
 const heat = {}
 
+/** Демо-файли: шлях, скільки секунд тому змінено, розмір, час друку (с), матеріал, вага (г), шар (мм) */
+const DEMO_FILES = [
+  ['SSR DIN clip.gcode', 3 * 3600, 2400000, 8040, 'PETG', 21.4, 0.2],
+  ['voron/stealthburner_main_body.gcode', 26 * 3600, 9800000, 19800, 'ABS', 64.2, 0.2],
+  ['vase_spiral_0.3mm.gcode', 3 * 86400, 1900000, 5400, 'PLA', 38.0, 0.3],
+  ['calibration/first_layer_test.gcode', 6 * 86400, 420000, 600, 'PLA', 4.1, 0.25],
+  ['cable_chain_link_x20.gcode', 12 * 86400, 5200000, 14400, 'PETG', 52.7, 0.2],
+  ['voron/z_endstop_mount.gcode', 20 * 86400, 760000, 2100, 'ABS', 8.3, 0.2]
+]
+
 const NETS = [
   ['Vyron Lab', 92, 'WPA2'], ['Kyivstar_5G', 74, 'WPA2 WPA3'], ['Workshop', 61, 'WPA2'],
   ['Guest', 48, ''], ['TP-Link_3F2A', 33, 'WPA2'], ['DIRECT-printer', 21, 'WPA2']
 ]
 const wait = ms => new Promise(r => setTimeout(r, ms))
-let db = { 'vyron_core/info': { version: '0.3.6', started: 0 } }
+let db = { 'vyron_core/info': { version: '0.3.6.5', started: 0 } }
 
 /** Імітація викликів Moonraker для сторінок налаштувань */
 export async function demoCall(method, params, { emitGcode, merge }) {
@@ -66,7 +76,21 @@ export async function demoCall(method, params, { emitGcode, merge }) {
       return { value: v }
     }
     case 'server.database.post_item': db[params.namespace + '/' + params.key] = params.value; return { value: params.value }
-    case 'server.files.metadata': return { size: 1200000 }
+    case 'server.files.list': {
+      const n = Date.now() / 1000
+      return DEMO_FILES.map(([path, ago, size]) => ({ path, modified: n - ago, size }))
+    }
+    case 'server.files.metadata': {
+      const f = DEMO_FILES.find(x => x[0] === params.filename)
+      if (!f) return { size: 1200000 }
+      return { size: f[2], estimated_time: f[3], filament_type: f[4], filament_weight_total: f[5], layer_height: f[6], slicer: 'OrcaSlicer' }
+    }
+    case 'printer.print.start': await wait(400); return 'ok'
+    case 'server.files.delete_file': {
+      const i = DEMO_FILES.findIndex(x => 'gcodes/' + x[0] === params.path)
+      if (i >= 0) DEMO_FILES.splice(i, 1)
+      return { item: { path: params.path } }
+    }
     case 'server.history.list': return { count: 1, jobs: [{ filename: 'SSR DIN clip.gcode', status: 'completed', print_duration: 8040, end_time: Date.now() / 1000 - 3 * 3600 }] }
     case 'printer.gcode.script':
       if (/G28|M84|QUAD_GANTRY_LEVEL|Z_TILT_ADJUST|G1 /.test(params.script)) return demoMotion(params.script, merge)

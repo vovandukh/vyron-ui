@@ -199,7 +199,7 @@ export const usePrinter = defineStore('printer', () => {
       loadLastJob()
       // ?demo&page=wifi — одразу відкрити сторінку налаштувань (для розробки)
       const pg = new URLSearchParams(location.search).get('page')
-      if (pg) stack.value = ['settings', 'move', 'temp'].includes(pg) ? ['home', pg] : ['home', 'settings', pg]
+      if (pg) stack.value = ['settings', 'move', 'temp', 'files'].includes(pg) ? ['home', pg] : ['home', 'settings', pg]
       return
     }
     host.value = resolveHost()
@@ -256,6 +256,32 @@ export const usePrinter = defineStore('printer', () => {
     if (DEMO) { merge(tunePatch(st, kind, v)); return }
     const script = tuneScript(kind, v)
     if (script) { try { await gcode(script) } catch { /* причину покаже Klipper */ } }
+  }
+
+  // ---------- файли й запуск друку ----------
+  /** Вибраний файл для сторінки запуску друку: { path, modified, size } */
+  const selFile = ref(null)
+  /** Файли G-code на принтері, новіші першими: [{ path, modified, size }] */
+  async function listFiles() {
+    const r = await call('server.files.list', { root: 'gcodes' })
+    return (Array.isArray(r) ? r : []).filter(f => /\.(gcode|g|gco)$/i.test(f.path)).sort((a, b) => b.modified - a.modified)
+  }
+  const fileMeta = filename => call('server.files.metadata', { filename }).catch(() => ({}))
+  /** Запустити друк і повернутися на головну (там з'явиться модель і прогрес) */
+  async function printFile(filename) {
+    if (active.value) return false
+    try { await call('printer.print.start', { filename }); home(); return true } catch { return false }
+  }
+  /** Видалити файл G-code з принтера (файл, що зараз друкується, Moonraker не дасть видалити) */
+  async function deleteFile(path) {
+    try { await call('server.files.delete_file', { path: 'gcodes/' + path }); return true } catch { return false }
+  }
+  /** Адреса мініатюри зі слайсера (відносно теки файлу) */
+  function thumbUrl(filename, meta) {
+    const th = ((meta && meta.thumbnails) || []).slice().sort((a, b) => b.width - a.width)[0]
+    if (!th || !host.value) return ''
+    const dir = filename.includes('/') ? filename.slice(0, filename.lastIndexOf('/') + 1) : ''
+    return location.protocol + '//' + host.value + '/server/files/gcodes/' + (dir + th.relative_path).split('/').map(encodeURIComponent).join('/')
   }
 
   /** Нагрів: ціль для нагрівача (extruder, heater_bed …) і «вимкнути все» */
@@ -368,7 +394,7 @@ export const usePrinter = defineStore('printer', () => {
   return {
     gcodeState, modelVer, done, filename, showModel, event, updates, refreshUpdates, runUpdate,
     link, host, hostname, lastJob, klippy, st, printState, active, progress, remaining, layer, heaters, busy, design,
-    stack, page, dir, go, back, home, tune, setTemp, heatOff,
+    stack, page, dir, go, back, home, tune, setTemp, heatOff, listFiles, fileMeta, printFile, thumbUrl, selFile, deleteFile,
     call, gcode, onGcode, setPreset,
     leveling, homed, position, leveled, moving, homeAll, motorsOff, level, jog,
     start, pause, resume, cancel, estop, firmwareRestart, restart, restartMoonraker, reboot, shutdown

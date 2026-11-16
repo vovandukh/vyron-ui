@@ -33,9 +33,9 @@ const jobName = computed(() => String((p.lastJob || {}).filename || '').replace(
 const jobTime = computed(() => (p.lastJob && p.lastJob.print_duration ? fmtDuration(p.lastJob.print_duration, t) : ''))
 
 const DOCK = [
+  { id: 'files', icon: 'files' },
   { id: 'move', icon: 'move' },
-  { id: 'temp', icon: 'flame' },
-  { id: 'settings', icon: 'gear' }
+  { id: 'temp', icon: 'flame' }
 ]
 function open(d) { if (!d.soon) p.go(d.id) }
 </script>
@@ -78,7 +78,7 @@ function open(d) { if (!d.soon) p.go(d.id) }
           </span>
         </div>
       </template>
-      <div v-else class="idle">
+      <div v-if="!showModel && !p.active" class="idle">
         <small>{{ t('scr.hello') }}<template v-if="p.hostname"> · {{ p.hostname }}</template></small>
         <b>{{ t('scr.idle') }}</b>
         <!-- Готовність машини: які осі в нулі, чи вирівняний портал, де зараз голова -->
@@ -129,7 +129,6 @@ function open(d) { if (!d.soon) p.go(d.id) }
         <Icon name="stop" size="1.5rem" :stroke="2.4" />{{ t('print.cancel') }}
       </button>
       <button type="button" class="btn glass sq tap" :aria-label="t('tune.open')" @click="tuneOpen = true"><Icon name="sliders" size="2rem" /></button>
-      <button type="button" class="btn glass sq tap" :aria-label="t('scr.page.settings')" @click="p.go('settings')"><Icon name="gear" size="2rem" /></button>
     </footer>
     <!-- Без друку: дві окремі картки — розділи (Рух, Нагрів, Налаштування) і швидкі дії (Home, QGL, мотори) -->
     <footer v-else class="cards">
