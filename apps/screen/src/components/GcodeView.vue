@@ -13,7 +13,7 @@ import { usePrinter } from '../store'
 
 const MAX_SEG = 40000      // скільки відрізків малюємо щонайбільше (решта зливається з сусідніми)
 const DRAG_SEG = 6000      // під час обертання пальцем — менше, щоб CB1 встигав малювати кадри
-const TILT_MIN = 0.3, TILT_MAX = 0.65   // нахил: стиснення глибини (0.5 — погляд згори під 30°)
+const TILT_MIN = 0.3, TILT_MAX = 0.6   // нахил: стиснення глибини (0.5 — погляд згори під 30°)
 const SLOP = 10            // px: менший зсув пальця — це дотик (резистивний тач дрижить), а не обертання
 const MAX_JOIN = 12        // мм: злиті відрізки довші за це не з'єднуємо (переїзди між островами)
 
@@ -40,18 +40,37 @@ function readColors() {
   colors = [c, 'rgb(' + rgb.map(v => Math.round(v + (255 - v) * 0.38)).join(',') + ')']
 }
 
+/**
+ * Справжній радіус моделі на столі (найдальша точка від центру), раз на модель.
+ * Половина діагоналі рамки для круглих деталей завищує його на ~41% — модель виходила дрібною.
+ */
+let radiusFor = null, radius = 1
+function modelRadius(cx, cy) {
+  if (radiusFor === model.P) return radius
+  const P = model.P, N = model.N, st = Math.max(1, Math.floor(N / 30000))
+  let r2 = 1
+  for (let i = 0; i < N; i += st) {
+    const o = i * 6, ax = P[o] - cx, ay = P[o + 1] - cy, bx = P[o + 3] - cx, by = P[o + 4] - cy
+    r2 = Math.max(r2, ax * ax + ay * ay, bx * bx + by * by)
+  }
+  radiusFor = model.P
+  radius = Math.sqrt(r2)
+  return radius
+}
+
 /** Проєкція моделі в координати canvas (ізометрія з нахилом), з урахуванням розміру й поля */
 function project(w, h, maxSeg = MAX_SEG) {
   const P = model.P, N = model.N, b = model.bounds
   if (!P || !N || !b) { n = 0; floor = null; return }
   const step = Math.max(1, Math.ceil(N / maxSeg))
-  const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2, zs = model.zScale || 1
+  // Розтяг висоти, як у вебі, але не більше 1.2: на малому екрані шари однаково зливаються, а висока модель дрібнішає
+  const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2, zs = Math.min(model.zScale || 1, 1.2)
   const ca = Math.cos(ang), sa = Math.sin(ang), TILT = tilt
   const cnt = Math.ceil(N / step)
   const raw = new Float32Array(cnt * 4)
   L = new Uint16Array(cnt); I = new Uint32Array(cnt); D = new Uint8Array(cnt)
   // Радіус «відбитка» моделі на столі — для смуг глибини й еліпса підлоги
-  const R = Math.max(1, Math.hypot(b.x1 - b.x0, b.y1 - b.y0) / 2)
+  const R = modelRadius(cx, cy)
   let k = 0
   const pr = (x, y, z, out, o) => {
     const dx = x - cx, dy = y - cy
@@ -78,7 +97,7 @@ function project(w, h, maxSeg = MAX_SEG) {
   const FR = R * 1.05, top = (model.zmax || 0) * zs
   const x0 = -FR, x1 = FR, y0 = -top - FR * TILT_MAX, y1 = FR * TILT_MAX
   // Поля: знизу — під скляну плашку з відсотком і назвою (модель може ледь заходити під її верх)
-  const padX = w * 0.04, padT = h * 0.03, padB = h * 0.22
+  const padX = w * 0.04, padT = h * 0.03, padB = h * 0.19
   const sc = Math.min((w - 2 * padX) / Math.max(1, x1 - x0), (h - padT - padB) / Math.max(1, y1 - y0))
   const ox = (w - (x1 - x0) * sc) / 2 - x0 * sc, oy = padT + (h - padT - padB - (y1 - y0) * sc) / 2 - y0 * sc
   S = raw
