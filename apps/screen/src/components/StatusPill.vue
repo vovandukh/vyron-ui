@@ -34,7 +34,7 @@ const view = computed(() => (p.event ? { text: t(p.event.key, p.event.params), t
 </template>
 
 <style scoped>
-.pill{display:flex;align-items:center;gap:.6rem;height:3.2rem;max-width:24rem;padding:0 1.2rem 0 1rem;border-radius:1.6rem;
+.pill{display:flex;align-items:center;gap:.6rem;height:3.4rem;max-width:24rem;padding:0 1.2rem 0 1rem;border-radius:1.6rem;
   background:#000;border:1px solid rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
   font-size:1.3rem;font-weight:600;white-space:nowrap;overflow:hidden;transition:max-width .3s var(--ease),border-color .3s var(--ease)}
 .dot{flex:none;width:.75rem;height:.75rem;border-radius:50%;background:var(--tone)}
