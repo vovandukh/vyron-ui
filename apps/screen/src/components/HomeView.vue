@@ -34,7 +34,7 @@ const jobTime = computed(() => (p.lastJob && p.lastJob.print_duration ? fmtDurat
 
 const DOCK = [
   { id: 'move', icon: 'move' },
-  { id: 'temp', icon: 'flame', soon: true },
+  { id: 'temp', icon: 'flame' },
   { id: 'settings', icon: 'gear' }
 ]
 function open(d) { if (!d.soon) p.go(d.id) }

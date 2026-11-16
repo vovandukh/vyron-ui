@@ -52,6 +52,7 @@ export default {
   'set.fxyShort': 'X/Y speed', 'set.fxyHint': 'mm/min for jog buttons', 'set.fzShort': 'Z speed', 'set.fzHint': 'mm/min for jog buttons',
   'set.secAbout': 'About system', 'set.ui': 'Interface', 'set.core': 'Core', 'set.coreNone': 'not installed', 'set.klipper': 'Klipper', 'set.moonraker': 'Moonraker', 'set.host': 'Host', 'set.os': 'OS', 'set.addr': 'Address',
   'tune.title': 'While printing', 'tune.open': 'Tune', 'tune.z': 'Z offset', 'tune.speed': 'Speed', 'tune.flow': 'Flow', 'tune.fan': 'Fan', 'tune.reset': 'Reset Z offset', 'tune.hint': 'Z offset applies instantly — adjust while watching the first layer', 'tune.mm': 'mm', 'common.done': 'Done',
+  'scr.needHome': 'Arrows unlock after Home — the printer needs to know where each axis starts', 'heat.material': 'Material', 'heat.off': 'Turn heaters off', 'heat.now': 'now', 'heat.hint': 'A preset sets nozzle and bed together. Klipper will not exceed max_temp from printer.cfg',
   'job.elapsed': '{t} elapsed', 'job.layer': 'layer {l}', 'job.fil': '{m} m of filament',
   'set.secNotify': 'Notifications', 'set.secNotifyHint': 'How the interface tells you about events',
   'set.toasts': 'Error pop-ups', 'set.toastsHint': 'Short cards when the printer skips a command: “The nozzle is not hot yet”, “The axes need to be homed first”…',

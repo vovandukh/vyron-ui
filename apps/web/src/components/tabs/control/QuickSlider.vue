@@ -9,6 +9,11 @@ import { useUiStore } from '../../../stores/uiStore'
 import { useI18n } from '../../../composables/useI18n'
 import { toolNum } from '@vyron/shared/klipper/objects'
 import { heatRgb } from '@vyron/shared/format'
+import { HEAT_PRESETS } from '@vyron/shared/klipper/heat'
+// Пресети температур — ті самі матеріали, що на екрані принтера (PLA / PETG / ASA): вимк. + унікальні значення
+const uniq = a => [...new Set(a)]
+const NOZZLE_PRESETS = [0, ...uniq(HEAT_PRESETS.filter(x => x.id !== 'abs').map(x => x.nozzle))]
+const BED_PRESETS = [0, ...uniq(HEAT_PRESETS.map(x => x.bed))]
 
 const props = defineProps({
   kind: { type: String, required: true },     // nozzle | bed | speed | fan
@@ -27,12 +32,12 @@ const cfg = computed(() => {
   switch (props.kind) {
     case 'nozzle': return {
       title: t('status.nozzle') + (tool ? ' · T' + toolNum(tool) : ''), unit: '°', min: 0, step: 5,
-      max: printer.heaterMax[tool] || 300, presets: [0, 205, 245], heat: true,
+      max: printer.heaterMax[tool] || 300, presets: NOZZLE_PRESETS, heat: true,
       now: printer.nozzleTemp, target: printer.nozzleTarget
     }
     case 'bed': return {
       title: t('status.bed'), unit: '°', min: 0, step: 5, max: printer.heaterMax.heater_bed || 120,
-      presets: [0, 60, 110], heat: true, now: printer.bedTemp, target: printer.bedTarget
+      presets: BED_PRESETS, heat: true, now: printer.bedTemp, target: printer.bedTarget
     }
     case 'speed': return {
       title: t('status.speed'), unit: '%', min: 10, max: 200, step: 5, presets: [50, 100, 150],
@@ -151,7 +156,7 @@ onBeforeUnmount(() => {
 .rng::-moz-range-track{background:transparent}
 .rng:focus-visible{outline:2px solid var(--coral);outline-offset:3px}
 
-.pre{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.pre{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px}
 .pre button,.exact{border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.06);color:var(--ink);font:inherit;font-size:12px;border-radius:var(--r);padding:9px 0;cursor:pointer;
   transition:transform var(--t-spring) var(--spring),background-color var(--t-fast) var(--ease-out),border-color var(--t-fast) var(--ease-out)}
 .pre button:hover,.exact:hover{background:rgba(255,255,255,.1)}

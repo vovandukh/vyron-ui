@@ -60,6 +60,7 @@ const go = (a, sign) => p.jog(a, sign * (a === 'z' ? Math.min(step.value, 10) : 
       </button>
     </section>
     <p v-if="p.active" class="busy">{{ t('scr.moveBusy') }}</p>
+    <p v-else-if="!p.homed.includes('x') || !p.homed.includes('y') || !p.homed.includes('z')" class="busy">{{ t('scr.needHome') }}</p>
   </div>
 </template>
 
