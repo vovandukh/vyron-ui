@@ -12,7 +12,7 @@ npm run build    # збірка в apps/web/dist/
 - Хост принтера визначається автоматично, без вшитих адрес: `?host=<ip:порт>` в адресі → хост, збережений після ручного підключення (`localStorage`) → `VITE_PRINTER_HOST` → хост, з якого відкрито сторінку. Протокол береться від сторінки (`https` → `wss`/`https`).
 - Збірка для принтера (`npm run build`) **не містить демо-режиму**: немає перемикача, `?demo` ігнорується, демо-дані не потрапляють у файл (прапорець `DEMO_BUILD` у `src/config.js`). У розробці (`npm run dev`) демо доступне — перемикач у центрі керування та `?demo`.
 - Демо локально: `npm run dev:demo`, з потрібною кількістю голів: `?demo=1`, `?demo=4` (1–12, за замовчуванням 6).
-- Вихідний `index.html` для Vite лежить у `apps/web/src/`, корінь Vite теж там. Корінь репозиторію в `main` зайнятий готовою статикою: після кожного push у `main` workflow [build-to-main](../../.github/workflows/build-to-main.yml) збирає проєкт і комітить у корінь `index.html` і `voron.html` (стара адреса), а також `screen.html`.
+- Вихідний `index.html` для Vite лежить у `apps/web/src/`, корінь Vite теж там. Корінь репозиторію в `main` зайнятий готовою статикою: після кожного push у `main` workflow [build-to-main](../../.github/workflows/build-to-main.yml) збирає проєкт і комітить у корінь `index.html` і `screen.html`.
 - Збірка однофайлова (`vite-plugin-singlefile`): увесь JS, CSS і картинки вшиті в HTML, тож веб-серверу досить віддати один файл без теки `assets/`. Ззовні вантажиться лише шрифт Montserrat (Google Fonts); без інтернету використовується системний шрифт.
 
 ## Демо на GitHub Pages

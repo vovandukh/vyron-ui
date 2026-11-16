@@ -2,25 +2,8 @@ import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { viteSingleFile } from 'vite-plugin-singlefile'
 import { fileURLToPath } from 'node:url'
-import { writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
 
 const r = p => fileURLToPath(new URL(p, import.meta.url))
-
-/**
- * Після збірки кладе копію index.html поруч під іншими іменами (dist/voron.html),
- * щоб застосунок відкривався і за цими адресами. Шляхи до assets відносні (base './'),
- * тому копія працює без змін.
- */
-const htmlAliases = names => ({
-  name: 'html-aliases',
-  apply: 'build',
-  async writeBundle(options, bundle) {
-    const html = bundle['index.html']
-    if (!html) return
-    await Promise.all(names.map(n => writeFile(join(options.dir, n), html.source)))
-  }
-})
 
 
 // Проксі Moonraker: застосунок у dev звертається до власного хоста (localhost:5173),
@@ -51,8 +34,8 @@ export default defineConfig(({ mode }) => {
     cacheDir: r('./node_modules/.vite'),
     base: './',              // відносні шляхи: статику можна віддавати з будь-якої теки nginx
     // viteSingleFile: увесь JS, CSS і картинки вшиваються в один index.html — nginx на принтері
-    // може віддавати лише цей файл, без теки assets/. htmlAliases іде після нього й копіює вже готовий файл.
-    plugins: [vue(), viteSingleFile(), htmlAliases(['voron.html'])],
+    // може віддавати лише цей файл, без теки assets/.
+    plugins: [vue(), viteSingleFile()],
     server: {
       proxy: Object.fromEntries(['/websocket', '/printer', '/server', '/machine', '/api'].map(p => [p, moonraker]))
     },

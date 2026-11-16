@@ -57,7 +57,6 @@ jobs:
           # Збірка — один автономний HTML; тека assets/ у корені більше не потрібна.
           rm -rf assets
           cp apps/web/dist/index.html index.html
-          cp apps/web/dist/index.html voron.html
           # Vyron Screen (сенсорний екран принтера) — окремий однофайловий застосунок
           cp apps/screen/dist/index.html screen.html
 
@@ -65,7 +64,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A index.html voron.html screen.html
+          git add -A index.html screen.html
           # Прибрати старі бандли з репозиторію; --ignore-unmatch — щоб крок не падав, коли assets/ вже немає.
           git rm -r -q --cached --ignore-unmatch assets
           if git diff --cached --quiet; then
