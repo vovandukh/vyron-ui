@@ -70,9 +70,10 @@ jobs:
       - name: Publish to demo repository
         if: steps.tok.outputs.skip != '1'
         run: |
-          git clone --depth 1 "https://x-access-token:${TOKEN}@github.com/${DEMO_REPO}.git" site
-          cd site
-          git rm -rq --ignore-unmatch .
+          # Сайту історія не потрібна: щоразу один коміт від бота, що замінює все (force-push).
+          # Так у публічному репозиторії демо немає нічого, крім поточної збірки.
+          mkdir site && cd site
+          git init -q -b main
           cp ../apps/web/dist-demo/index.html index.html
           # Vyron Screen у демо-режимі й сторінки пристроїв (меню «Екрани принтера»)
           cp ../apps/screen/dist-demo/index.html screen.html
@@ -80,7 +81,6 @@ jobs:
           touch .nojekyll
           printf '# Vyron — demo\n\nAuto-generated demo build of Vyron Web and Vyron Screen (Vue 3, single-file).\nDo not edit: every push to the source repository overwrites this content.\n' > README.md
           git add -A
-          if git diff --cached --quiet; then echo "Demo unchanged."; exit 0; fi
           git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-            commit -m "deploy demo from ${GITHUB_SHA::7}"
-          git push origin HEAD:main
+            commit -qm "deploy demo from ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${TOKEN}@github.com/${DEMO_REPO}.git" HEAD:main
