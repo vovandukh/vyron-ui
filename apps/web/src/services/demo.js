@@ -1,6 +1,7 @@
 // Демо-режим: імітація друку і фейкові відповіді Moonraker. Команди нікуди не надсилаються.
 
-export const DEMO_DEFAULT_TOOLS = 6
+// Більшість принтерів — з одним екструдером; 2–6 голів вмикаються в центрі керування демо
+export const DEMO_DEFAULT_TOOLS = 1
 export const DEMO_MAX_TOOLS = 12
 
 /** Список екструдерів демо-принтера: extruder, extruder1, … */

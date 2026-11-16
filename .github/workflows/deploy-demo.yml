@@ -4,7 +4,7 @@ name: Deploy demo to GitHub Pages
 # ПУБЛІЧНИЙ репозиторій, з якого GitHub Pages віддає сайт. Код цього репозиторію лишається приватним.
 #
 # Одноразове налаштування:
-#   1. Публічний репозиторій для демо (за замовчуванням vovandukh/voron_ui_demo; інший — змінна DEMO_REPO
+#   1. Публічний репозиторій для демо (за замовчуванням vovandukh/vyron-demo; інший — змінна DEMO_REPO
 #      у Settings → Secrets and variables → Actions → Variables).
 #   2. Fine-grained токен з доступом лише до цього репозиторію, Contents: Read and write →
 #      секрет DEMO_DEPLOY_TOKEN у цьому (приватному) репозиторії.
@@ -16,6 +16,7 @@ on:
     branches: [main]
     paths:
       - 'apps/web/**'
+      - 'apps/screen/**'
       - 'packages/**'
       - 'package.json'
       - 'package-lock.json'
@@ -31,7 +32,7 @@ jobs:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     env:
-      DEMO_REPO: ${{ vars.DEMO_REPO || 'vovandukh/voron_ui_demo' }}
+      DEMO_REPO: ${{ vars.DEMO_REPO || 'vovandukh/vyron-demo' }}
       TOKEN: ${{ secrets.DEMO_DEPLOY_TOKEN }}
     steps:
       - name: Check deploy token
@@ -58,6 +59,7 @@ jobs:
         run: |
           npm ci
           npm run build:demo
+          npm run build:screen:demo
           if grep -qE '(src|href)="\./assets/' apps/web/dist-demo/index.html; then
             echo "apps/web/dist-demo/index.html references ./assets/ — single-file build is broken"; exit 1
           fi
@@ -69,8 +71,11 @@ jobs:
           cd site
           git rm -rq --ignore-unmatch .
           cp ../apps/web/dist-demo/index.html index.html
+          # Vyron Screen у демо-режимі й сторінки пристроїв (меню «Екрани принтера»)
+          cp ../apps/screen/dist-demo/index.html screen.html
+          mkdir -p screens && cp ../apps/screen/demo/*.html screens/
           touch .nojekyll
-          printf '# Vyron Web — demo\n\nAuto-generated demo build of Vyron Web (Vue 3, single-file).\nDo not edit: every push to the source repository overwrites this content.\n' > README.md
+          printf '# Vyron — demo\n\nAuto-generated demo build of Vyron Web and Vyron Screen (Vue 3, single-file).\nDo not edit: every push to the source repository overwrites this content.\n' > README.md
           git add -A
           if git diff --cached --quiet; then echo "Demo unchanged."; exit 0; fi
           git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
