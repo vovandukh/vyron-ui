@@ -5,9 +5,20 @@ export function normalizeHost(v) {
 }
 
 // Протокол — як у сторінки: https → wss/https, http → ws/http (без змішаного контенту).
-const secure = () => typeof location !== 'undefined' && location.protocol === 'https:'
-export const socketUrl = host => (secure() ? 'wss://' : 'ws://') + host + '/websocket'
-export const httpBase = host => (secure() ? 'https://' : 'http://') + host
+// Виняток (лише демо на GitHub Pages, allowLocalInsecure): принтер у локальній мережі не має TLS, тож для
+// приватних адрес ідемо через ws/http — браузер пропустить це, якщо користувач дозволив «Небезпечний вміст».
+let localInsecure = false
+export function allowLocalInsecure() { localInsecure = true }
+/** Приватна адреса: 10.*, 172.16–31.*, 192.168.*, 127.*, localhost, *.local, ім'я без крапок */
+export function isLocalHost(host) {
+  const h = String(host || '').replace(/:\d+$/, '').replace(/^\[|\]$/g, '').toLowerCase()
+  return /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(h) || h === 'localhost' || h.endsWith('.local') || (!!h && !h.includes('.') && !h.includes(':'))
+}
+const secureFor = host => typeof location !== 'undefined' && location.protocol === 'https:' && !(localInsecure && isLocalHost(host))
+export const socketUrl = host => (secureFor(host) ? 'wss://' : 'ws://') + host + '/websocket'
+export const httpBase = host => (secureFor(host) ? 'https://' : 'http://') + host
+/** Підключення з https-сторінки до принтера без TLS — браузер може заблокувати (змішаний вміст) */
+export const mixedContentRisk = host => typeof location !== 'undefined' && location.protocol === 'https:' && localInsecure && isLocalHost(host)
 
 // ---------- вибір хоста принтера (жодних вшитих адрес) ----------
 const HOST_KEY = 'vyron.host'

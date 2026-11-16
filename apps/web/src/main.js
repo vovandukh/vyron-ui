@@ -8,6 +8,11 @@ import { logoDataUri } from '@vyron/shared/logo'
 import { watchBuild, saveResume, takeResume, revealReady } from '@vyron/shared/live'
 import { usePrinterStore } from './stores/printerStore'
 import { useUiStore } from './stores/uiStore'
+import { DEMO_BUILD } from './config'
+import { allowLocalInsecure } from '@vyron/shared/moonraker/client'
+
+// Демо на GitHub Pages (https): дозволити підключення до принтера в локальній мережі без TLS (ws/http)
+if (DEMO_BUILD) allowLocalInsecure()
 
 // Favicon — знак Vyron як SVG data URI: однофайлова збірка (vite-plugin-singlefile) не потребує файлу поруч з HTML.
 // Колір — фірмовий колір теми; оновлюється, коли змінюють дизайн.
