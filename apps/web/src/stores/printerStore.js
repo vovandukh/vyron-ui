@@ -3,6 +3,7 @@ import { ref, shallowReactive, computed } from 'vue'
 import { MoonrakerClient, normalizeHost, resolveHost, rememberHost, savedHost } from '@vyron/shared/moonraker/client'
 import { fetchGcode, startPrintFile } from '@vyron/shared/moonraker/api'
 import { discoverTools, subscriptionObjects, STATE_KEYS, toolNum, findChamber, findLeveling, findMcus, findHwSensors, mcuConnections } from '@vyron/shared/klipper/objects'
+import { tuneScript, tunePatch } from '@vyron/shared/klipper/tune'
 import { detectToolheads, toolheadObjects } from '@vyron/shared/klipper/toolheads'
 import { detectEddy, eddyObjects } from '@vyron/shared/klipper/eddy'
 import { parseGcode } from '@vyron/shared/gcode/parser'
@@ -615,6 +616,16 @@ export const usePrinterStore = defineStore('printer', () => {
     return script ? rpc(script) : false
   }
 
+  /**
+   * Тонке налаштування під час друку (@vyron/shared/klipper/tune): Z-зсув, швидкість, потік, обдув.
+   * kind: 'z' (v — приріст, мм) | 'zreset' | 'speed' | 'flow' | 'fan' (v — нове значення, %).
+   */
+  function tune(kind, v) {
+    if (demoMode.value) { mergeStatus(tunePatch(st, kind, v)); return true }
+    const script = tuneScript(kind, v)
+    return script ? rpc(script) : false
+  }
+
   function demoBeginPrint(file) {
     applyModel(file === DEMO_PRINTING_FILE ? demoGcode() : demoPreviewModel(file))
     Object.assign(demoJob, { file, state: 'printing', k: 0, pos: null, progress: 0 })
@@ -798,7 +809,7 @@ export const usePrinterStore = defineStore('printer', () => {
     consoleLines, cmdHistory, modelVersion, done,
     // getters
     connected, isPrinting, printState, stateLabel, meta, activeToolName, canSwitchTools, toolCount, nozzleTemp, bedTemp, chamberTemp,
-    speedFactor, fanSpeed, position, qgl, progressPct, etaSeconds, layerText, nozzleHeater,
+    speedFactor, fanSpeed, position, qgl, progressPct, etaSeconds, layerText, nozzleHeater, tune,
     nozzleTarget, bedTarget, hasBed, hasFan, chamberObj, leveling, heaterMax, quickSet,
     mcuObjects, hwSensors, hostInfo, mcuBadAt, mcuRate, mcuConn,
     // actions

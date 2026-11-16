@@ -127,7 +127,7 @@ export function demoTickStatus({ pos, progress, activeTool, tools, toolheads, ed
   const patch = {
     toolhead: { position: pos ? [pos[0], pos[1], z, 0] : [0, 0, 0, 0], extruder: tools[activeTool] },
     virtual_sdcard: { progress },
-    print_stats: { state, filename, print_duration: progress * DEMO_PRINT_SECONDS,
+    print_stats: { state, filename, print_duration: progress * DEMO_PRINT_SECONDS, filament_used: progress * 14200,
       info: filename === DEMO_PRINTING_FILE ? { current_layer: layer, total_layer: DEMO_VASE_LAYERS } : {} }
   }
   // Температури — з імітації нагріву в сторі (demoHeatStep); без неї — сталі значення
