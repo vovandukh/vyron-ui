@@ -6,6 +6,7 @@ import { discoverTools, subscriptionObjects, STATE_KEYS, toolNum, findChamber, f
 import { tuneScript, tunePatch } from '@vyron/shared/klipper/tune'
 import { detectToolheads, toolheadObjects } from '@vyron/shared/klipper/toolheads'
 import { detectEddy, eddyObjects } from '@vyron/shared/klipper/eddy'
+import { bedShape, bedKey, DEFAULT_BED } from '@vyron/shared/klipper/bed'
 import { parseGcode } from '@vyron/shared/gcode/parser'
 import { model, loadModel, indexForPos, segEnd, layerLabel } from '@vyron/shared/gcode/model'
 import {
@@ -148,6 +149,16 @@ export const usePrinterStore = defineStore('printer', () => {
   const qgl = computed(() => (leveling.value ? (st[leveling.value.obj] || {}).applied ?? null : null))
   /** Межі нагрівачів з printer.cfg (max_temp): { extruder: 300, heater_bed: 120, … } */
   const heaterMax = ref({})
+  /** Кінематика й круглий стіл карти — з налаштувань printer.cfg (лише читання) */
+  const kinematics = ref('')
+  const meshRound = ref(false)
+  /** Робоча область: форма й розміри з Klipper (toolhead axis_minimum/maximum). Об'єкт змінюється лише разом зі столом. */
+  let bedCache = DEFAULT_BED
+  const bed = computed(() => {
+    const b = bedShape(kinematics.value, st.toolhead) || DEFAULT_BED
+    if (bedKey(b) !== bedKey(bedCache)) bedCache = b
+    return bedCache
+  })
   // ---------- залізо: MCU, хост ----------
   /** Усі мікроконтролери з printer.objects.list ('mcu', 'mcu EBBCan', …) */
   const mcuObjects = computed(() => findMcus(objectList.value))
@@ -203,6 +214,8 @@ export const usePrinterStore = defineStore('printer', () => {
     for (const k of Object.keys(st)) delete st[k]
     objectList.value = []
     heaterMax.value = {}
+    kinematics.value = ''
+    meshRound.value = false
     hwSensors.value = []
     hostInfo.value = null
     mcuBadAt.value = {}
@@ -435,6 +448,8 @@ export const usePrinterStore = defineStore('printer', () => {
         const settings = (((q || {}).status || {}).configfile || {}).settings || {}
         heaterMax.value = Object.fromEntries([...tools, 'heater_bed']
           .map(n => [n, Number((settings[n] || {}).max_temp)]).filter(([, v]) => v > 0))
+        kinematics.value = String((settings.printer || {}).kinematics || '')
+        meshRound.value = Number((settings.bed_mesh || {}).mesh_radius) > 0
         toolheads.value = detectToolheads(settings, tools, objectList.value)
         eddies.value = detectEddy(settings, tools, toolheads.value, objectList.value)
         hwSensors.value = findHwSensors(objectList.value, settings)
@@ -520,6 +535,24 @@ export const usePrinterStore = defineStore('printer', () => {
   }
 
   /** Демо з n головами (1…DEMO_MAX_TOOLS). Без аргументу — ?demo=N з адреси або DEMO_DEFAULT_TOOLS. */
+  /**
+   * Демо: форма столу — прямокутний (CoreXY 350×350) або круглий (дельта, радіус 150).
+   * Центр круглого — там само (175, 175), щоб демо-модель стояла посередині.
+   */
+  const demoBed = ref('rect')
+  function applyDemoBed() {
+    const round = demoBed.value === 'round'
+    kinematics.value = round ? 'delta' : 'corexy'
+    meshRound.value = round
+    mergeStatus({ toolhead: round
+      ? { axis_minimum: [25, 25, 0, -99999], axis_maximum: [325, 325, 300, 99999] }
+      : { axis_minimum: [0, 0, 0, -99999], axis_maximum: [350, 350, 330, 99999] } })
+  }
+  function setDemoBed(kind) {
+    demoBed.value = kind === 'round' ? 'round' : 'rect'
+    if (demoMode.value) applyDemoBed()
+  }
+
   function startDemo(n) {
     if (!DEMO_BUILD) return   // у збірці для принтера демо немає (див. config.js)
     if (!(n >= 1)) n = Number(new URLSearchParams(location.search).get('demo')) || DEMO_DEFAULT_TOOLS
@@ -540,6 +573,7 @@ export const usePrinterStore = defineStore('printer', () => {
     resetDemoFiles()
     demoHeat.targets = {}; demoHeat.temps = {}
     mergeStatus(demoStaticStatus(heads, eds))
+    applyDemoBed()
     demoBeginPrint(DEMO_PRINTING_FILE)
     // Демо має повний набір датчиків (камера, QGL, обдув…) — «список об'єктів» беремо з імітованого статусу.
     mergeStatus(demoTickStatus({ pos: null, progress: 0, state: 'printing', filename: demoJob.file, activeTool: 0, tools, toolheads: heads, eddies: eds, heat: demoHeatStep(tools) }))
@@ -834,10 +868,10 @@ export const usePrinterStore = defineStore('printer', () => {
     // getters
     connected, isPrinting, printState, stateLabel, meta, activeToolName, canSwitchTools, toolCount, nozzleTemp, bedTemp, chamberTemp,
     speedFactor, fanSpeed, position, qgl, progressPct, etaSeconds, layerText, nozzleHeater, tune,
-    nozzleTarget, bedTarget, hasBed, hasFan, chamberObj, leveling, heaterMax, quickSet,
+    nozzleTarget, bedTarget, hasBed, hasFan, chamberObj, leveling, heaterMax, quickSet, kinematics, meshRound, bed,
     mcuObjects, hwSensors, hostInfo, mcuBadAt, mcuRate, mcuConn,
     // actions
-    preview, openPreview, closePreview, printBusy, startPrint, demoSet,
+    preview, openPreview, closePreview, printBusy, startPrint, demoSet, demoBed, setDemoBed,
     on, log, connect, startDemo, exitDemo, autoStart, rpc, sendRaw, consoleSend, call, selectTool, setToolTarget,
     setHeater, emergencyStop, printAction, levelGantry, levelingBusy, mergeStatus,
     // помилки Klipper

@@ -137,6 +137,13 @@ function onEnter(el) {
                 <button v-for="n in HEADS" :key="n" type="button" role="radio" :aria-checked="String(printer.toolCount === n)" :class="{ on: printer.toolCount === n }" @click="printer.startDemo(n)">{{ n }}</button>
               </div>
             </div>
+            <!-- Форма столу: прямокутний або круглий (дельта) -->
+            <div class="heads">
+              <small>{{ t('cc.bed') }}</small>
+              <div class="hseg" role="radiogroup" :aria-label="t('cc.bed')">
+                <button v-for="b in ['rect', 'round']" :key="b" type="button" role="radio" :aria-checked="String(printer.demoBed === b)" :class="{ on: printer.demoBed === b }" @click="printer.setDemoBed(b)">{{ t('cc.bed.' + b) }}</button>
+              </div>
+            </div>
             <!-- Стан демо-друку: побачити і «готово», і очікування, а не лише нескінченний друк -->
             <div class="heads">
               <small>{{ t('cc.demoState') }}</small>
