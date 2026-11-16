@@ -1,0 +1,87 @@
+name: Release to stable
+
+# Випуск версії для звичайних користувачів.
+#
+#   main   — канал dev: кожен push одразу доходить до принтерів розробників.
+#   stable — канал stable: рухається лише цим workflow, на перевірений коміт з main.
+#
+# Запуск: Actions → Release to stable → Run workflow. Перед цим:
+#   1. підняти vyronVersion у package.json (і __version__ у core/vyron_core/__init__.py);
+#   2. дочекатися зеленого «Build to main» — реліз бере вже зібрані index.html і screen.html.
+#
+# Workflow перевіряє, що збірка в main відповідає коду, тег vX ще не існує, а stable рухається лише вперед.
+# Потім ставить тег vX, переводить stable на цей коміт і створює GitHub Release.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Version
+        id: v
+        run: |
+          V="$(node -p "const p=require('./package.json'); p.vyronVersion || p.version")"
+          CORE="$(sed -n 's/^__version__ = "\(.*\)"/\1/p' core/vyron_core/__init__.py)"
+          if [ "$V" != "$CORE" ]; then
+            echo "::error::package.json vyronVersion ($V) != core __version__ ($CORE) — change them together"; exit 1
+          fi
+          if git rev-parse -q --verify "refs/tags/v$V" >/dev/null; then
+            echo "::error::tag v$V already exists — bump vyronVersion before releasing"; exit 1
+          fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+
+      - name: Built files match the code
+        run: |
+          npm ci
+          npm run build
+          npm run build:screen
+          bad=0
+          cmp -s apps/web/dist/index.html index.html || { echo "index.html in main is stale"; bad=1; }
+          cmp -s apps/screen/dist/index.html screen.html || { echo "screen.html in main is stale"; bad=1; }
+          if [ $bad = 1 ]; then
+            echo "::error::Build to main has not finished for the latest commit — wait for it and run the release again"; exit 1
+          fi
+
+      - name: Stable only moves forward
+        run: |
+          if git rev-parse -q --verify refs/remotes/origin/stable >/dev/null; then
+            git merge-base --is-ancestor origin/stable HEAD || { echo "::error::stable is not an ancestor of main"; exit 1; }
+          fi
+
+      - name: Tag, move stable, publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          V: ${{ steps.v.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$V" -m "Vyron $V"
+          git push origin "v$V"
+          git push origin HEAD:refs/heads/stable
+          PREV="$(git describe --tags --abbrev=0 "v$V^" 2>/dev/null || true)"
+          if [ -n "$PREV" ]; then
+            gh release create "v$V" --title "Vyron $V" --generate-notes --notes-start-tag "$PREV"
+          else
+            gh release create "v$V" --title "Vyron $V" --notes "Перший стабільний випуск Vyron."
+          fi

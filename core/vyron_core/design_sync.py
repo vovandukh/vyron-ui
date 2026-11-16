@@ -22,11 +22,23 @@ EVENT = "design_changed"
 class DesignSync:
     def __init__(self, interval=2.0):
         self.interval = interval
+        self._known = False  # простір vyron_ui уже існує в базі
 
     async def _updated(self, client):
+        # Поки тему ніхто не зберігав, простору немає, і кожен get_item писав би в moonraker.log «not found».
+        # Тож спершу перевіряємо список просторів (без помилок), а ключ читаємо лише коли простір з'явився.
+        if not self._known:
+            try:
+                r = await client.call("server.database.list")
+            except MoonrakerError:
+                return None
+            if NAMESPACE not in ((r or {}).get("namespaces") or []):
+                return None
+            self._known = True
         try:
             r = await client.call("server.database.get_item", {"namespace": NAMESPACE, "key": KEY})
         except MoonrakerError:
+            self._known = False
             return None  # запису ще немає — тему ніхто не зберігав
         value = (r or {}).get("value")
         return value if isinstance(value, (int, float)) else None

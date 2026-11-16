@@ -3,9 +3,10 @@
 Потрібно: принтер із Klipper, Moonraker і nginx (стандартна установка Mainsail або Fluidd через KIAUH).
 
 ```bash
-cd ~ && git clone https://github.com/vovandukh/vyron-ecosystem.git
-~/vyron-ecosystem/install/install.sh --dry-run   # подивитися, що буде зроблено
-~/vyron-ecosystem/install/install.sh             # встановити
+cd ~ && git clone -b stable https://github.com/vovandukh/vyron-ui.git
+~/vyron-ui/install/install.sh --dry-run   # подивитися, що буде зроблено
+~/vyron-ui/install/install.sh             # встановити (плата без відеокарти: CB1, Pi 3, SPI-екран)
+~/vyron-ui/install/install.sh --gpu       # встановити (плата з відеокартою: Pi 4/5, CM4, Orange Pi 5)
 ```
 
 Після встановлення:
@@ -39,13 +40,15 @@ cd ~ && git clone https://github.com/vovandukh/vyron-ecosystem.git
 | `--no-updates` | не додавати запис в Update Manager |
 | `--no-core` | не встановлювати службу Vyron Core |
 | `--no-screen` | не чіпати екран принтера (KlipperScreen лишається) |
+| `--gpu` / `--no-gpu` | прискорення відеокартою для екрана принтера (Pi 4/5, CM4, Orange Pi 5) або без нього (CB1, Pi 3, SPI-екрани — за замовчуванням). Вибір запам'ятовується |
+| `--stable` / `--dev` | канал оновлень: перевірені випуски (гілка `stable`) або кожна зміна (гілка `main`). Перемикає репозиторій на потрібну гілку й оновлює запис Update Manager. Без параметра — канал поточної гілки |
 
 ## Видалення
 
 ```bash
-~/vyron-ecosystem/install/uninstall.sh --dry-run
-~/vyron-ecosystem/install/uninstall.sh            # тека репозиторію лишається
-~/vyron-ecosystem/install/uninstall.sh --purge    # і видалити теку
+~/vyron-ui/install/uninstall.sh --dry-run
+~/vyron-ui/install/uninstall.sh            # тека репозиторію лишається
+~/vyron-ui/install/uninstall.sh --purge    # і видалити теку
 ```
 
 Повертає Mainsail на порт 80 (вмикає знову), прибирає сайт `vyron`, запис з `moonraker.conf` і службу Vyron Core.
@@ -53,9 +56,9 @@ cd ~ && git clone https://github.com/vovandukh/vyron-ecosystem.git
 ## Vyron Screen на екрані принтера (замість KlipperScreen)
 
 ```bash
-~/vyron-ecosystem/install/screen.sh --dry-run   # подивитися план
-~/vyron-ecosystem/install/screen.sh             # поставити Vyron Screen на екран
-~/vyron-ecosystem/install/screen.sh --remove    # повернути KlipperScreen
+~/vyron-ui/install/screen.sh --dry-run   # подивитися план
+~/vyron-ui/install/screen.sh             # поставити Vyron Screen на екран
+~/vyron-ui/install/screen.sh --remove    # повернути KlipperScreen
 ```
 
 `install.sh` запускає цей крок сам; окремо він потрібен, щоб лише перемкнути екран. Для екрана піднімається локальний сайт nginx на `127.0.0.1:7136`

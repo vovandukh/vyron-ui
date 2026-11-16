@@ -18,26 +18,20 @@ export default {
 
   'state.printing': 'Printing', 'state.paused': 'Pause', 'state.standby': 'Standby', 'state.complete': 'Done',
   'state.cancelled': 'Cancelled', 'state.error': 'Error', 'state.connecting': 'Connecting…', 'state.connected': 'Connected',
-  'state.ready': 'Ready', 'state.klipperError': 'Klipper error', 'state.lost': 'No connection', 'state.demo': 'Demo',
+  'state.ready': 'Ready', 'state.klipperError': 'Klipper error', 'state.lost': 'No connection',
 
-  'conn.placeholder': 'printer address', 'conn.aria': 'Printer address', 'conn.connect': 'Connect', 'conn.demo': 'Demo',
+  'conn.placeholder': 'printer address', 'conn.aria': 'Printer address', 'conn.connect': 'Connect',
   'conn.connectingTo': 'Connecting to {host}…', 'conn.connectedTo': 'Connected · {host}',
   'conn.wsError': 'Could not connect — check the address and that the printer is on', 'conn.lost': 'Lost connection to the printer — reconnecting…',
   'conn.addrError': 'Address error: {msg}',
-  'cc.title': 'Control Center', 'cc.connection': 'Connection', 'cc.demo': 'Demo mode', 'cc.demoHint': 'Simulated print, no printer needed',
-  'cc.demoErr': 'Simulate errors', 'cc.demoErrHint': 'See how the UI shows Klipper failures',
-  'demoErr.g.klippy': 'Klipper state', 'demoErr.g.gcode': 'G-code errors',
-  'demoErr.mcu': 'MCU lost', 'demoErr.timer': 'Timer too close', 'demoErr.heater': 'Heater', 'demoErr.adc': 'Thermistor',
-  'demoErr.estop': 'M112', 'demoErr.config': 'Config error', 'demoErr.startup': 'Starting', 'demoErr.offline': 'Service stopped',
-  'demoErr.home': 'Not homed', 'demoErr.range': 'Out of range', 'demoErr.cold': 'Cold nozzle', 'demoErr.probe': 'Probe',
-  'demoErr.qgl': 'QGL', 'demoErr.macro': 'Macro', 'demoErr.unknown': 'Unknown command',
+  'cc.title': 'Control Center',
   'cc.connected': 'Connected', 'cc.notConnected': 'Not connected',
   'cc.address': 'Address',
   'cc.open': 'Control Center · connection',
-  'island.demo': 'Demo mode active', 'island.connected': 'Connected · {host}', 'island.lost': 'Connection lost',
+  'island.connected': 'Connected · {host}', 'island.lost': 'Connection lost',
   'island.ready': 'Klipper ready', 'island.klipperError': 'Klipper error', 'island.qgl': 'Quad gantry level complete', 'island.ztilt': 'Z-Tilt adjust complete',
   'view.reset': 'Reset view', 'nav.home': 'Home — Control',
-  'island.detail': '{state} · {host}', 'island.demoHost': 'local simulation', 'island.noHost': 'no host set', 'island.peekTitle': 'Printer status and address',
+  'island.detail': '{state} · {host}', 'island.noHost': 'no host set', 'island.peekTitle': 'Printer status and address',
   'island.printStart': 'Print started', 'island.printDone': 'Print complete', 'island.paused': 'Print paused',
   'island.printError': 'Print error', 'island.cancelled': 'Print cancelled',
   // ---------- settings → design (DesignPanel, services/theme.js) ----------
@@ -50,10 +44,11 @@ export default {
   'set.secMotion': 'Motion', 'set.secMotionHint': 'Motion panel on the Control tab',
   'set.inv': 'Invert axes', 'set.invHint': 'If a button moves the axis the wrong way',
   'set.fxyShort': 'X/Y speed', 'set.fxyHint': 'mm/min for jog buttons', 'set.fzShort': 'Z speed', 'set.fzHint': 'mm/min for jog buttons',
+  'set.secBed': 'Bed', 'set.secBedHint': 'Shape and size of the work area in the 3D view', 'set.bedShape': 'Shape', 'set.bedAuto': 'Klipper: {v}', 'set.mm': 'mm',
+  'set.bed.auto': 'Auto', 'set.bed.rect': 'Rectangular', 'set.bed.round': 'Round', 'set.bed.w': 'Width (X), mm', 'set.bed.d': 'Depth (Y), mm', 'set.bed.dia': 'Diameter, mm', 'set.bed.h': 'Height (Z), mm',
   'set.secAbout': 'About system', 'set.ui': 'Interface', 'set.core': 'Core', 'set.coreNone': 'not installed', 'set.klipper': 'Klipper', 'set.moonraker': 'Moonraker', 'set.host': 'Host', 'set.os': 'OS', 'set.addr': 'Address',
   'tune.title': 'While printing', 'tune.open': 'Tune', 'tune.z': 'Z offset', 'tune.speed': 'Speed', 'tune.flow': 'Flow', 'tune.fan': 'Fan', 'tune.reset': 'Reset Z offset', 'tune.hint': 'Z offset applies instantly — adjust while watching the first layer', 'tune.mm': 'mm', 'common.done': 'Done',
   'scr.needHome': 'Arrows unlock after Home — the printer needs to know where each axis starts', 'heat.material': 'Material', 'scr.print': 'Print', 'scr.printQ': 'Start printing this file?', 'scr.est': 'Print time', 'scr.fil': 'Filament', 'scr.layerH': 'Layer', 'scr.filesBusy': 'A print is running — start a new file after it', 'scr.today': 'today', 'scr.deleteQ': 'Delete «{name}» from the printer? This cannot be undone.', 'heat.off': 'Turn heaters off', 'heat.now': 'now', 'heat.hint': 'A preset sets nozzle and bed together. Klipper will not exceed max_temp from printer.cfg',
-  'conn.help.t': 'The browser blocked the printer from this page', 'conn.help.1': 'Allow «Insecure content» for this site: icon left of the address → Site settings → Insecure content → Allow. Reload the page', 'conn.help.2': 'In moonraker.conf, under [authorization], add cors_domains: {origin} and restart Moonraker', 'conn.help.3': 'If the browser asks to access devices on your local network — allow it', 'conn.help.alt': 'Easiest — open Vyron straight from the printer: http://printer-IP/', 'cc.heads': 'Heads in demo', 'cc.demoState': 'Print state', 'cc.ds.printing': 'Printing', 'cc.ds.paused': 'Paused', 'cc.ds.complete': 'Done', 'cc.ds.idle': 'Idle', 'demo.screenChip': 'Printer screen', 'cc.screens': 'Printer screens', 'cc.screensHint': 'Vyron Screen on a touch display', 'cc.ready': 'ready', 'cc.feedback': 'Feedback and ideas', 'cc.screensMore': 'Other displays (800×480, 1024×600) — coming later',
   'job.elapsed': '{t} elapsed', 'job.layer': 'layer {l}', 'job.fil': '{m} m of filament',
   'set.secNotify': 'Notifications', 'set.secNotifyHint': 'How the interface tells you about events',
   'set.toasts': 'Error pop-ups', 'set.toastsHint': 'Short cards when the printer skips a command: “The nozzle is not hot yet”, “The axes need to be homed first”…',
@@ -162,7 +157,7 @@ export default {
   'kerr.shutdownNow.h': 'Press “Restart printer”',
 
   'meta.notConnected': 'Not connected', 'meta.noFile': 'No active file',
-  'meta.gcodeError': 'Could not load G-code: {msg}', 'meta.demo': 'Demo · simulated print',
+  'meta.gcodeError': 'Could not load G-code: {msg}',
 
   'print.controls': 'Print controls', 'print.pause': 'Pause', 'print.resume': 'Resume', 'print.cancel': 'Cancel',
   'print.pausing': 'Pausing…', 'print.resuming': 'Resuming…', 'print.cancelling': 'Cancelling…',
@@ -179,7 +174,7 @@ export default {
   'jog.home': 'Home all axes', 'jog.motorsOff': 'Disable motors (M84)', 'jog.motorsOffAria': 'Disable motors',
   'jog.badDistance': 'Enter a valid distance greater than 0', 'jog.stepAll': 'Move step', 'mob.data': 'Data', 'mob.head': 'Toolhead', 'mob.heads': 'Toolheads', 'jog.homeAll': 'Home', 'jog.motorsShort': 'Motors',
 
-  'msg.demoNoExec': 'Demo: command not executed', 'msg.notConnected': 'Not connected',
+  'msg.notConnected': 'Not connected',
   'msg.notConnectedPrinter': 'Not connected to the printer', 'msg.notWhilePrinting': 'Not while printing',
   'msg.invalidWs': 'The printer sent a response that could not be read',
 
@@ -188,8 +183,6 @@ export default {
   'tools.found': 'Toolheads found: {n}',
   'tools.none': 'No toolheads found yet',
 
-  'tools.demoMode': 'Demo mode · no commands are sent to the printer',
-  'tools.demoSelected': 'Demo · selected T{i}',
   'tools.sent': 'Tool selection sent: T{i}', 'tools.board': 'Toolhead board ·',
   'tools.aria': 'Temperature T{i}',
   'tools.activate': 'Activate', 'tools.badTemp': 'Enter a temperature 0–320 °C',
@@ -204,7 +197,7 @@ export default {
   'console.macros': 'Quick macros',
   'mesh.save': 'Save profile', 'mesh.saveConfirm': 'Save this bed mesh? The printer will remember it and restart briefly (SAVE_CONFIG).',
   'mesh.profile': 'Profile', 'mesh.savedShort': 'saved', 'mesh.min': 'Min, mm', 'mesh.max': 'Max, mm', 'mesh.range': 'Range, mm', 'mesh.exag': 'Scale',
-  'mesh.calibrate': 'Calibrate', 'mesh.none': 'No bed mesh yet. Press “Calibrate” to let the printer measure the bed.', 'mesh.front': 'The front edge of the bed is at the bottom.',
+  'mesh.no3d': '3D view is not available in this browser (no WebGL) — see the values in the table', 'mesh.calibrate': 'Calibrate', 'mesh.none': 'No bed mesh yet. Press “Calibrate” to let the printer measure the bed.', 'mesh.front': 'The front edge of the bed is at the bottom.',
   'mesh.calSent': 'Calibration started. Progress is shown in the console.',
   'mesh.info': '{name}{saved} · {lo}…{hi} mm · range {range} mm · ×{k}', 'mesh.savedSuffix': ' · saved profile',
 
@@ -224,7 +217,7 @@ export default {
   'hw.mhz': 'MHz', 'hw.retransmit': 'Retransmits', 'hw.invalid': 'Invalid',
   'hw.bus.ok': 'Link stable', 'hw.bus.warn': 'Some data is getting lost — check the bus cable and connectors', 'hw.bus.off': 'Board not responding',
   'eng.klipper': 'Klipper', 'eng.host': 'Host', 'eng.state': 'State', 'eng.cpu': 'CPU', 'eng.cpuTemp': 'CPU temperature',
-  'eng.mem': 'Memory', 'eng.uptime': 'Uptime', 'eng.memVal': '{p}% of {gb} GB', 'eng.demoUptime': '3 days',
+  'eng.mem': 'Memory', 'eng.uptime': 'Uptime', 'eng.memVal': '{p}% of {gb} GB',
   'eng.confirmRestart': 'Reload the config and restart Klipper?', 'eng.confirmFw': 'Restart the printer (FIRMWARE_RESTART)? The control boards will be reset and the current print aborted.',
 
   'cfg.search': 'Search files', 'cfg.new': '+ New', 'cfg.unsaved': '● unsaved', 'cfg.find': 'Find',
@@ -257,7 +250,6 @@ export default {
   'net.sent': 'Command sent. If it connects, this page will lose the connection — open the printer at its new IP address.',
   'net.setupSummary': 'One-time setup for connecting',
   'net.setupNote': 'This needs the gcode_shell_command extension on the printer (installed via KIAUH). The example below has not been tested on your printer; if nmcli asks for admin rights, you will need to set up sudo or polkit.',
-  'net.demoIface': 'wlan0 · 192.168.1.50 (demo)',
 
   'set.lang': 'Language', 'set.cEstop': 'Confirm emergency stop',
   'set.cSys': 'Confirm system actions (restart, shutdown)',
@@ -266,7 +258,7 @@ export default {
   'set.note': 'General settings are stored in this browser; the design is also saved on the printer.',
 
   'temp.nozzle': 'Nozzle temperature', 'temp.bed': 'Bed temperature', 'temp.now': 'Now', 'temp.target': 'target',
-  'temp.aria': 'Target temperature', 'temp.range': 'Enter a temperature 0–{max} °C',
+  'temp.aria': 'Target temperature', 'temp.range': 'Enter a temperature 0–{max} °C',
   'tools.statusActive': 'Active', 'tools.statusIdle': 'Idle',
 
   'eddy.shared': 'on board', 'eddy.onBoard': 'Eddy is connected to the I²C of toolhead board {mcu}',

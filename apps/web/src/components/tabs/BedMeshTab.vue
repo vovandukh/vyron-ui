@@ -5,6 +5,7 @@ import { useI18n } from '../../composables/useI18n'
 import BedMesh3D from '../viz/BedMesh3D.vue'
 import BedMeshGrid from '../viz/BedMeshGrid.vue'
 import { useConfirm } from '../../composables/useConfirm'
+import { meshInside } from '@vyron/shared/klipper/bed'
 
 const printer = usePrinterStore()
 const { t } = useI18n()
@@ -27,9 +28,12 @@ const parsed = computed(() => {
   if (!Array.isArray(mx) || !Array.isArray(mx[0])) return null
   mx = mx.map(r => r.map(Number))
   if (mx.some(r => r.some(v => !Number.isFinite(v)))) return null
-  const flat = mx.flat(), lo = Math.min(...flat), hi = Math.max(...flat)
+  // Круглий стіл: точки поза колом Klipper не міряє, а домальовує — у статистику їх не беремо
+  const round = printer.meshRound
+  const flat = mx.flatMap((r, i) => (round ? r.filter((_, j) => meshInside(i, j, mx.length, r.length)) : r))
+  const lo = Math.min(...flat), hi = Math.max(...flat)
   const lim = Math.max(Math.abs(lo), Math.abs(hi), 0.02)
-  return { mx, name, saved, lo, hi, lim, key: JSON.stringify(mx) + name }
+  return { mx, name, saved, lo, hi, lim, round, key: JSON.stringify(mx) + name + round }
 })
 
 // Остання валідна карта лишається на екрані, навіть якщо наступний статус її не містить.
@@ -68,9 +72,9 @@ function calibrate() {
       <div class="chip"><small>{{ t('mesh.exag') }}</small><b>×{{ Math.round(40 / mesh.lim) }}</b></div>
     </div>
     <div class="meshwrap">
-      <BedMesh3D :matrix="mesh ? mesh.mx : null" :lim="mesh ? mesh.lim : 0.02" :active="active" />
+      <BedMesh3D :matrix="mesh ? mesh.mx : null" :lim="mesh ? mesh.lim : 0.02" :round="!!(mesh && mesh.round)" :active="active" />
       <div class="card side">
-        <BedMeshGrid v-if="mesh" :matrix="mesh.mx" :lim="mesh.lim" />
+        <BedMeshGrid v-if="mesh" :matrix="mesh.mx" :lim="mesh.lim" :round="mesh.round" />
         <div v-else class="empty">{{ t('mesh.none') }}</div>
       </div>
     </div>

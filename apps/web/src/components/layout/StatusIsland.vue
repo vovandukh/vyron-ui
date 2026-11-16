@@ -4,6 +4,7 @@
 // і за кілька секунд згортається назад. Клік/тап — розкривається на місці з детальним станом і
 // адресою хоста, за 1.2 с згортається сам (центр керування відкривається лише кнопкою «…»).
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { DEMO_BUILD } from '../../config'
 import { usePrinterStore } from '../../stores/printerStore'
 import { useUiStore } from '../../stores/uiStore'
 import { useI18n } from '../../composables/useI18n'
@@ -54,7 +55,7 @@ function peek() {
   clearTimeout(timer)
   // Системну подію, яку перервав клік, покажемо одразу після розкриття
   if (ev.value && !ev.value.peek) queue.unshift(ev.value)
-  const params = printer.demoMode
+  const params = DEMO_BUILD && printer.demoMode
     ? { state: t('state.demo'), host: t('island.demoHost') }
     : { state: tm(printer.stateLabel), host: printer.host || resolveHost() || t('island.noHost') }
   ev.value = { id: ++seq, key: 'island.detail', params, tone: PEEK_TONE[printer.link] || 'info', peek: true }

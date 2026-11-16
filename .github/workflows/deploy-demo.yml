@@ -1,15 +1,15 @@
 name: Deploy demo to GitHub Pages
 
 # Збирає демо-версію (npm run build:demo — одразу демо-режим) і публікує її в окремий
-# ПУБЛІЧНИЙ репозиторій, з якого GitHub Pages віддає сайт. Код цього репозиторію лишається приватним.
+# публічний репозиторій, з якого GitHub Pages віддає сайт.
 #
 # Одноразове налаштування:
 #   1. Публічний репозиторій для демо (за замовчуванням vovandukh/vyron-demo; інший — змінна DEMO_REPO
 #      у Settings → Secrets and variables → Actions → Variables).
 #   2. Fine-grained токен з доступом лише до цього репозиторію, Contents: Read and write →
-#      секрет DEMO_DEPLOY_TOKEN у цьому (приватному) репозиторії.
+#      секрет DEMO_DEPLOY_TOKEN у цьому репозиторії.
 #   3. У демо-репозиторії: Settings → Pages → Deploy from a branch → main / (root).
-# Без секрету крок деплою пропускається (workflow не падає).
+# Без секрету workflow падає (у форках — тихо пропускає деплой).
 
 on:
   push:
@@ -38,8 +38,11 @@ jobs:
       - name: Check deploy token
         id: tok
         run: |
+          if [ -z "$TOKEN" ] && [ "$GITHUB_REPOSITORY" = "vovandukh/vyron-ui" ]; then
+            echo "::error::DEMO_DEPLOY_TOKEN is not set — the demo was NOT published (see the setup notes at the top of this file)"; exit 1
+          fi
           if [ -z "$TOKEN" ]; then
-            echo "::notice::DEMO_DEPLOY_TOKEN is not set — demo deploy skipped"
+            echo "::notice::no DEMO_DEPLOY_TOKEN in this fork — demo deploy skipped"
             echo "skip=1" >> "$GITHUB_OUTPUT"
           fi
 
@@ -67,9 +70,10 @@ jobs:
       - name: Publish to demo repository
         if: steps.tok.outputs.skip != '1'
         run: |
-          git clone --depth 1 "https://x-access-token:${TOKEN}@github.com/${DEMO_REPO}.git" site
-          cd site
-          git rm -rq --ignore-unmatch .
+          # Сайту історія не потрібна: щоразу один коміт від бота, що замінює все (force-push).
+          # Так у публічному репозиторії демо немає нічого, крім поточної збірки.
+          mkdir site && cd site
+          git init -q -b main
           cp ../apps/web/dist-demo/index.html index.html
           # Vyron Screen у демо-режимі й сторінки пристроїв (меню «Екрани принтера»)
           cp ../apps/screen/dist-demo/index.html screen.html
@@ -77,7 +81,6 @@ jobs:
           touch .nojekyll
           printf '# Vyron — demo\n\nAuto-generated demo build of Vyron Web and Vyron Screen (Vue 3, single-file).\nDo not edit: every push to the source repository overwrites this content.\n' > README.md
           git add -A
-          if git diff --cached --quiet; then echo "Demo unchanged."; exit 0; fi
           git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-            commit -m "deploy demo from ${GITHUB_SHA::7}"
-          git push origin HEAD:main
+            commit -qm "deploy demo from ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${TOKEN}@github.com/${DEMO_REPO}.git" HEAD:main

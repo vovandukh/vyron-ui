@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Vyron Screen на екрані принтера замість KlipperScreen.
 #
-#   ~/vyron-ecosystem/install/screen.sh             — поставити Vyron Screen на екран
-#   ~/vyron-ecosystem/install/screen.sh --dry-run   — лише показати, що буде зроблено
-#   ~/vyron-ecosystem/install/screen.sh --remove    — повернути KlipperScreen
+#   ~/vyron-ui/install/screen.sh             — поставити Vyron Screen на екран
+#   ~/vyron-ui/install/screen.sh --dry-run   — лише показати, що буде зроблено
+#   ~/vyron-ui/install/screen.sh --remove    — повернути KlipperScreen
+#   ~/vyron-ui/install/screen.sh --gpu       — плата з відеокартою (Raspberry Pi 4/5, CM4…): прискорення в браузері
+#   ~/vyron-ui/install/screen.sh --no-gpu    — без прискорення (CB1, Pi 3, SPI-екрани; так за замовчуванням)
 #
 # Що робить:
 #   1. Локальний сайт nginx «vyron-screen» на 127.0.0.1:7136 (лише для екрана; з мережі недоступний,
@@ -18,10 +20,13 @@ set -euo pipefail
 DRY=0
 REMOVE=0
 LPORT=7136
+GPU=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) DRY=1 ;;
     --remove|--uninstall) REMOVE=1 ;;
+    --gpu) GPU=1 ;;
+    --no-gpu) GPU=0 ;;
     -h|--help) sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "Невідомий параметр: $1 (див. --help)" >&2; exit 2 ;;
   esac
@@ -142,9 +147,13 @@ fi
 
 # 3. служба
 say "3. Служба vyron-screen (замість KlipperScreen)"
+# Прискорення відеокартою: з параметра, інакше — як у попередньому встановленні, інакше вимкнене
+[ -n "$GPU" ] || GPU="$(state_get SCREEN_GPU)"
+[ "$GPU" = 1 ] || GPU=0
+info "відеокарта в браузері: $([ $GPU = 1 ] && echo 'увімкнена (--gpu)' || echo 'вимкнена — малює процесор (--gpu, якщо плата з відеокартою)')"
 GROUPS_LINE=""; [ -n "$KS_GROUPS" ] && GROUPS_LINE="SupplementaryGroups=$KS_GROUPS"
 sed -e "s|@USER@|$USER_NAME|g" -e "s|@UID@|$UID_N|g" -e "s|@GROUPS@|$GROUPS_LINE|" \
-    -e "s|@KIOSK@|$REPO/install/screen-kiosk.sh|g" -e "s|@URL@|$URL|g" "$REPO/install/vyron-screen.service" > "$UNITF"
+    -e "s|@KIOSK@|$REPO/install/screen-kiosk.sh|g" -e "s|@URL@|$URL|g" -e "s|@GPU@|$GPU|g" "$REPO/install/vyron-screen.service" > "$UNITF"
 if [ $DRY = 1 ]; then
   info "$UNIT буде таким:"; sed 's/^/      | /' "$UNITF"
   info "KlipperScreen: вимкнеться (не видаляється), на екрані запуститься Vyron Screen"
@@ -158,6 +167,7 @@ else
   sudo systemctl reset-failed vyron-screen.service 2>/dev/null || true
   sudo systemctl start vyron-screen.service
   state_set SCREEN 1
+  state_set SCREEN_GPU "$GPU"
   info "чекаю запуску браузера (до 40 с)…"
   up=0
   for i in $(seq 1 20); do

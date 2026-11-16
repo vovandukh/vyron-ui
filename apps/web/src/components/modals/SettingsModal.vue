@@ -35,10 +35,31 @@ const numbers = [
   { k: 'fz', step: 50, min: 10, max: 6000 }
 ]
 
+// ---------- стіл (3D-сцена) ----------
+// Авто — форма й розміри з Klipper; якщо не підходить, вручну: прямокутний або круглий зі своїми розмірами.
+const BED_TABS = computed(() => ['auto', 'rect', 'round'].map(v => ({ value: v, label: t('set.bed.' + v) })))
+const bedAutoText = computed(() => {
+  const b = printer.bedAuto, mm = v => Math.round(v)
+  const size = b.round ? 'Ø' + mm(2 * b.r) + ' × ' + mm(b.h) : mm(b.w) + ' × ' + mm(b.d) + ' × ' + mm(b.h)
+  return size + ' ' + t('set.mm') + (b.kin ? ' · ' + b.kin : '')
+})
+function setBedMode(mode) {
+  // Перемикаючись на ручний режим, заповнюємо розміри тим, що визначив Klipper — далі лише підправити
+  const a = printer.bedAuto, o = printer.bedOverride
+  printer.setBedOverride({ mode, w: o.w || a.w, d: o.d || a.d, dia: o.dia || Math.min(a.w, a.d), h: o.h || a.h })
+}
+const setBedSize = (k, v) => printer.setBedOverride({ ...printer.bedOverride, [k]: v })
+const bedFields = computed(() => {
+  const o = printer.bedOverride, b = printer.bed
+  if (o.mode === 'round') return [{ k: 'dia', v: Math.round(2 * b.r) }, { k: 'h', v: Math.round(b.h) }]
+  if (o.mode === 'rect') return [{ k: 'w', v: Math.round(b.w) }, { k: 'd', v: Math.round(b.d) }, { k: 'h', v: Math.round(b.h) }]
+  return []
+})
+
 // ---------- про систему ----------
 const sys = ref({ klipper: null, moonraker: null, hostname: null, core: null })
 async function loadSys() {
-  if (printer.demoMode) { sys.value = { klipper: 'v0.13.0-560-gaea1bcf', moonraker: 'v0.9.3-41-g3f9d2c1', hostname: 'vyron-demo', core: { version: uiVersion } }; return }
+  if (DEMO_BUILD && printer.demoMode) { sys.value = { klipper: 'v0.13.0-560-gaea1bcf', moonraker: 'v0.9.3-41-g3f9d2c1', hostname: 'vyron-demo', core: { version: uiVersion } }; return }
   if (!printer.connected) { sys.value = { klipper: null, moonraker: null, hostname: null, core: null }; return }
   const [p, s, c] = await Promise.allSettled([printer.call('printer.info'), printer.call('server.info'), coreInfo(printer.call)])
   sys.value = {
@@ -60,7 +81,7 @@ const about = computed(() => [
   { k: 'set.moonraker', v: sys.value.moonraker, mono: true },
   { k: 'set.host', v: sys.value.hostname },
   { k: 'set.os', v: os.value },
-  { k: 'set.addr', v: printer.demoMode ? t('island.demoHost') : printer.host || resolveHost(), mono: true }
+  { k: 'set.addr', v: DEMO_BUILD && printer.demoMode ? t('island.demoHost') : printer.host || resolveHost(), mono: true }
 ])
 // ---------- дані: експорт / імпорт / скидання (налаштування + дизайн одним файлом) ----------
 const { confirm } = useConfirm()
@@ -175,6 +196,25 @@ const presetName = computed(() => t('design.p.' + design.d.preset))
           </div>
         </article>
 
+        <!-- ---------- стіл ---------- -->
+        <article class="crd">
+          <header class="ch">
+            <span class="ci"><svg viewBox="0 0 24 24"><path d="M3.5 15.5 12 19.5l8.5-4L12 11.5Z" /><path d="M12 11.5V4.5M7 13.6V8.2M17 13.6V8.2" /></svg></span>
+            <div><b>{{ t('set.secBed') }}</b><small>{{ t('set.secBedHint') }}</small></div>
+          </header>
+          <div class="rows">
+            <div class="srow stack">
+              <span>{{ t('set.bedShape') }}<small>{{ t('set.bedAuto', { v: bedAutoText }) }}</small></span>
+              <SegmentedControl :model-value="printer.bedOverride.mode" :options="BED_TABS" :aria-label="t('set.bedShape')" @update:model-value="setBedMode" />
+            </div>
+            <div v-for="f in bedFields" :key="f.k" class="srow wr">
+              <span>{{ t('set.bed.' + f.k) }}</span>
+              <StepperInput :model-value="f.v" :step="5" :min="20" :max="3000" :aria-label="t('set.bed.' + f.k)"
+                            @update:model-value="setBedSize(f.k, $event)" />
+            </div>
+          </div>
+        </article>
+
         <!-- ---------- сповіщення ---------- -->
         <article class="crd">
           <header class="ch">
@@ -265,6 +305,8 @@ h1{margin:0;font-size:20px;font-weight:600;letter-spacing:-.01em}
 label.srow{cursor:pointer}
 .srow>span:first-child{display:grid;gap:2px;line-height:1.35;min-width:0}
 .srow small{color:var(--dim);font-size:11px;font-weight:400}
+/* Рядок, де керування не вміщається поруч із назвою: назва зверху, перемикач під нею */
+.srow.stack{flex-direction:column;align-items:flex-start;gap:10px}
 /* Рядок-посилання на вкладку «Дизайн» */
 .view .srow.lnk{background:none;border:0;border-top:1px solid var(--hair);border-radius:0;padding:10px 14px;font-size:13px;color:var(--ink)}
 .view .srow.lnk:hover:not(:disabled){background:rgba(255,255,255,.04);border-color:var(--hair)}

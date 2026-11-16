@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { DEMO_BUILD } from '../../config'
 import { usePrinterStore } from '../../stores/printerStore'
 import { useUiStore } from '../../stores/uiStore'
 import { useI18n } from '../../composables/useI18n'
@@ -54,7 +55,7 @@ function send(v) {
   v = Number(v)
   if (!heater.value) return
   if ((empty && v !== 0) || !(v >= 0 && v <= c.max)) { msg.value = { key: 'temp.range', params: { max: c.max } }; return }
-  if (printer.demoMode) { close(); return }
+  if (DEMO_BUILD && printer.demoMode) { close(); return }
   if (!printer.connected) { msg.value = { key: 'msg.notConnectedPrinter' }; return }
   printer.setHeater(heater.value, v).then(close).catch(e => { msg.value = { raw: e.message } })
 }

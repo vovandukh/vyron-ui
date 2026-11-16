@@ -19,7 +19,7 @@ export function demoToolheads(tools) {
     return [tool, {
       mcu, mcuObj: 'mcu ' + mcu, link: can ? 'can' : 'usb',
       canbusUuid: can ? uuid(i) : null, canbusInterface: can ? 'can0' : null,
-      serial: can ? null : '/dev/serial/by-id/usb-Klipper_rp2040_4E363334320E1A3C-if00',
+      serial: can ? null : '/dev/serial/by-id/usb-Klipper_rp2040_DE0000000000D001-if00',
       sensors: [{ obj: 'temperature_sensor ' + mcu + '_mcu', name: mcu + '_mcu', chip: true }],
       fans: [
         { obj: 'heater_fan hotend_fan' + (i ? '_t' + i : ''), name: 'hotend_fan' + (i ? '_t' + i : ''), kind: 'hotend' },
@@ -303,9 +303,9 @@ function demoMcuStats(m) {
 }
 /** Підключення демо-плат: основна — USB, голови — CAN/USB, Eddy — CAN, host — процес Linux */
 export function demoMcuConn(toolheads, eddies) {
-  const out = { mcu: { kind: 'usb', id: 'usb-Klipper_stm32g0b1xx_1D0036001950434B37383120-if00' }, 'mcu host': { kind: 'linux', id: '/tmp/klipper_host_mcu' } }
+  const out = { mcu: { kind: 'usb', id: 'usb-Klipper_stm32g0b1xx_DE00000000000000DE000001-if00' }, 'mcu host': { kind: 'linux', id: '/tmp/klipper_host_mcu' } }
   Object.values(toolheads).filter(Boolean).forEach((th, i) => {
-    out[th.mcuObj] = th.link === 'can' ? { kind: 'can', iface: 'can0', id: (0xf3e9a0b47c21 + i * 0x1111).toString(16) } : { kind: 'usb', id: 'usb-Klipper_rp2040_E66138935F4B' + i + 'A28-if00' }
+    out[th.mcuObj] = th.link === 'can' ? { kind: 'can', iface: 'can0', id: (0xf3e9a0b47c21 + i * 0x1111).toString(16) } : { kind: 'usb', id: 'usb-Klipper_rp2040_DE00000000' + i + 'A28-if00' }
   })
   for (const list of Object.values(eddies)) for (const e of list) if (e.link === 'can') out[e.mcuObj] = { kind: 'can', iface: 'can0', id: '7d4c1b9e2a60' }
   return out

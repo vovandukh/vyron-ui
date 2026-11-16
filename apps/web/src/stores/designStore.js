@@ -3,6 +3,8 @@ import { computed, reactive, ref, watch } from 'vue'
 import { DEFAULT_DESIGN, PRESETS, applyDesign, sanitizeDesign, brandFor, hexToRgb } from '@vyron/shared/theme'
 import { usePrinterStore } from './printerStore'
 import { watchDesign, handleCoreEvent } from '@vyron/shared/live'
+import { dbGet, dbKnown } from '@vyron/shared/moonraker/db'
+import { DEMO_BUILD } from '../config'
 
 const KEY = 'vyron-design'
 /** Moonraker database: спільний дизайн для всіх екранів принтера (ПК, планшет, екран принтера) */
@@ -54,31 +56,32 @@ export const useDesignStore = defineStore('design', () => {
     touch()
   }
 
-  const canSync = () => printer.connected && !printer.demoMode
+  const canSync = () => printer.connected && !(DEMO_BUILD && printer.demoMode)
   async function pushRemote() {
     if (!canSync()) { sync.value = 'local'; return }
     sync.value = 'saving'
     try {
       await printer.call('server.database.post_item', { ...DB, value: { ...d } })
+      dbKnown(DB.namespace)
       sync.value = 'synced'
     } catch { sync.value = 'error' }
   }
   async function pullRemote() {
     if (!canSync()) { sync.value = 'local'; return }
-    try {
-      const r = await printer.call('server.database.get_item', DB)
-      const remote = sanitizeDesign(r && r.value)
-      if (remote.updated > d.updated) {
-        applyingRemote = true
-        Object.assign(d, remote)
-        sync.value = 'synced'
-      } else if (d.updated > remote.updated) pushRemote()
-      else sync.value = 'synced'
-    } catch {
+    const v = await dbGet((m, p) => printer.call(m, p), DB.namespace, DB.key)
+    if (v === undefined) {
       // Запису ще немає (перший запуск) — створюємо, якщо користувач уже щось змінював
       if (d.updated) pushRemote()
       else sync.value = 'synced'
+      return
     }
+    const remote = sanitizeDesign(v)
+    if (remote.updated > d.updated) {
+      applyingRemote = true
+      Object.assign(d, remote)
+      sync.value = 'synced'
+    } else if (d.updated > remote.updated) pushRemote()
+    else sync.value = 'synced'
   }
 
   watch(d, () => {
@@ -94,7 +97,7 @@ export const useDesignStore = defineStore('design', () => {
 
   // Тема, змінена на іншому пристрої (екран принтера, інший браузер), — підхоплюємо без перезавантаження.
   // Поки триває власний запис (saving), не втручаємось: інакше чужа версія перебила б щойно зроблену зміну.
-  const live = computed(() => printer.connected && !printer.demoMode)
+  const live = computed(() => printer.connected && !(DEMO_BUILD && printer.demoMode))
   let stopLive = null
   watch(live, on => {
     stopLive && stopLive(); stopLive = null

@@ -70,6 +70,7 @@ export async function demoCall(method, params, { emitGcode, merge }) {
       } }
     case 'server.info': return { moonraker_version: 'v0.9.3-41-g3f9d2c1', klippy_state: 'ready' }
     case 'printer.info': return { software_version: 'v0.13.0-560-gaea1bcf', hostname: 'vyron-demo', state: 'ready' }
+    case 'server.database.list': return { namespaces: [...new Set(Object.keys(db).map(k => k.split('/')[0]))] }
     case 'server.database.get_item': {
       const v = db[params.namespace + '/' + params.key]
       if (!v) throw new Error('Key not found')
@@ -125,7 +126,7 @@ const updated = new Set()
 const demoVersions = () => fixUp({
   klipper: { version: 'v0.13.0-560', remote_version: 'v0.13.0-573', commits_behind: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] },
   moonraker: { version: 'v0.9.3-41', remote_version: 'v0.9.3-41', commits_behind: [] },
-  'vyron-ecosystem': { version: 'v0.2.0', remote_version: 'v0.3.0', configured_type: 'git_repo', commits_behind: [1, 2, 3] },
+  'vyron': { version: 'v0.2.0', remote_version: 'v0.3.0', configured_type: 'git_repo', commits_behind: [1, 2, 3] },
   mainsail: { version: 'v2.13.2', remote_version: 'v2.13.2', configured_type: 'web' },
   system: { package_count: 4, package_list: ['libc6', 'openssl', 'python3', 'tzdata'] }
 })

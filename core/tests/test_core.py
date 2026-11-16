@@ -71,6 +71,8 @@ class FakeMoonraker:
         if m == "server.database.post_item":
             self.db[(p["namespace"], p["key"])] = p["value"]
             return {"jsonrpc": "2.0", "id": rid, "result": {"namespace": p["namespace"], "key": p["key"], "value": p["value"]}}
+        if m == "server.database.list":
+            return {"jsonrpc": "2.0", "id": rid, "result": {"namespaces": sorted({ns for ns, _ in self.db})}}
         if m == "server.database.get_item":
             # Як у Moonraker: "design.updated" — вкладене поле запису "design"
             root, *path = p["key"].split(".")
@@ -170,6 +172,11 @@ class DesignSyncTest(Base):
         self.run_async(asyncio.sleep(0.2))
         self.assertEqual(self.mr.events, [])
         self.assertFalse(task.done(), "keeps running while the design record does not exist")
+        self.assertNotIn("server.database.get_item", self.mr.calls, "no 'not found' errors in moonraker.log")
+        # Тему вперше зберегли — підхоплюється
+        self.mr.db[("vyron_ui", "design")] = {"updated": 300}
+        self.run_async(asyncio.sleep(0.3))
+        self.assertEqual(self.mr.events, [{"event": "design_changed", "data": {"updated": 300}}])
         task.cancel()
         self.run_async(c.close())
 

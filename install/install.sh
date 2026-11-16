@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Vyron — встановлення на принтер (Klipper + Moonraker + nginx).
 #
-#   ~/vyron-ecosystem/install/install.sh             — встановити або полагодити (можна запускати повторно)
-#   ~/vyron-ecosystem/install/install.sh --dry-run   — лише показати, що буде зроблено
+#   ~/vyron-ui/install/install.sh             — встановити або полагодити (можна запускати повторно)
+#   ~/vyron-ui/install/install.sh --dry-run   — лише показати, що буде зроблено
 #
 # Що робить:
 #   1. Сайт nginx «vyron»: Vyron Web на http://IP/ (порт 80), Vyron Screen на http://IP/screen.html.
@@ -23,6 +23,9 @@ DRY=0
 UPDATES=1
 CORE=1
 SCREEN=1
+CHANNEL=""
+SCREEN_ARGS=()
+ARGS=("$@")
 
 usage() { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; cat <<'EOF'
 Параметри:
@@ -32,6 +35,12 @@ usage() { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; cat <<'EOF'
   --no-updates        не додавати запис в Update Manager
   --no-core           не встановлювати службу Vyron Core
   --no-screen         не чіпати екран принтера (KlipperScreen лишається)
+  --gpu               плата з відеокартою (Raspberry Pi 4/5, CM4, Orange Pi 5): прискорення для екрана.
+                      Без нього (за замовчуванням) екран малює процесор — для CB1, Pi 3, SPI-екранів
+  --no-gpu            вимкнути прискорення, якщо раніше ставили з --gpu
+  --channel stable|dev  канал оновлень: stable — перевірені випуски (гілка stable),
+                      dev — кожна зміна одразу (гілка main). Без параметра — канал поточної гілки.
+  --stable / --dev    те саме коротше
 EOF
 }
 
@@ -44,6 +53,11 @@ while [ $# -gt 0 ]; do
     --core) CORE=1 ;;
     --no-core) CORE=0 ;;
     --no-screen) SCREEN=0 ;;
+    --gpu) SCREEN_ARGS+=(--gpu) ;;
+    --no-gpu) SCREEN_ARGS+=(--no-gpu) ;;
+    --channel) CHANNEL="${2:-}"; shift ;;
+    --stable) CHANNEL=stable ;;
+    --dev) CHANNEL=dev ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Невідомий параметр: $1 (див. --help)" >&2; exit 2 ;;
   esac
@@ -71,7 +85,35 @@ elif [ -n "$MAINSAIL_PORT" ]; then
 else
   MODE=hide
 fi
+
+# ---------- канал оновлень: stable (гілка stable) або dev (гілка main) ----------
+CUR_BRANCH="$(git -C "$REPO" symbolic-ref --short HEAD 2>/dev/null || true)"
+case "$CHANNEL" in
+  "") case "$CUR_BRANCH" in stable) CHANNEL=stable ;; *) CHANNEL=dev ;; esac ;;
+  stable|dev) ;;
+  *) die "Канал «$CHANNEL» невідомий — stable або dev." ;;
+esac
+WANT_BRANCH="$([ "$CHANNEL" = stable ] && echo stable || echo main)"
+TARGET_BRANCH="${CUR_BRANCH:-main}"  # гілка, на якій репозиторій буде після цього кроку
+if [ -n "$CUR_BRANCH" ] && [ "$CUR_BRANCH" != "$WANT_BRANCH" ] && { [ "$CHANNEL" = stable ] || [ "$CUR_BRANCH" = stable ]; }; then
+  # Перемикаємо репозиторій на гілку каналу. Інша гілка розробки (не main/stable) з --dev лишається як є.
+  say "Канал $CHANNEL: перемикаю $REPO з $CUR_BRANCH на $WANT_BRANCH"
+  [ -z "$(git -C "$REPO" status --porcelain --untracked-files=no 2>/dev/null)" ] ||
+    die "У $REPO є змінені файли — перемикання каналу їх затерло б. Збережи або скасуй зміни (git status)."
+  TARGET_BRANCH="$WANT_BRANCH"
+  if [ $DRY = 1 ]; then
+    info "[dry-run] git fetch origin $WANT_BRANCH && git checkout -B $WANT_BRANCH origin/$WANT_BRANCH"
+  else
+    git -C "$REPO" fetch -q origin "$WANT_BRANCH" || die "Не вдалося завантажити гілку $WANT_BRANCH з GitHub."
+    git -C "$REPO" checkout -q -B "$WANT_BRANCH" "origin/$WANT_BRANCH"
+    git -C "$REPO" branch -q --set-upstream-to="origin/$WANT_BRANCH" "$WANT_BRANCH"
+    ok "репозиторій на гілці $WANT_BRANCH"
+    # Скрипт міг змінитися разом із гілкою — продовжуємо вже новою версією
+    exec bash "$REPO/install/install.sh" "${ARGS[@]}"
+  fi
+fi
 [ -f "$REPO/index.html" ] || die "У $REPO немає index.html — це не репозиторій Vyron або збірка ще не готова."
+info "канал:        $CHANNEL (гілка $TARGET_BRANCH)"
 
 info "репозиторій:  $REPO"
 info "користувач:   $USER_NAME"
@@ -192,7 +234,7 @@ MR_CHANGED=0
 if [ $UPDATES = 1 ]; then
   say "2. Update Manager (moonraker.conf)"
   ORIGIN="$(git -C "$REPO" remote get-url origin 2>/dev/null || true)"
-  BRANCH="$(git -C "$REPO" symbolic-ref --short HEAD 2>/dev/null || echo main)"
+  BRANCH="$TARGET_BRANCH"
   if [ -z "$ORIGIN" ]; then
     warn "у $REPO немає git origin — пропускаю (оновлення вручну через git pull)"
   else
@@ -265,9 +307,9 @@ if [ $SCREEN = 1 ]; then
     info "KlipperScreen не встановлено — екран не чіпаю"
     SCREEN_RES="немає KlipperScreen — не змінювався"
   elif [ $DRY = 1 ]; then
-    if bash "$REPO/install/screen.sh" --dry-run; then SCREEN_RES="Vyron Screen замість KlipperScreen"
+    if bash "$REPO/install/screen.sh" --dry-run ${SCREEN_ARGS[@]+"${SCREEN_ARGS[@]}"}; then SCREEN_RES="Vyron Screen замість KlipperScreen"
     else warn "перевірка екрана завершилась помилкою (див. вище)"; SCREEN_RES="перевірка не пройшла — див. вище"; fi
-  elif bash "$REPO/install/screen.sh"; then
+  elif bash "$REPO/install/screen.sh" ${SCREEN_ARGS[@]+"${SCREEN_ARGS[@]}"}; then
     SCREEN_RES="Vyron Screen (KlipperScreen приховано)"
   else
     # screen.sh сам повертає KlipperScreen, якщо щось не так; Vyron Web при цьому вже працює
@@ -283,6 +325,7 @@ say "Готово$([ $DRY = 1 ] && echo ' (dry-run — нічого не змі�
 info "Vyron Web:    $URL/"
 info "Vyron Screen: $URL/screen.html"
 info "Екран:        $SCREEN_RES"
+info "Оновлення:    канал $CHANNEL$([ "$CHANNEL" = stable ] && echo ' (перевірені випуски)' || echo ' (кожна зміна одразу)')"
 if [ $MODE = hide ]; then
   info "Mainsail:     приховано (повернути: uninstall.sh, або встановити з --mainsail-port 66)"
 elif [ $MODE = move ]; then

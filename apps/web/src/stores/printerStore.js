@@ -6,6 +6,8 @@ import { discoverTools, subscriptionObjects, STATE_KEYS, toolNum, findChamber, f
 import { tuneScript, tunePatch } from '@vyron/shared/klipper/tune'
 import { detectToolheads, toolheadObjects } from '@vyron/shared/klipper/toolheads'
 import { detectEddy, eddyObjects } from '@vyron/shared/klipper/eddy'
+import { bedShape, bedKey, DEFAULT_BED, sanitizeBedOverride, applyBedOverride } from '@vyron/shared/klipper/bed'
+import { dbGet, dbKnown } from '@vyron/shared/moonraker/db'
 import { parseGcode } from '@vyron/shared/gcode/parser'
 import { model, loadModel, indexForPos, segEnd, layerLabel } from '@vyron/shared/gcode/model'
 import {
@@ -95,10 +97,10 @@ export const usePrinterStore = defineStore('printer', () => {
   const connected = computed(() => ['open', 'ready', 'shutdown'].includes(link.value))
   const printState = computed(() => (st.print_stats || {}).state)
   /** Чи йде реальний друк (у демо — ні, щоб керування лишалось доступним). */
-  const isPrinting = computed(() => !demoMode.value && printState.value === 'printing')
+  const isPrinting = computed(() => !(DEMO_BUILD && demoMode.value) && printState.value === 'printing')
 
   const stateLabel = computed(() => {
-    if (demoMode.value) return { key: 'state.demo' }
+    if ((DEMO_BUILD && demoMode.value)) return { key: 'state.demo' }
     switch (link.value) {
       case 'idle': return { key: 'state.standby' }
       case 'connecting': return { key: 'state.connecting' }
@@ -114,7 +116,7 @@ export const usePrinterStore = defineStore('printer', () => {
   })
 
   const meta = computed(() => {
-    if (demoMode.value) return { key: 'meta.demo' }
+    if ((DEMO_BUILD && demoMode.value)) return { key: 'meta.demo' }
     if (metaOverride.value) return metaOverride.value
     const fn = (st.print_stats || {}).filename
     if (gcodeError.value && fn === gcodeError.value.name) return { key: 'meta.gcodeError', params: { msg: gcodeError.value.msg } }
@@ -148,6 +150,35 @@ export const usePrinterStore = defineStore('printer', () => {
   const qgl = computed(() => (leveling.value ? (st[leveling.value.obj] || {}).applied ?? null : null))
   /** Межі нагрівачів з printer.cfg (max_temp): { extruder: 300, heater_bed: 120, … } */
   const heaterMax = ref({})
+  /** Кінематика й круглий стіл карти — з налаштувань printer.cfg (лише читання) */
+  const kinematics = ref('')
+  const meshRound = ref(false)
+  /** Стіл, як його визначив Klipper (toolhead axis_minimum/maximum + kinematics) */
+  const bedAuto = computed(() => bedShape(kinematics.value, st.toolhead) || DEFAULT_BED)
+  /**
+   * Ручне налаштування столу (Налаштування → Стіл), якщо автовизначення не підходить.
+   * Зберігається в базі Moonraker (vyron_ui/bed) — однакове для всіх пристроїв цього принтера.
+   */
+  const bedOverride = ref(sanitizeBedOverride(null))
+  /** Робоча область для 3D-сцени. Об'єкт змінюється лише разом зі столом (щоб не перебудовувати сцену щокадру). */
+  let bedCache = DEFAULT_BED
+  const bed = computed(() => {
+    const b = applyBedOverride(bedAuto.value, bedOverride.value)
+    if (bedKey(b) !== bedKey(bedCache)) bedCache = b
+    return bedCache
+  })
+  const BED_DB = { namespace: 'vyron_ui', key: 'bed' }
+  async function loadBedOverride() {
+    bedOverride.value = sanitizeBedOverride(await dbGet((m, q) => client.call(m, q), BED_DB.namespace, BED_DB.key))
+  }
+  async function setBedOverride(o) {
+    bedOverride.value = sanitizeBedOverride(o)
+    if ((DEMO_BUILD && demoMode.value) || !client.connected) return
+    try {
+      await client.call('server.database.post_item', { ...BED_DB, value: { ...bedOverride.value } })
+      dbKnown(BED_DB.namespace)
+    } catch { /* лишається до перезавантаження сторінки */ }
+  }
   // ---------- залізо: MCU, хост ----------
   /** Усі мікроконтролери з printer.objects.list ('mcu', 'mcu EBBCan', …) */
   const mcuObjects = computed(() => findMcus(objectList.value))
@@ -203,6 +234,9 @@ export const usePrinterStore = defineStore('printer', () => {
     for (const k of Object.keys(st)) delete st[k]
     objectList.value = []
     heaterMax.value = {}
+    kinematics.value = ''
+    meshRound.value = false
+    bedOverride.value = sanitizeBedOverride(null)
     hwSensors.value = []
     hostInfo.value = null
     mcuBadAt.value = {}
@@ -237,7 +271,7 @@ export const usePrinterStore = defineStore('printer', () => {
    * з порожньою сценою. Хост сторінки тут не беремо: у демо-збірці на GitHub Pages це не принтер.
    */
   function exitDemo() {
-    if (!demoMode.value) return
+    if (!(DEMO_BUILD && demoMode.value)) return
     stopDemo()
     demoMode.value = false
     clearState()
@@ -317,18 +351,18 @@ export const usePrinterStore = defineStore('printer', () => {
       // Причину зупинки показує картка Klipper — той самий текст у тостах зайвий
       if (info) alerts.value = alerts.value.filter(a => a.info.head !== info.head)
     }
-    if (!demoMode.value && ['open', 'ready', 'shutdown'].includes(link.value)) link.value = state === 'ready' ? 'ready' : bad ? 'shutdown' : 'open'
+    if (!(DEMO_BUILD && demoMode.value) && ['open', 'ready', 'shutdown'].includes(link.value)) link.value = state === 'ready' ? 'ready' : bad ? 'shutdown' : 'open'
     if (klippyBusy.value) {
       if (state === 'startup' || state === 'disconnected') busyTransit = true
       else if (busyTransit) finishBusy()
     }
     clearTimeout(klippyTimer)
-    if (!demoMode.value && (state === 'startup' || state === 'disconnected')) klippyTimer = setTimeout(refreshKlippy, KLIPPY_POLL)
+    if (!(DEMO_BUILD && demoMode.value) && (state === 'startup' || state === 'disconnected')) klippyTimer = setTimeout(refreshKlippy, KLIPPY_POLL)
   }
 
   /** Запит стану: server.info (працює й без Klipper) → printer.info з текстом state_message. */
   async function refreshKlippy() {
-    if (demoMode.value || !client.connected) return
+    if ((DEMO_BUILD && demoMode.value) || !client.connected) return
     clearTimeout(klippyTimer)
     try {
       const s = await client.call('server.info')
@@ -408,14 +442,14 @@ export const usePrinterStore = defineStore('printer', () => {
     unknown: '!! Unknown command:"G29"'
   }
   function demoError(kind) {
-    if (!DEMO_BUILD || !demoMode.value) return false
+    if (!DEMO_BUILD || !(DEMO_BUILD && demoMode.value)) return false
     if (DEMO_GCODE[kind]) { log(DEMO_GCODE[kind]); pushAlert(DEMO_GCODE[kind], 'gcode'); return true }
     if (kind === 'ready') { setKlippy('ready'); return true }
     const e = DEMO_KLIPPY[kind]
     if (!e) return false
     setKlippy(e[0], e[1])
     // Демо-запуск сам доходить до «готовий» (у справжньому Klipper так само, без дій користувача)
-    if (kind === 'startup') setTimeout(() => { if (demoMode.value && klippy.value.state === 'startup') setKlippy('ready') }, 6000)
+    if (kind === 'startup') setTimeout(() => { if ((DEMO_BUILD && demoMode.value) && klippy.value.state === 'startup') setKlippy('ready') }, 6000)
     return true
   }
 
@@ -435,6 +469,9 @@ export const usePrinterStore = defineStore('printer', () => {
         const settings = (((q || {}).status || {}).configfile || {}).settings || {}
         heaterMax.value = Object.fromEntries([...tools, 'heater_bed']
           .map(n => [n, Number((settings[n] || {}).max_temp)]).filter(([, v]) => v > 0))
+        kinematics.value = String((settings.printer || {}).kinematics || '')
+        meshRound.value = Number((settings.bed_mesh || {}).mesh_radius) > 0
+        loadBedOverride().catch(() => {})
         toolheads.value = detectToolheads(settings, tools, objectList.value)
         eddies.value = detectEddy(settings, tools, toolheads.value, objectList.value)
         hwSensors.value = findHwSensors(objectList.value, settings)
@@ -487,8 +524,8 @@ export const usePrinterStore = defineStore('printer', () => {
     // Друк обірвався з помилкою: print_stats.message — причина (дублікат рядка «!!» відсіє pushAlert)
     const ps = st.print_stats || {}
     if (ps.state === 'error' && prevPrint && prevPrint !== 'error' && ps.message) pushAlert(ps.message, 'print')
-    if (patch.webhooks && !demoMode.value) setKlippy(st.webhooks.state, st.webhooks.state_message)
-    if (demoMode.value) return
+    if (patch.webhooks && !(DEMO_BUILD && demoMode.value)) setKlippy(st.webhooks.state, st.webhooks.state_message)
+    if ((DEMO_BUILD && demoMode.value)) return
     metaOverride.value = null
     maybeLoadGcode()
     const pos = (st.virtual_sdcard || {}).file_position
@@ -520,6 +557,24 @@ export const usePrinterStore = defineStore('printer', () => {
   }
 
   /** Демо з n головами (1…DEMO_MAX_TOOLS). Без аргументу — ?demo=N з адреси або DEMO_DEFAULT_TOOLS. */
+  /**
+   * Демо: форма столу — прямокутний (CoreXY 350×350) або круглий (дельта, радіус 150).
+   * Центр круглого — там само (175, 175), щоб демо-модель стояла посередині.
+   */
+  const demoBed = ref('rect')
+  function applyDemoBed() {
+    const round = demoBed.value === 'round'
+    kinematics.value = round ? 'delta' : 'corexy'
+    meshRound.value = round
+    mergeStatus({ toolhead: round
+      ? { axis_minimum: [25, 25, 0, -99999], axis_maximum: [325, 325, 300, 99999] }
+      : { axis_minimum: [0, 0, 0, -99999], axis_maximum: [350, 350, 330, 99999] } })
+  }
+  function setDemoBed(kind) {
+    demoBed.value = kind === 'round' ? 'round' : 'rect'
+    if ((DEMO_BUILD && demoMode.value)) applyDemoBed()
+  }
+
   function startDemo(n) {
     if (!DEMO_BUILD) return   // у збірці для принтера демо немає (див. config.js)
     if (!(n >= 1)) n = Number(new URLSearchParams(location.search).get('demo')) || DEMO_DEFAULT_TOOLS
@@ -540,6 +595,7 @@ export const usePrinterStore = defineStore('printer', () => {
     resetDemoFiles()
     demoHeat.targets = {}; demoHeat.temps = {}
     mergeStatus(demoStaticStatus(heads, eds))
+    applyDemoBed()
     demoBeginPrint(DEMO_PRINTING_FILE)
     // Демо має повний набір датчиків (камера, QGL, обдув…) — «список об'єктів» беремо з імітованого статусу.
     mergeStatus(demoTickStatus({ pos: null, progress: 0, state: 'printing', filename: demoJob.file, activeTool: 0, tools, toolheads: heads, eddies: eds, heat: demoHeatStep(tools) }))
@@ -600,7 +656,7 @@ export const usePrinterStore = defineStore('printer', () => {
     v = Math.round(Number(v))
     if (!Number.isFinite(v) || v < 0) return false
     const tool = activeToolName.value
-    if (demoMode.value) {
+    if ((DEMO_BUILD && demoMode.value)) {
       if (kind === 'nozzle' && tool) demoHeat.targets[tool] = v
       else if (kind === 'bed') demoHeat.targets.heater_bed = v
       else if (kind === 'speed') mergeStatus({ gcode_move: { speed_factor: v / 100 } })
@@ -621,7 +677,7 @@ export const usePrinterStore = defineStore('printer', () => {
    * kind: 'z' (v — приріст, мм) | 'zreset' | 'speed' | 'flow' | 'fan' (v — нове значення, %).
    */
   function tune(kind, v) {
-    if (demoMode.value) { mergeStatus(tunePatch(st, kind, v)); return true }
+    if ((DEMO_BUILD && demoMode.value)) { mergeStatus(tunePatch(st, kind, v)); return true }
     const script = tuneScript(kind, v)
     return script ? rpc(script) : false
   }
@@ -631,7 +687,7 @@ export const usePrinterStore = defineStore('printer', () => {
    * Щоб відвідувач побачив і «друк завершено», і очікування, а не лише нескінченний друк.
    */
   function demoSet(state) {
-    if (!demoMode.value) return
+    if (!(DEMO_BUILD && demoMode.value)) return
     if (state === 'idle') {
       Object.assign(demoJob, { file: null, state: 'standby', k: 0, pos: null, progress: 0 })
       applyModel({ P: new Float32Array(0), F: [], T: null })
@@ -696,12 +752,12 @@ export const usePrinterStore = defineStore('printer', () => {
       const s = savedPrint
       applyModel(s)
       const pos = (st.virtual_sdcard || {}).file_position
-      done.value = !demoMode.value && pos != null ? indexForPos(pos) : s.done
+      done.value = !(DEMO_BUILD && demoMode.value) && pos != null ? indexForPos(pos) : s.done
     } else if (model.P) {
       applyModel({ P: new Float32Array(0), F: [] })
     }
     savedPrint = null
-    if (!demoMode.value) maybeLoadGcode()
+    if (!(DEMO_BUILD && demoMode.value)) maybeLoadGcode()
   }
 
   /**
@@ -717,8 +773,8 @@ export const usePrinterStore = defineStore('printer', () => {
 
   /** G-code від кнопок керування. Повертає false і пише причину в ctlMsg, якщо команда не пішла. */
   function rpc(script) {
-    if (demoMode.value || !client.connected) {
-      ctlMsg.value = { key: demoMode.value ? 'msg.demoNoExec' : 'msg.notConnected' }
+    if ((DEMO_BUILD && demoMode.value) || !client.connected) {
+      ctlMsg.value = { key: (DEMO_BUILD && demoMode.value) ? 'msg.demoNoExec' : 'msg.notConnected' }
       return false
     }
     ctlMsg.value = null
@@ -736,10 +792,10 @@ export const usePrinterStore = defineStore('printer', () => {
     if (!cmd) return
     cmdHistory.value.push(cmd)
     log('> ' + cmd, 'c')
-    const dm = DEMO_BUILD && demoMode.value && /^DEMO_ERRORs+(w+)$/i.exec(cmd)
+    const dm = DEMO_BUILD && demoMode.value && /^DEMO_ERROR\s+(\w+)$/i.exec(cmd)
     if (dm && demoError(dm[1].toLowerCase())) return
-    if (demoMode.value || !client.connected) {
-      log({ key: demoMode.value ? 'msg.demoNoExec' : 'msg.notConnectedPrinter' }, 'e')
+    if ((DEMO_BUILD && demoMode.value) || !client.connected) {
+      log({ key: (DEMO_BUILD && demoMode.value) ? 'msg.demoNoExec' : 'msg.notConnectedPrinter' }, 'e')
       return
     }
     client.fire('printer.gcode.script', { script: cmd })
@@ -755,7 +811,7 @@ export const usePrinterStore = defineStore('printer', () => {
     const name = toolObjects.value[i]
     if (!name || !canSwitchTools.value) return
     const n = toolNum(name)
-    if (demoMode.value) {
+    if ((DEMO_BUILD && demoMode.value)) {
       activeTool.value = i
       toolStatus.value = { key: 'tools.demoSelected', params: { i: n } }
       return
@@ -816,7 +872,7 @@ export const usePrinterStore = defineStore('printer', () => {
 
   async function printAction(kind) {
     if (!['pause', 'resume', 'cancel'].includes(kind)) return
-    if (demoMode.value) {
+    if ((DEMO_BUILD && demoMode.value)) {
       if (kind === 'pause' && demoJob.state === 'printing') demoJob.state = 'paused'
       else if (kind === 'resume' && demoJob.state === 'paused') demoJob.state = 'printing'
       else if (kind === 'cancel') demoJob.state = 'cancelled'
@@ -834,10 +890,10 @@ export const usePrinterStore = defineStore('printer', () => {
     // getters
     connected, isPrinting, printState, stateLabel, meta, activeToolName, canSwitchTools, toolCount, nozzleTemp, bedTemp, chamberTemp,
     speedFactor, fanSpeed, position, qgl, progressPct, etaSeconds, layerText, nozzleHeater, tune,
-    nozzleTarget, bedTarget, hasBed, hasFan, chamberObj, leveling, heaterMax, quickSet,
+    nozzleTarget, bedTarget, hasBed, hasFan, chamberObj, leveling, heaterMax, quickSet, kinematics, meshRound, bed, bedAuto, bedOverride, setBedOverride,
     mcuObjects, hwSensors, hostInfo, mcuBadAt, mcuRate, mcuConn,
     // actions
-    preview, openPreview, closePreview, printBusy, startPrint, demoSet,
+    preview, openPreview, closePreview, printBusy, startPrint, demoSet, demoBed, setDemoBed,
     on, log, connect, startDemo, exitDemo, autoStart, rpc, sendRaw, consoleSend, call, selectTool, setToolTarget,
     setHeater, emergencyStop, printAction, levelGantry, levelingBusy, mergeStatus,
     // помилки Klipper

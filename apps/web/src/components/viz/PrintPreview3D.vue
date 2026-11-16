@@ -10,7 +10,7 @@ import { usePrinterStore } from '../../stores/printerStore'
 import { useUiStore } from '../../stores/uiStore'
 import { useOrbitCamera } from '../../composables/useOrbitCamera'
 import { useI18n } from '../../composables/useI18n'
-import { model, BED } from '@vyron/shared/gcode/model'
+import { model } from '@vyron/shared/gcode/model'
 import { hexToRgb } from '@vyron/shared/theme'
 import { useDesignStore } from '../../stores/designStore'
 import { MOBILE_QUERY } from '../../composables/useMobile'
@@ -49,10 +49,15 @@ const GAIN = 1.25          // компенсує затемнення від ч�
 const PITCH_PER_DIST = 0.0029
 const VASE_WINDOW = 90     // «поточний шар» спіральної вази — останній виток (~90 сегментів)
 
-// ---------- робоча область Voron 2.4 350 (каркас у режимі очікування) ----------
-const HALF = BED[0] / 2, VOL_H = 330
-const IDLE_VIEW = { target: [0, 70, 0], dist: 980 }
+// ---------- робоча область (каркас у режимі очікування) ----------
+// Форма й розміри — з Klipper (printer.bed): прямокутний стіл або круглий (дельта, polar).
+// Центр столу — початок координат сцени; Y сцени — вгору, Z сцени — до глядача (= −Y принтера).
+let B = null
+// Круглий об'єм (дельта) зазвичай вищий за ширину — камера трохи далі, щоб верхнє коло не впиралось у шапку
+const idleView = () => ({ target: [0, B.h * 0.21, 0], dist: Math.max(B.w, B.d, B.h) * (B.round ? 3.2 : 2.8) })
 const HOME_ROT = { rotX: 0.45, rotY: 0.7 }
+// Дельта: камера строго спереду (між вежами A і B) — трикутник веж симетричний у кадрі
+const homeRot = () => (B && B.round ? { rotX: 0.45, rotY: 0 } : HOME_ROT)
 const PULSE_MS = 1700      // період «дихання» поточного шару
 const PULSE_FPS = 30       // коли рухається лише пульсація — рендеримо вдвічі рідше
 
@@ -63,10 +68,13 @@ const orbit = useOrbitCamera(cv, { ...HOME_ROT, dist: 650, speed: 0.007, minX: -
 
 // Кнопка «Скинути ракурс» видна, лише коли камеру зрушено (верхньорівневий ref — щоб шаблон розгорнув його)
 const camMoved = orbit.isCameraMoved
+/** WebGL недоступний — полотно сцени й кнопку ракурсу не показуємо */
+const no3d = ref(false)
 const { t } = useI18n()
 
 let renderer, scene, cam, lines = null, colAttr = null, raf = 0
-const target = new THREE.Vector3(...IDLE_VIEW.target)
+B = printer.bed
+const target = new THREE.Vector3(...idleView().target)
 const targetGoal = target.clone()
 
 // Стан геометрії
@@ -143,8 +151,8 @@ function repaint(from, to, done) {
 /** Сегмент моделі i → координати сцени (Y — вгору, Z розтягнуто на zScale). */
 function segTo(out, q, i) {
   const P = model.P, o = i * 6, zs = model.zScale
-  out[q] = P[o] - HALF; out[q + 1] = P[o + 2] * zs; out[q + 2] = -(P[o + 1] - HALF)
-  out[q + 3] = P[o + 3] - HALF; out[q + 4] = P[o + 5] * zs; out[q + 5] = -(P[o + 4] - HALF)
+  out[q] = P[o] - B.cx; out[q + 1] = P[o + 2] * zs; out[q + 2] = -(P[o + 1] - B.cy)
+  out[q + 3] = P[o + 3] - B.cx; out[q + 4] = P[o + 5] * zs; out[q + 5] = -(P[o + 4] - B.cy)
 }
 
 // ---------- побудова ----------
@@ -187,10 +195,12 @@ function buildGeometry(newStep) {
 
 /** Нова модель: кадрування (без purge-лінії/skirt першого шару — див. gcodeModel), світло, геометрія. */
 function build() {
+  if (!scene) return            // 3D недоступний або сцену вже прибрано
   if (!model.P || !model.N) {
     disposeLines()
-    targetGoal.set(...IDLE_VIEW.target)
-    orbit.frame({ dist: IDLE_VIEW.dist, ...HOME_ROT })
+    const v = idleView()
+    targetGoal.set(...v.target)
+    orbit.frame({ dist: v.dist, ...homeRot() })
     updateGlow()
     kick()
     return
@@ -199,8 +209,8 @@ function build() {
   const b = model.bounds
   if (b) {
     const h = model.zmax * model.zScale
-    targetGoal.set((b.x0 + b.x1) / 2 - HALF, h / 2, -((b.y0 + b.y1) / 2 - HALF))
-    orbit.frame({ dist: Math.max(b.x1 - b.x0, b.y1 - b.y0, h) * 2.1 + 25, ...HOME_ROT })
+    targetGoal.set((b.x0 + b.x1) / 2 - B.cx, h / 2, -((b.y0 + b.y1) / 2 - B.cy))
+    orbit.frame({ dist: Math.max(b.x1 - b.x0, b.y1 - b.y0, h) * 2.1 + 25, ...homeRot() })
   }
   buildGeometry(stepFor(orbit.dist))
 }
@@ -277,31 +287,79 @@ function radialTexture() {
   return new THREE.CanvasTexture(c)
 }
 
-function makeStage() {
-  const S = HALF
-  fx.stage = new THREE.Group(); fx.idle = new THREE.Group()
-  // Сітка столу: тонкі лінії кожні 25 мм, акцентні — кожні 50 мм, рамка — яскравіша
-  const minor = [], major = []
-  for (let i = 0; i <= BED[0] / 25; i++) {
-    const v = -S + i * 25, arr = i % 2 ? minor : major
-    if (i === 0 || i === BED[0] / 25) continue
-    arr.push(v, 0, -S, v, 0, S, -S, 0, v, S, 0, v)
+/** Коло радіусом r на висоті y (відрізками) */
+function circle(r, y, n = 120) {
+  const a = []
+  for (let i = 0; i < n; i++) {
+    const t0 = (i / n) * Math.PI * 2, t1 = ((i + 1) / n) * Math.PI * 2
+    a.push(r * Math.cos(t0), y, -r * Math.sin(t0), r * Math.cos(t1), y, -r * Math.sin(t1))
   }
+  return a
+}
+
+/** Прямокутний стіл: сітка кожні 25 мм від початку координат (передній лівий кут), рамка, об'єм, осі */
+function stageRect() {
+  const SX = B.w / 2, SZ = B.d / 2, H = B.h
+  const minor = [], major = []
+  for (let i = 1; i * 25 < B.w - 1; i++) { const v = -SX + i * 25; (i % 2 ? minor : major).push(v, 0, -SZ, v, 0, SZ) }
+  for (let i = 1; i * 25 < B.d - 1; i++) { const v = SZ - i * 25; (i % 2 ? minor : major).push(-SX, 0, v, SX, 0, v) }
   fx.stage.add(segments(minor, lineMat(0xffffff, 0.035)))
   fx.stage.add(segments(major, lineMat(0xffffff, 0.07)))
-  fx.stage.add(segments([-S, 0, -S, S, 0, -S, S, 0, -S, S, 0, S, S, 0, S, -S, 0, S, -S, 0, S, -S, 0, -S], lineMat(0xffffff, 0.16)))
-  // Об'єм друку: вертикальні ребра + верхня рамка
+  fx.stage.add(segments([-SX, 0, -SZ, SX, 0, -SZ, SX, 0, -SZ, SX, 0, SZ, SX, 0, SZ, -SX, 0, SZ, -SX, 0, SZ, -SX, 0, -SZ], lineMat(0xffffff, 0.16)))
   const box = []
-  for (const [x, z] of [[-S, -S], [S, -S], [S, S], [-S, S]]) box.push(x, 0, z, x, VOL_H, z)
-  box.push(-S, VOL_H, -S, S, VOL_H, -S, S, VOL_H, -S, S, VOL_H, S, S, VOL_H, S, -S, VOL_H, S, -S, VOL_H, S, -S, VOL_H, -S)
+  for (const [x, z] of [[-SX, -SZ], [SX, -SZ], [SX, SZ], [-SX, SZ]]) box.push(x, 0, z, x, H, z)
+  box.push(-SX, H, -SZ, SX, H, -SZ, SX, H, -SZ, SX, H, SZ, SX, H, SZ, -SX, H, SZ, -SX, H, SZ, -SX, H, -SZ)
   fx.idle.add(segments(box, lineMat(0xffffff, 0.06)))
-  // Осі від початку координат (передній лівий кут): X — кораловий, Y — крижаний
-  const o = [-S, 0.5, S], A = 70
-  fx.idle.add(segments([...o, -S + A, 0.5, S, -S + A, 0.5, S, -S + A - 7, 0.5, S - 4, -S + A, 0.5, S, -S + A - 7, 0.5, S + 4], lineMat(CORAL, 0.9)))
-  fx.idle.add(segments([...o, -S, 0.5, S - A, -S, 0.5, S - A, -S - 4, 0.5, S - A + 7, -S, 0.5, S - A, -S + 4, 0.5, S - A + 7], lineMat(ICE, 0.9)))
-  // Лише назви осей — жодних розмірів, щоб каркас лишався універсальним для будь-якого столу
-  fx.idle.add(label('X', '#ff6b5a', 16, -S + A + 12, 2, S))
-  fx.idle.add(label('Y', '#7cc7ff', 16, -S, 2, S - A - 12))
+  axes(-SX, SZ, Math.min(70, B.w * 0.2))
+}
+
+/**
+ * Круглий стіл (дельта, polar): сітка кожні 25 мм, обрізана колом, яскравіший край, циліндр об'єму.
+ * У дельти — три колони на кутах веж Klipper (A 210°, B 330°, C 90°). Початок координат — центр.
+ */
+function stageRound() {
+  const R = B.r, H = B.h
+  const minor = [], major = []
+  for (let k = 1; k * 25 < R - 1; k++) {
+    for (const v of [k * 25, -k * 25]) {
+      const half = Math.sqrt(R * R - v * v), arr = k % 2 ? minor : major
+      arr.push(v, 0, -half, v, 0, half, -half, 0, v, half, 0, v)
+    }
+  }
+  major.push(0, 0, -R, 0, 0, R, -R, 0, 0, R, 0, 0)
+  fx.stage.add(segments(minor, lineMat(0xffffff, 0.035)))
+  fx.stage.add(segments(major, lineMat(0xffffff, 0.07)))
+  fx.stage.add(segments(circle(R, 0), lineMat(0xffffff, 0.16)))
+  const vol = []
+  if (B.kin !== 'polar') {   // дельта (і круглий стіл, заданий вручну)
+    // Дельта: три лінії піднімаються з краю круглого столу (кути веж Klipper) і звужуються конусом
+    // до меншого трикутника вгорі
+    const at = (deg, r) => { const t = (deg * Math.PI) / 180; return [r * Math.cos(t), -r * Math.sin(t)] }
+    const TOP = 0.42
+    ;[210, 330, 90].forEach((deg, k, all) => {
+      const [x, z] = at(deg, R), [tx, tz] = at(deg, R * TOP), [nx, nz] = at(all[(k + 1) % 3], R * TOP)
+      vol.push(x, 0, z, tx, H, tz, tx, H, tz, nx, H, nz)
+    })
+  } else {
+    // Polar: циліндр над столом
+    vol.push(...circle(R, H, 96))
+    for (const deg of [0, 90, 180, 270]) { const t = (deg * Math.PI) / 180, x = R * Math.cos(t), z = -R * Math.sin(t); vol.push(x, 0, z, x, H, z) }
+  }
+  fx.idle.add(segments(vol, lineMat(0xffffff, 0.06)))
+  axes(0, 0, Math.min(70, R * 0.4))
+}
+
+/** Осі від початку координат: X — кораловий, Y — крижаний; лише назви, без розмірів */
+function axes(x0, z0, A) {
+  fx.idle.add(segments([x0, 0.5, z0, x0 + A, 0.5, z0, x0 + A, 0.5, z0, x0 + A - 7, 0.5, z0 - 4, x0 + A, 0.5, z0, x0 + A - 7, 0.5, z0 + 4], lineMat(CORAL, 0.9)))
+  fx.idle.add(segments([x0, 0.5, z0, x0, 0.5, z0 - A, x0, 0.5, z0 - A, x0 - 4, 0.5, z0 - A + 7, x0, 0.5, z0 - A, x0 + 4, 0.5, z0 - A + 7], lineMat(ICE, 0.9)))
+  fx.idle.add(label('X', '#ff6b5a', 16, x0 + A + 12, 2, z0))
+  fx.idle.add(label('Y', '#7cc7ff', 16, x0, 2, z0 - A - 12))
+}
+
+function makeStage() {
+  fx.stage = new THREE.Group(); fx.idle = new THREE.Group()
+  if (B.round) stageRound(); else stageRect()
   scene.add(fx.stage, fx.idle)
 
   // Світіння: гало на висоті поточного шару, тепле відбиття від столу, коралова «аура» ліній поточного шару
@@ -322,7 +380,7 @@ function updateGlow() {
   fx.idleGoal = has ? 0 : 1
   const b = model.bounds
   const fw = b ? Math.max(b.x1 - b.x0, 30) : 0, fd = b ? Math.max(b.y1 - b.y0, 30) : 0
-  const cx = b ? (b.x0 + b.x1) / 2 - HALF : 0, cz = b ? -((b.y0 + b.y1) / 2 - HALF) : 0
+  const cx = b ? (b.x0 + b.x1) / 2 - B.cx : 0, cz = b ? -((b.y0 + b.y1) / 2 - B.cy) : 0
   // Відбиття від столу — під моделлю, яскравість від температури столу (холодний — нічого)
   const bedK = Math.min(1, Math.max(0, ((printer.bedTemp ?? 0) - 35) / 75))
   fx.bedGlow.visible = has && bedK > 0.02
@@ -425,7 +483,16 @@ function loop(now) {
 }
 
 onMounted(() => {
-  renderer = new THREE.WebGLRenderer({ canvas: cv.value, antialias: true, alpha: true })
+  // Без WebGL (браузер на слабкій платі без відеокарти, вимкнене прискорення, старий драйвер) Three.js кидає
+  // помилку. Тоді 3D-перегляду просто немає — решта інтерфейсу працює як завжди.
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas: cv.value, antialias: true, alpha: true })
+  } catch (e) {
+    console.warn('Vyron: WebGL недоступний — 3D-перегляд вимкнено', e)
+    renderer = null
+    no3d.value = true
+    return
+  }
   scene = new THREE.Scene()
   cam = new THREE.PerspectiveCamera(40, 1, 1, 6000)
   makeStage()
@@ -474,6 +541,20 @@ onBeforeUnmount(() => {
   scene = null
 })
 
+/** Новий стіл: перебудувати каркас і координати моделі */
+function rebuildStage() {
+  B = printer.bed
+  if (!scene) return
+  for (const g of [fx.stage, fx.idle, fx.halo, fx.bedGlow, fx.glowLines]) {
+    if (!g) continue
+    scene.remove(g)
+    g.traverse(o => { o.geometry?.dispose(); o.material?.map?.dispose(); o.material?.dispose() })
+  }
+  fx.mats = []
+  makeStage()
+  build()
+}
+watch(() => printer.bed, rebuildStage)
 watch(() => printer.modelVersion, build)
 watch(() => printer.done, paintTo)
 watch(printing, () => { updateGlow(); kick() })
@@ -482,10 +563,10 @@ watch(() => ui.view, kick)
 </script>
 
 <template>
-  <canvas ref="cv" class="bg3d"></canvas>
+  <canvas v-show="!no3d" ref="cv" class="bg3d"></canvas>
   <!-- Скидання ракурсу: з'являється, коли камеру зрушено; подвійний клік/тап по сцені теж працює -->
   <Transition name="rv">
-    <button v-if="camMoved && ui.view === 'main'" type="button" class="rv glass" :title="t('view.reset')" :aria-label="t('view.reset')" @click="orbit.reset()">
+    <button v-if="camMoved && !no3d && ui.view === 'main'" type="button" class="rv glass" :title="t('view.reset')" :aria-label="t('view.reset')" @click="orbit.reset()">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3" /><path d="M4.5 4.5v3.7h3.7" /><circle cx="12" cy="12" r="2.2" /></svg>
     </button>
   </Transition>
