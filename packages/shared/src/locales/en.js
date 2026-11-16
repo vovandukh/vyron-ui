@@ -296,7 +296,7 @@ export default {
   'scr.page.language': 'Language',
   'scr.page.about': 'About',
   'scr.page.system': 'System',
-  'scr.page.files': 'Files',
+  'scr.page.files': 'G-code',
   'scr.page.move': 'Move',
   'scr.page.temp': 'Heat',
   'scr.hello': 'All good', 'scr.axes': 'Axes', 'scr.levelSt': 'Level', 'scr.pos': 'Position', 'scr.notLeveled': 'no', 'scr.lastJob': 'Last print', 'scr.noJobs': 'No prints yet',

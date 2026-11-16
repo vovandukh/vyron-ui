@@ -296,7 +296,7 @@ export default {
   'scr.page.language': 'Мова',
   'scr.page.about': 'Про систему',
   'scr.page.system': 'Система',
-  'scr.page.files': 'Файли',
+  'scr.page.files': 'G-code',
   'scr.page.move': 'Рух',
   'scr.page.temp': 'Нагрів',
   'scr.hello': 'Усе гаразд', 'scr.axes': 'Осі', 'scr.levelSt': 'Рівень', 'scr.pos': 'Позиція', 'scr.notLeveled': 'ні', 'scr.lastJob': 'Останній друк', 'scr.noJobs': 'Історія друку порожня',
