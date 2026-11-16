@@ -23,15 +23,12 @@ const file = computed(() => String((p.st.print_stats || {}).filename || '').repl
 const left = computed(() => (p.remaining == null ? '' : fmtDuration(p.remaining, t)))
 const temp = v => (v == null ? '–' : Math.round(v))
 const hot = h => h.target > 0
-/** Стан нагрівача для плитки: гріє (з потужністю), тримає, охолоджується або вимкнений */
+/** Праворуч угорі плитки — потужність нагрівача у відсотках (як у KlipperScreen) або «Вимк.» */
 const ROOM = 20
 function heatState(h) {
   if (h.target === undefined) return null                     // датчик без цілі (камера)
-  if (!(h.target > 0)) return { key: 'qs.off' }
-  const d = (h.temperature ?? 0) - h.target, pw = h.power != null ? Math.round(h.power * 100) + '%' : ''
-  if (d < -2) return { key: 'scr.heat.up', pw }
-  if (d > 2) return { key: 'scr.heat.down' }
-  return { key: 'scr.heat.hold', pw, ok: true }
+  if (!(h.target > 0)) return { text: t('qs.off') }
+  return h.power != null ? { text: Math.round(h.power * 100) + '%', pw: true } : null
 }
 /** Скільки шляху від кімнатної до цілі вже пройдено (0…100) */
 const heatPct = h => (h.target > ROOM ? Math.max(0, Math.min(100, ((h.temperature ?? ROOM) - ROOM) / (h.target - ROOM) * 100)) : 0)
@@ -132,7 +129,7 @@ function open(d) { if (!d.soon) p.go(d.id) }
         <span class="th">
           <span class="ti"><Icon :name="h.icon" size="1.5rem" /></span>
           <span class="lbl">{{ t(h.key) }}</span>
-          <span v-if="heatState(h)" class="hs" :class="{ ok: heatState(h).ok }">{{ t(heatState(h).key) }}<b v-if="heatState(h).pw">{{ heatState(h).pw }}</b></span>
+          <span v-if="heatState(h)" class="hs" :class="{ pw: heatState(h).pw }">{{ heatState(h).text }}</span>
         </span>
         <span class="tv">
           <span class="now">{{ temp(h.temperature) }}<i>°</i></span>
@@ -245,9 +242,8 @@ function open(d) { if (!d.soon) p.go(d.id) }
 .th{display:flex;align-items:center;gap:.6rem;min-width:0}
 .ti{flex:none;width:2.5rem;height:2.5rem;border-radius:.8rem;display:grid;place-items:center;background:rgba(255,255,255,.08);color:var(--dim)}
 .lbl{font-size:1.1rem;color:var(--dim);font-weight:500;white-space:nowrap}
-.hs{margin-left:auto;font-size:1rem;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hs b{margin-left:.35rem;font-weight:600;color:var(--tile-ink)}
-.hs.ok{color:var(--green)}
+.hs{margin-left:auto;font-size:1.05rem;color:var(--dim);white-space:nowrap}
+.hs.pw{font-weight:600;color:var(--tile-ink);font-variant-numeric:tabular-nums}
 .tv{display:flex;align-items:baseline;gap:.5rem;min-width:0}
 .now{font-size:2.4rem;font-weight:600;line-height:1.05;letter-spacing:-.03em}
 .now i{font-style:normal;font-weight:400;color:var(--dim)}
