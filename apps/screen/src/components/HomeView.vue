@@ -78,7 +78,9 @@ function open(d) { if (!d.soon) p.go(d.id) }
           </span>
         </div>
       </template>
-      <div v-else class="idle">
+      <!-- Без друку головна дія — вибрати файл і друкувати -->
+      <button v-if="!p.active && !showModel" type="button" class="fbtn tap" @click.stop="p.go('files')"><Icon name="files" size="1.6rem" :stroke="2.2" />{{ t('scr.page.files') }}</button>
+      <div v-if="!showModel && !p.active" class="idle">
         <small>{{ t('scr.hello') }}<template v-if="p.hostname"> · {{ p.hostname }}</template></small>
         <b>{{ t('scr.idle') }}</b>
         <!-- Готовність машини: які осі в нулі, чи вирівняний портал, де зараз голова -->
@@ -192,6 +194,9 @@ function open(d) { if (!d.soon) p.go(d.id) }
 .hero:not(.model)::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:calc(.5 * var(--grid-k));
   background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48' viewBox='0 0 28 48'%3E%3Cpath d='M14 0 28 8v16L14 32 0 24V8zM14 32v16' fill='none' stroke='%23ffffff' stroke-opacity='.18' stroke-width='1'/%3E%3C/svg%3E") center / 2.8rem 4.8rem;
   -webkit-mask-image:radial-gradient(ellipse 70% 80% at 100% 0,#000 10%,transparent 85%);mask-image:radial-gradient(ellipse 70% 80% at 100% 0,#000 10%,transparent 85%)}
+.fbtn{position:absolute;top:1rem;right:1rem;z-index:1;height:3.2rem;padding:0 1.2rem 0 1rem;border-radius:1.6rem;display:flex;align-items:center;gap:.5rem;
+  background:var(--primary);color:var(--on-primary);font-size:1.25rem;font-weight:600}
+.idle small{padding-right:10rem}
 .idle{position:relative;flex:1;min-width:0;display:grid;gap:.45rem;padding-left:.6rem}
 .idle small{font-size:1.1rem;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .idle b{font-size:2.5rem;font-weight:700;letter-spacing:-.03em;line-height:1.1}
