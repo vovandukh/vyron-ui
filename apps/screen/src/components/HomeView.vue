@@ -42,8 +42,8 @@ function open(d) { if (!d.soon) p.go(d.id) }
 
 <template>
   <div class="home page">
-    <section class="hero glass" :class="{ model: showModel, tunable: p.active }" @click="p.active && (tuneOpen = true)">
-      <!-- Модель друку (G-code) на всю картку; поверх — відсоток, файл і час. Під моделлю — легка шестикутна сітка (статична, малюється раз). -->
+    <section class="hero" :class="{ glass: !showModel, model: showModel, tunable: p.active }" @click="p.active && (tuneOpen = true)">
+      <!-- Модель друку (G-code) без картки — просто на фоні екрана, як 3D-сцена у вебі; поверх — відсоток, файл і час -->
       <template v-if="showModel">
         <GcodeView />
         <div class="ov-top"><b>{{ pctShown }}</b><small>%</small><span v-if="p.printState === 'complete'" class="done">{{ t('state.complete') }}</span></div>
@@ -161,16 +161,12 @@ function open(d) { if (!d.soon) p.go(d.id) }
 .home{display:grid;grid-template-columns:1fr 16.5rem;grid-template-rows:1fr auto;gap:.9rem;padding:.2rem 1.2rem 1.2rem}
 .hero{position:relative;min-width:0;border-radius:var(--r-lg);display:flex;align-items:center;gap:1.3rem;padding:1rem 1.4rem 1rem 1rem;overflow:hidden}
 .hero.model{padding:0}
-/* Шестикутна сітка Vyron під моделлю: статичний SVG-візерунок, яскравіший у центрі й згасає до країв */
-.hero.model::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:calc(.45 * var(--grid-k));
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48' viewBox='0 0 28 48'%3E%3Cpath d='M14 0 28 8v16L14 32 0 24V8zM14 32v16' fill='none' stroke='%23ffffff' stroke-opacity='.22' stroke-width='1'/%3E%3C/svg%3E") center / 2.8rem 4.8rem;
-  -webkit-mask-image:radial-gradient(ellipse 62% 66% at 50% 48%,#000 25%,transparent 100%);mask-image:radial-gradient(ellipse 62% 66% at 50% 48%,#000 25%,transparent 100%)}
-/* Підписи поверх моделі: темні градієнти зверху й знизу, щоб текст читався на будь-якому фоні */
-.ov-top{position:absolute;left:0;top:0;right:0;padding:.8rem 1.2rem 2rem;display:flex;align-items:baseline;pointer-events:none;background:linear-gradient(180deg,rgba(6,6,7,.7),transparent)}
+/* Підписи поверх моделі; знизу — легке затемнення, щоб назва читалась, якщо модель заходить під неї */
+.ov-top{position:absolute;left:0;top:0;right:0;padding:.4rem .6rem 2rem;display:flex;align-items:baseline;pointer-events:none}
 .ov-top b{font-size:3rem;font-weight:700;letter-spacing:-.05em;line-height:1}
 .ov-top .done{margin-left:.8rem;padding:.25rem .7rem;border-radius:1rem;background:rgba(48,209,88,.16);color:var(--green);font-size:1.1rem;font-weight:600;align-self:center}
 .ov-top small{font-size:1.3rem;font-weight:600;color:var(--dim);margin-left:.15rem}
-.ov-bot{position:absolute;left:0;right:0;bottom:0;padding:2.2rem 1.2rem .9rem;display:grid;gap:.5rem;pointer-events:none;background:linear-gradient(0deg,rgba(6,6,7,.85),transparent)}
+.ov-bot{position:absolute;left:0;right:0;bottom:0;padding:2rem .6rem .3rem;display:grid;gap:.5rem;pointer-events:none;background:linear-gradient(0deg,rgba(6,6,7,.75),transparent)}
 .file.one{-webkit-line-clamp:1;font-size:1.3rem}
 
 .ring{position:relative;flex:none;width:12.4rem;height:12.4rem}
