@@ -259,6 +259,8 @@ export const usePrinter = defineStore('printer', () => {
   }
 
   // ---------- файли й запуск друку ----------
+  /** Вибраний файл для сторінки запуску друку: { path, modified, size } */
+  const selFile = ref(null)
   /** Файли G-code на принтері, новіші першими: [{ path, modified, size }] */
   async function listFiles() {
     const r = await call('server.files.list', { root: 'gcodes' })
@@ -388,7 +390,7 @@ export const usePrinter = defineStore('printer', () => {
   return {
     gcodeState, modelVer, done, filename, showModel, event, updates, refreshUpdates, runUpdate,
     link, host, hostname, lastJob, klippy, st, printState, active, progress, remaining, layer, heaters, busy, design,
-    stack, page, dir, go, back, home, tune, setTemp, heatOff, listFiles, fileMeta, printFile, thumbUrl,
+    stack, page, dir, go, back, home, tune, setTemp, heatOff, listFiles, fileMeta, printFile, thumbUrl, selFile,
     call, gcode, onGcode, setPreset,
     leveling, homed, position, leveled, moving, homeAll, motorsOff, level, jog,
     start, pause, resume, cancel, estop, firmwareRestart, restart, restartMoonraker, reboot, shutdown
