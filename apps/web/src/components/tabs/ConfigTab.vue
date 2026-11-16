@@ -1,5 +1,6 @@
 <script setup>
-import { computed, ref, shallowRef, onActivated, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref, shallowRef, onActivated, onDeactivated, onMounted, onBeforeUnmount, watch } from 'vue'
+import { holdReveal } from '@vyron/shared/live'
 import { usePrinterStore } from '../../stores/printerStore'
 import { useConfirm } from '../../composables/useConfirm'
 import { useI18n } from '../../composables/useI18n'
@@ -74,7 +75,11 @@ async function newFile() {
   editor.value?.focus()
 }
 
-onActivated(() => { if (!files.value.length) loadList() })
+// Список файлів — щойно є зв'язок (після перезавантаження сторінка може відкритися раніше за підключення)
+let active = false
+onActivated(() => { active = true; if (!files.value.length) holdReveal(loadList()) })
+onDeactivated(() => { active = false })
+watch(() => printer.connected, c => { if (c && active && !files.value.length) { msg.value = null; holdReveal(loadList()) } })
 
 const beforeUnload = e => { if (path.value && dirty.value) { e.preventDefault(); e.returnValue = '' } }
 onMounted(() => addEventListener('beforeunload', beforeUnload))

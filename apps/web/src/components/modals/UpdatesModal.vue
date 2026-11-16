@@ -4,7 +4,8 @@
 // machine.update.status?refresh лише як запасний варіант). Під час перевірки — індикатор активності
 // у стилі Apple і відблиск по рядках; після — список перечитується, компоненти з оновленнями
 // піднімаються нагору й підсвічуються, а вгорі з'являється підсумок.
-import { computed, ref, shallowRef, nextTick, onActivated, onDeactivated } from 'vue'
+import { computed, ref, shallowRef, nextTick, onActivated, onDeactivated, watch } from 'vue'
+import { holdReveal } from '@vyron/shared/live'
 import { usePrinterStore } from '../../stores/printerStore'
 import { useConfirm } from '../../composables/useConfirm'
 import { useI18n } from '../../composables/useI18n'
@@ -19,17 +20,23 @@ const { t, tm } = useI18n()
 const vi = shallowRef({})
 const busy = ref(false)
 const msg = ref('')
-const logLines = ref([])
+// Журнал оновлення переживає перезавантаження сторінки (зокрема тихе — на нову версію після цього ж оновлення)
+const LOG_KEY = 'vyron.updlog', LOG_TTL = 10 * 60 * 1000
+function loadLog() {
+  try { const v = JSON.parse(sessionStorage.getItem(LOG_KEY) || 'null'); return v && Date.now() - v.at < LOG_TTL ? v.lines : [] } catch { return [] }
+}
+const logLines = ref(loadLog())
 const logEl = ref(null)
 /** Іде перевірка (machine.update.refresh) */
 const checking = ref(false)
 /** Перевірку завершено в цій сесії — показуємо підсумок; лічильник перезапускає анімацію підсвічування */
 const checked = ref(false)
 const flash = ref(0)
-let lid = 0
+let lid = logLines.value.reduce((m, l) => Math.max(m, l.id), 0)
 
 function addLog(m, cls = '') {
   logLines.value.push({ id: ++lid, m, cls })
+  try { sessionStorage.setItem(LOG_KEY, JSON.stringify({ at: Date.now(), lines: logLines.value.slice(-200) })) } catch { /* приватний режим */ }
   nextTick(() => { if (logEl.value) logEl.value.scrollTop = logEl.value.scrollHeight })
 }
 
@@ -48,9 +55,11 @@ const rows = computed(() => {
 const needCount = computed(() => rows.value.filter(r => r.need).length)
 
 function load() {
-  if (DEMO_BUILD && printer.demoMode) { vi.value = demoUpdates; return }
+  if (DEMO_BUILD && printer.demoMode) { vi.value = demoUpdates; return Promise.resolve() }
+  // Ще немає зв'язку (наприклад, одразу після перезавантаження) — завантажимо, щойно він з'явиться
+  if (!printer.connected) return Promise.resolve()
   msg.value = ''
-  printer.call('machine.update.status', {})
+  return printer.call('machine.update.status', {})
     .then(r => { vi.value = r.version_info || {}; busy.value = !!r.busy })
     .catch(e => { msg.value = e.message })
 }
@@ -115,12 +124,14 @@ function onResponse(p) {
   if (p.complete) { addLog({ key: 'upd.finished' }); load() }
 }
 
-let offs = []
+let offs = [], active = false
+watch(() => printer.connected, c => { if (c && active) holdReveal(load()) })
 onActivated(() => {
-  load()
+  active = true
+  holdReveal(load())
   offs = [printer.on('update_response', onResponse), printer.on('update_refreshed', p => { vi.value = p.version_info || {} })]
 })
-onDeactivated(() => { offs.forEach(f => f()); offs = [] })
+onDeactivated(() => { active = false; offs.forEach(f => f()); offs = [] })
 </script>
 
 <template>

@@ -1,14 +1,15 @@
 <script setup>
 // Оновлення (як у Vyron Web): компоненти Moonraker update_manager — версії, кнопка «Оновити» для кожного,
 // «Оновити все», перевірка нових версій і журнал процесу. Під час друку — недоступно (Moonraker теж не дозволить).
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
+import { whenOnline } from '../online'
 import { usePrinter } from '../store'
 import { t } from '../i18n'
 import Icon from '../components/Icon.vue'
 import ConfirmSheet from '../components/ConfirmSheet.vue'
 
 const p = usePrinter()
-onMounted(() => p.refreshUpdates(false))
+whenOnline(() => p.refreshUpdates(false))
 
 const short = v => String(v || '').replace(/-g[0-9a-f]+$/, '')
 const items = computed(() => Object.entries(p.updates.info || {}).map(([name, v]) => {

@@ -2,7 +2,8 @@
 // Wi‑Fi: інтерфейси хоста, пошук мереж і підключення. Механізм той самий, що у Vyron Web:
 // макрос WIFI_SCAN друкує в консоль рядки «SSID:SIGNAL:SECURITY», WIFI_CONNECT підключає (gcode_shell_command + nmcli).
 // Під час друку недоступно; якщо макросів немає — показуємо, що потрібне одноразове налаштування.
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
+import { whenOnline } from '../online'
 import { usePrinter } from '../store'
 import { t } from '../i18n'
 import { interfaces, parseScanLine, BAD_CHARS } from '../net'
@@ -23,7 +24,7 @@ const note = ref(null)
 const pick = ref(null)
 const askOpen = ref(null)
 
-onMounted(async () => {
+whenOnline(async () => {
   try { ifaces.value = interfaces((await p.call('machine.system_info')).system_info) } catch { ifaces.value = [] }
   scan()
 })
