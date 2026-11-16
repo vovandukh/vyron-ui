@@ -298,7 +298,7 @@ export default {
   'scr.langHint': 'Language of this screen. The web interface has its own language setting.',
   'scr.themeHint': 'The colour is shared with the web interface: a change here applies to every device.',
   'scr.gb': 'GB',
-  'scr.cores': 'cores',
+  'scr.heat.up': 'Heating', 'scr.heat.down': 'Cooling', 'scr.heat.hold': 'Holding', 'scr.cores': 'cores',
   'scr.wifiOff': 'not connected',
   'scr.sysHint': 'Restarting Klipper takes a few seconds. A host that is shut down can only be turned back on by cycling power.',
   'scr.sysBusy': 'Restarts are unavailable while printing — finish or cancel the print first.',

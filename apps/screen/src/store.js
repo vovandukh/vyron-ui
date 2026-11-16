@@ -23,8 +23,9 @@ const BASE = {
   print_stats: ['state', 'filename', 'print_duration', 'info', 'message'],
   virtual_sdcard: ['progress', 'is_active', 'file_position'],
   display_status: ['progress'],
-  extruder: ['temperature', 'target'],
-  heater_bed: ['temperature', 'target'],
+  // power — скільки зараз гріє нагрівач (0…1): «Нагрів 64%» у плитках
+  extruder: ['temperature', 'target', 'power'],
+  heater_bed: ['temperature', 'target', 'power'],
   webhooks: ['state', 'state_message'],
   toolhead: ['homed_axes', 'position'],
   // Тонке налаштування під час друку: Z-зсув, швидкість, потік, обдув

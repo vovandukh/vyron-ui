@@ -23,6 +23,18 @@ const file = computed(() => String((p.st.print_stats || {}).filename || '').repl
 const left = computed(() => (p.remaining == null ? '' : fmtDuration(p.remaining, t)))
 const temp = v => (v == null ? '–' : Math.round(v))
 const hot = h => h.target > 0
+/** Стан нагрівача для плитки: гріє (з потужністю), тримає, охолоджується або вимкнений */
+const ROOM = 20
+function heatState(h) {
+  if (h.target === undefined) return null                     // датчик без цілі (камера)
+  if (!(h.target > 0)) return { key: 'qs.off' }
+  const d = (h.temperature ?? 0) - h.target, pw = h.power != null ? Math.round(h.power * 100) + '%' : ''
+  if (d < -2) return { key: 'scr.heat.up', pw }
+  if (d > 2) return { key: 'scr.heat.down' }
+  return { key: 'scr.heat.hold', pw, ok: true }
+}
+/** Скільки шляху від кімнатної до цілі вже пройдено (0…100) */
+const heatPct = h => (h.target > ROOM ? Math.max(0, Math.min(100, ((h.temperature ?? ROOM) - ROOM) / (h.target - ROOM) * 100)) : 0)
 /** Модель показуємо, коли G-code розібрано; інакше (завантаження, завеликий файл) — кільце прогресу */
 const showModel = computed(() => p.showModel && p.gcodeState === 'ready')
 const pctShown = computed(() => (p.printState === 'complete' ? 100 : pct.value))
@@ -117,12 +129,16 @@ function open(d) { if (!d.soon) p.go(d.id) }
 
     <section class="temps">
       <div v-for="h in p.heaters" :key="h.id" class="tile glass" :class="{ hot: hot(h) }">
-        <span class="ti"><Icon :name="h.icon" size="1.7rem" /></span>
-        <span class="tx">
+        <span class="th">
+          <span class="ti"><Icon :name="h.icon" size="1.5rem" /></span>
           <span class="lbl">{{ t(h.key) }}</span>
-          <span class="now">{{ temp(h.temperature) }}<i>°</i></span>
+          <span v-if="heatState(h)" class="hs" :class="{ ok: heatState(h).ok }">{{ t(heatState(h).key) }}<b v-if="heatState(h).pw">{{ heatState(h).pw }}</b></span>
         </span>
-        <span v-if="h.target !== undefined" class="tgt">{{ hot(h) ? temp(h.target) + '°' : t('qs.off') }}</span>
+        <span class="tv">
+          <span class="now">{{ temp(h.temperature) }}<i>°</i></span>
+          <span v-if="hot(h)" class="tg">/ {{ temp(h.target) }}°</span>
+        </span>
+        <i v-if="hot(h)" class="tb"><i :style="{ width: heatPct(h) + '%' }"></i></i>
       </div>
     </section>
 
@@ -223,13 +239,21 @@ function open(d) { if (!d.soon) p.go(d.id) }
 @keyframes spin{to{transform:rotate(360deg)}}
 
 .temps{display:grid;gap:.7rem;align-content:stretch;grid-auto-rows:1fr}
-.tile{position:relative;display:flex;align-items:center;gap:.9rem;padding:.6rem 1rem;border-radius:var(--r)}
-.ti{flex:none;width:3rem;height:3rem;border-radius:.9rem;display:grid;place-items:center;background:rgba(255,255,255,.08);color:var(--dim)}
-.tx{display:grid;gap:.05rem;min-width:0}
-.lbl{font-size:1.1rem;color:var(--dim);font-weight:500}
-.now{font-size:2.2rem;font-weight:600;line-height:1.05;letter-spacing:-.03em}
+/* Плитка нагрівача: угорі іконка, назва і стан («Нагрів 64%», «Тримає», «Вимк.»),
+   посередині велика температура з ціллю, унизу — смужка: скільки шляху до цілі пройдено */
+.tile{position:relative;display:flex;flex-direction:column;justify-content:center;gap:.35rem;padding:.7rem 1rem .8rem;border-radius:var(--r);min-width:0}
+.th{display:flex;align-items:center;gap:.6rem;min-width:0}
+.ti{flex:none;width:2.5rem;height:2.5rem;border-radius:.8rem;display:grid;place-items:center;background:rgba(255,255,255,.08);color:var(--dim)}
+.lbl{font-size:1.1rem;color:var(--dim);font-weight:500;white-space:nowrap}
+.hs{margin-left:auto;font-size:1rem;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hs b{margin-left:.35rem;font-weight:600;color:var(--tile-ink)}
+.hs.ok{color:var(--green)}
+.tv{display:flex;align-items:baseline;gap:.5rem;min-width:0}
+.now{font-size:2.4rem;font-weight:600;line-height:1.05;letter-spacing:-.03em}
 .now i{font-style:normal;font-weight:400;color:var(--dim)}
-.tgt{position:absolute;top:.7rem;right:1rem;font-size:1.05rem;color:var(--dim)}
+.tg{font-size:1.2rem;color:var(--dim);white-space:nowrap}
+.tb{display:block;height:.3rem;border-radius:.2rem;background:rgba(255,255,255,.08);overflow:hidden}
+.tb i{display:block;height:100%;border-radius:.2rem;background:linear-gradient(90deg,var(--coral),var(--brand));transition:width 1s linear}
 .hot .ti{color:var(--coral)}
 .hot .now{color:var(--coral)}
 
