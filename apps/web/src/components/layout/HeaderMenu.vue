@@ -178,7 +178,7 @@ function onEnter(el) {
                 <small class="scr-more">{{ t('cc.screensMore') }}</small>
               </div>
             </Transition>
-            <a role="menuitem" class="fb" href="https://github.com/vovandukh/vyron-demo/issues" target="_blank" rel="noopener">{{ t('cc.feedback') }} ↗</a>
+            <a role="menuitem" class="fb" href="https://github.com/vovandukh/vyron-ecosystem/issues" target="_blank" rel="noopener">{{ t('cc.feedback') }} ↗</a>
             <hr>
           </template>
           <button role="menuitem" @click="nav('set')">{{ t('menu.settings') }}</button>

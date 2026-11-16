@@ -3,7 +3,7 @@
 Потрібно: принтер із Klipper, Moonraker і nginx (стандартна установка Mainsail або Fluidd через KIAUH).
 
 ```bash
-cd ~ && git clone https://github.com/vovandukh/vyron-ecosystem.git
+cd ~ && git clone -b stable https://github.com/vovandukh/vyron-ecosystem.git
 ~/vyron-ecosystem/install/install.sh --dry-run   # подивитися, що буде зроблено
 ~/vyron-ecosystem/install/install.sh             # встановити
 ```
@@ -39,6 +39,7 @@ cd ~ && git clone https://github.com/vovandukh/vyron-ecosystem.git
 | `--no-updates` | не додавати запис в Update Manager |
 | `--no-core` | не встановлювати службу Vyron Core |
 | `--no-screen` | не чіпати екран принтера (KlipperScreen лишається) |
+| `--stable` / `--dev` | канал оновлень: перевірені випуски (гілка `stable`) або кожна зміна (гілка `main`). Перемикає репозиторій на потрібну гілку й оновлює запис Update Manager. Без параметра — канал поточної гілки |
 
 ## Видалення
 

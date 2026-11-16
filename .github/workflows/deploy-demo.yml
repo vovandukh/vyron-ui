@@ -1,15 +1,15 @@
 name: Deploy demo to GitHub Pages
 
 # Збирає демо-версію (npm run build:demo — одразу демо-режим) і публікує її в окремий
-# ПУБЛІЧНИЙ репозиторій, з якого GitHub Pages віддає сайт. Код цього репозиторію лишається приватним.
+# публічний репозиторій, з якого GitHub Pages віддає сайт.
 #
 # Одноразове налаштування:
 #   1. Публічний репозиторій для демо (за замовчуванням vovandukh/vyron-demo; інший — змінна DEMO_REPO
 #      у Settings → Secrets and variables → Actions → Variables).
 #   2. Fine-grained токен з доступом лише до цього репозиторію, Contents: Read and write →
-#      секрет DEMO_DEPLOY_TOKEN у цьому (приватному) репозиторії.
+#      секрет DEMO_DEPLOY_TOKEN у цьому репозиторії.
 #   3. У демо-репозиторії: Settings → Pages → Deploy from a branch → main / (root).
-# Без секрету крок деплою пропускається (workflow не падає).
+# Без секрету workflow падає (у форках — тихо пропускає деплой).
 
 on:
   push:
@@ -38,8 +38,11 @@ jobs:
       - name: Check deploy token
         id: tok
         run: |
+          if [ -z "$TOKEN" ] && [ "$GITHUB_REPOSITORY" = "vovandukh/vyron-ecosystem" ]; then
+            echo "::error::DEMO_DEPLOY_TOKEN is not set — the demo was NOT published (see the setup notes at the top of this file)"; exit 1
+          fi
           if [ -z "$TOKEN" ]; then
-            echo "::notice::DEMO_DEPLOY_TOKEN is not set — demo deploy skipped"
+            echo "::notice::no DEMO_DEPLOY_TOKEN in this fork — demo deploy skipped"
             echo "skip=1" >> "$GITHUB_OUTPUT"
           fi
 

@@ -17,7 +17,7 @@ npm run build    # збірка в apps/web/dist/
 
 ## Демо на GitHub Pages
 
-`npm run build:demo` збирає в `apps/web/dist-demo/` версію, що одразу стартує в демо-режимі (`.env.demo`); реальний принтер у ній можна відкрити через `?host=ip:порт`. Workflow [deploy-demo](../../.github/workflows/deploy-demo.yml) після кожного push у `main` публікує її в окремий публічний репозиторій (код цього лишається приватним) — налаштування описане в самому workflow.
+`npm run build:demo` збирає в `apps/web/dist-demo/` версію, що одразу стартує в демо-режимі (`.env.demo`); реальний принтер у ній можна відкрити через `?host=ip:порт`. Workflow [deploy-demo](../../.github/workflows/deploy-demo.yml) після кожного push у `main` публікує її в окремий репозиторій vyron-demo — налаштування описане в самому workflow.
 
 ## Структура
 

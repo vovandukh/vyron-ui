@@ -1,8 +1,8 @@
 {
   "name": "vyron-ecosystem",
   "private": true,
-  "version": "0.3.7",
-  "vyronVersion": "0.3.7.1",
+  "version": "0.4.0",
+  "vyronVersion": "0.4.0",
   "description": "Vyron — open-source ecosystem for Klipper printers: web UI, touchscreen app and host service",
   "workspaces": [
     "apps/web",
