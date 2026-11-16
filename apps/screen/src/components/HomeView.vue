@@ -43,16 +43,24 @@ function open(d) { if (!d.soon) p.go(d.id) }
 <template>
   <div class="home page">
     <section class="hero" :class="{ glass: !showModel, model: showModel, tunable: p.active }" @click="p.active && (tuneOpen = true)">
-      <!-- Модель друку (G-code) без картки — просто на фоні екрана, як 3D-сцена у вебі; поверх — відсоток, файл і час -->
+      <!-- Модель друку (G-code) без картки — просто на фоні екрана, як 3D-сцена у вебі.
+           Унизу скляна плашка в стилі плиток: відсоток, файл, шар і час, під нею — смужка прогресу. -->
       <template v-if="showModel">
         <GcodeView />
-        <div class="ov-top"><b>{{ pctShown }}</b><small>%</small><span v-if="p.printState === 'complete'" class="done">{{ t('state.complete') }}</span></div>
-        <div class="ov-bot">
-          <span class="file one">{{ file }}</span>
-          <span class="chips">
-            <span v-if="p.layer" class="chip">{{ t('scr.layer', p.layer) }}</span>
-            <span v-if="left" class="chip">{{ left }}</span>
+        <div class="job glass">
+          <span class="jp"><b>{{ pctShown }}</b><small>%</small></span>
+          <span class="jt">
+            <span class="jf">{{ file }}</span>
+            <span class="js">
+              <template v-if="p.printState === 'complete'"><Icon name="check" size="1.2rem" :stroke="3" class="good" />{{ t('state.complete') }}</template>
+              <template v-else>
+                <span v-if="p.layer">{{ t('scr.layer', p.layer) }}</span>
+                <span v-if="p.layer && left" class="sep">·</span>
+                <span v-if="left">{{ left }}</span>
+              </template>
+            </span>
           </span>
+          <i class="jbar" :style="{ width: pctShown + '%' }"></i>
         </div>
       </template>
       <template v-else-if="p.active">
@@ -162,12 +170,17 @@ function open(d) { if (!d.soon) p.go(d.id) }
 .hero{position:relative;min-width:0;border-radius:var(--r-lg);display:flex;align-items:center;gap:1.3rem;padding:1rem 1.4rem 1rem 1rem;overflow:hidden}
 .hero.model{padding:0}
 /* Підписи поверх моделі; знизу — легке затемнення, щоб назва читалась, якщо модель заходить під неї */
-.ov-top{position:absolute;left:0;top:0;right:0;padding:.4rem .6rem 2rem;display:flex;align-items:baseline;pointer-events:none}
-.ov-top b{font-size:3rem;font-weight:700;letter-spacing:-.05em;line-height:1}
-.ov-top .done{margin-left:.8rem;padding:.25rem .7rem;border-radius:1rem;background:rgba(48,209,88,.16);color:var(--green);font-size:1.1rem;font-weight:600;align-self:center}
-.ov-top small{font-size:1.3rem;font-weight:600;color:var(--dim);margin-left:.15rem}
-.ov-bot{position:absolute;left:0;right:0;bottom:0;padding:2rem .6rem .3rem;display:grid;gap:.5rem;pointer-events:none;background:linear-gradient(0deg,rgba(6,6,7,.75),transparent)}
-.file.one{-webkit-line-clamp:1;font-size:1.3rem}
+/* Плашка друку: те саме скло, що й плитки температур; відсоток великий, решта — дрібніше й тьмяніше */
+.job{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:1rem;padding:.75rem 1rem .9rem;border-radius:var(--r);overflow:hidden;pointer-events:none}
+.jp{flex:none;display:flex;align-items:baseline}
+.jp b{font-size:2.6rem;font-weight:700;letter-spacing:-.05em;line-height:1}
+.jp small{font-size:1.2rem;font-weight:600;color:var(--dim);margin-left:.1rem}
+.jt{min-width:0;display:grid;gap:.2rem;padding-left:1rem;border-left:1px solid var(--line)}
+.jf{font-size:1.25rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.js{display:flex;align-items:center;gap:.35rem;font-size:1.1rem;color:var(--dim);white-space:nowrap;overflow:hidden}
+.js .sep{opacity:.6}
+/* Смужка прогресу по нижньому краю плашки — градієнт фірмового кольору, як у кільці */
+.jbar{position:absolute;left:0;bottom:0;height:.3rem;background:linear-gradient(90deg,var(--coral),var(--brand));border-radius:0 .2rem .2rem 0;transition:width 1s linear}
 
 .ring{position:relative;flex:none;width:12.4rem;height:12.4rem}
 .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
