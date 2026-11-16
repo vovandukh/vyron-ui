@@ -166,7 +166,7 @@ export default {
   'print.pausing': 'Пауза…', 'print.resuming': 'Продовження…', 'print.cancelling': 'Скасування…',
   'print.cancelConfirm': 'Скасувати поточний друк? Продовжити його вже не вийде.', 'print.failed': 'Не вдалося виконати — перевір зв’язок з принтером або подивись консоль',
   'print.cancelOk': 'Скасувати друк', 'print.keep': 'Залишити',
-  'status.nozzle': 'Активне сопло', 'status.nozzleShort': 'Сопло', 'status.bed': 'Стіл', 'status.chamber': 'Камера', 'status.speed': 'Швидкість',
+  'status.nozzle': 'Активне сопло', 'status.nozzleShort': 'Сопло', 'status.bed': 'Стіл', 'status.chamber': 'Термокамера', 'status.speed': 'Швидкість',
   'status.fan': 'Обдув', 'status.z': 'Висота Z', 'status.layer': 'Шар', 'status.qgl': 'QGL',
   'status.setNozzle': 'Задати температуру сопла', 'status.setBed': 'Задати температуру столу',
   'status.qglDone': 'вирівняно', 'status.qglNot': 'не вирівняно', 'status.ztilt': 'Z-Tilt',

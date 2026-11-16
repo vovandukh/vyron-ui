@@ -1,6 +1,7 @@
 <script setup>
-// Одометр: кожна цифра — вертикальна стрічка 0…9, що пружно перекочується до нового значення
-// (transform + CSS-пружина --spring; анімацію рахує GPU, Vue перемальовує лише при зміні числа).
+// Одометр: кожна цифра — вертикальна стрічка 0…9, що плавно перекочується до нового значення
+// (transform з м'яким гальмуванням без перехльосту; анімацію рахує GPU, Vue перемальовує лише при зміні числа).
+// Краї клітинки згасають (mask), тож цифра, що заїжджає чи виїжджає, не ріжеться навпіл.
 // Розряди мають ключі від кінця числа, тож поява нового розряду (99 → 100) не зсуває анімації решти.
 // Значення оновлюється не частіше ніж раз на `throttle` мс: інакше при частих оновленнях
 // (демо — кожні 40 мс) цифри ніколи не встигали б «доїхати» і виглядали б розмитими.
@@ -10,7 +11,8 @@ const props = defineProps({
   value: { type: Number, default: null },
   decimals: { type: Number, default: 0 },
   suffix: { type: String, default: '' },
-  throttle: { type: Number, default: 320 }
+  // Не частіше ніж раз на 0.8 с: перекочування (~0.35 с) встигає закінчитися, і цифра стоїть чітко
+  throttle: { type: Number, default: 800 }
 })
 
 const DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -50,8 +52,10 @@ const label = computed(() => (chars.value.length ? chars.value.map(x => x.c).joi
 <style scoped>
 .rn{display:inline-flex;align-items:baseline;white-space:nowrap;font-variant-numeric:tabular-nums}
 /* Висота клітинки = line-height; стрічка з 10 цифр зсувається на 10% за кожну цифру */
-.rn-ch{position:relative;display:inline-block;height:var(--rn-h,1.15em);line-height:var(--rn-h,1.15em);overflow:hidden;vertical-align:bottom}
-.rn-strip{display:flex;flex-direction:column;transition:transform var(--t-spring) var(--spring);will-change:transform}
+.rn-ch{position:relative;display:inline-block;height:var(--rn-h,1.15em);line-height:var(--rn-h,1.15em);overflow:hidden;vertical-align:bottom;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 14%,#000 86%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 14%,#000 86%,transparent 100%)}
+.rn-strip{display:flex;flex-direction:column;transition:transform .36s cubic-bezier(.22,.9,.3,1);will-change:transform}
+@media (prefers-reduced-motion:reduce){.rn-strip{transition:none}}
 .rn-strip>span{display:block;height:var(--rn-h,1.15em);text-align:center}
 /* white-space:pre — щоб пробіл на початку суфікса (« мм», « / 150») не з'їдався */
 .rn-sfx{display:inline-block;height:var(--rn-h,1.15em);line-height:var(--rn-h,1.15em);vertical-align:bottom;white-space:pre}
