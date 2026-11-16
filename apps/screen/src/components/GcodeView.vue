@@ -17,7 +17,12 @@ const p = usePrinter()
 const box = ref(null)
 const cv = ref(null)
 let base = null            // прихований буфер із сірими лініями
-let S = null, L = null, I = null, n = 0   // екранні координати, шар і вихідний індекс кожного відрізка
+let S = null, L = null, I = null, D = null, n = 0   // екранні координати, шар, вихідний індекс і глибина кожного відрізка
+/** «Підлога» під моделлю: центр і півосі еліпса на екрані */
+let floor = null
+// Глибина: каркас без підказок глибини око читає і «згори», і «знизу» (ефект куба Неккера).
+// Тому задні лінії тьмяніші за передні — три смуги, лише різна прозорість при малюванні.
+const BAND_ALPHA = [0.38, 0.7, 1]
 let drawn = 0              // скільки відрізків уже пофарбовано як надруковані
 const ANGLE = -Math.PI / 4  // фіксований ракурс: модель повернута на 45°, як класична ізометрія
 let colors = ['#ff6b5a', '#ff9a8c']
@@ -33,13 +38,15 @@ function readColors() {
 /** Проєкція моделі в координати canvas (ізометрія з нахилом), з урахуванням розміру й поля */
 function project(w, h) {
   const P = model.P, N = model.N, b = model.bounds
-  if (!P || !N || !b) { n = 0; return }
+  if (!P || !N || !b) { n = 0; floor = null; return }
   const step = Math.max(1, Math.ceil(N / MAX_SEG))
   const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2, zs = model.zScale || 1
   const ca = Math.cos(ANGLE), sa = Math.sin(ANGLE)
   const cnt = Math.ceil(N / step)
   const raw = new Float32Array(cnt * 4)
-  L = new Uint16Array(cnt); I = new Uint32Array(cnt)
+  L = new Uint16Array(cnt); I = new Uint32Array(cnt); D = new Uint8Array(cnt)
+  // Радіус «відбитка» моделі на столі — для смуг глибини й еліпса підлоги
+  const R = Math.max(1, Math.hypot(b.x1 - b.x0, b.y1 - b.y0) / 2)
   let k = 0, x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9
   const pr = (x, y, z, out, o) => {
     const dx = x - cx, dy = y - cy
@@ -54,31 +61,59 @@ function project(w, h) {
     pr(P[a], P[a + 1], P[a + 2], raw, k * 4)
     pr(P[ex + 3], P[ex + 4], P[ex + 5], raw, k * 4 + 2)
     L[k] = model.Lay[i]; I[k] = j
+    // глибина середини відрізка: від'ємна — далі від глядача, додатна — ближче
+    const mx = (P[a] + P[ex + 3]) / 2 - cx, my = (P[a + 1] + P[ex + 4]) / 2 - cy
+    const dep = mx * sa + my * ca
+    D[k] = dep < -R / 3 ? 0 : dep > R / 3 ? 2 : 1
     x0 = Math.min(x0, raw[k * 4], raw[k * 4 + 2]); x1 = Math.max(x1, raw[k * 4], raw[k * 4 + 2])
     y0 = Math.min(y0, raw[k * 4 + 1], raw[k * 4 + 3]); y1 = Math.max(y1, raw[k * 4 + 1], raw[k * 4 + 3])
     k++
   }
   n = k
+  // Підлога — еліпс трохи ширший за відбиток моделі; враховуємо його в межах, щоб влазив у кадр
+  const FR = R * 1.05
+  x0 = Math.min(x0, -FR); x1 = Math.max(x1, FR); y0 = Math.min(y0, -FR * TILT); y1 = Math.max(y1, FR * TILT)
   // Поля: зверху — під відсоток, знизу — під назву файлу й час (підписи лежать поверх моделі)
   const padX = w * 0.08, padT = h * 0.16, padB = h * 0.3
   const sc = Math.min((w - 2 * padX) / Math.max(1, x1 - x0), (h - padT - padB) / Math.max(1, y1 - y0))
   const ox = (w - (x1 - x0) * sc) / 2 - x0 * sc, oy = padT + (h - padT - padB - (y1 - y0) * sc) / 2 - y0 * sc
   S = raw
   for (let q = 0; q < n * 4; q += 2) { S[q] = S[q] * sc + ox; S[q + 1] = S[q + 1] * sc + oy }
+  // Точка (cx, cy, 0) у проєкції — це (0, 0), тобто на екрані (ox, oy)
+  floor = { x: ox, y: oy, rx: FR * sc, ry: FR * TILT * sc }
+}
+
+/** Стіл під моделлю: м'яке світле коло з тонким краєм — підказує, що дивимось згори */
+function drawFloor(ctx) {
+  if (!floor) return
+  const { x, y, rx, ry } = floor
+  ctx.save()
+  ctx.translate(x, y); ctx.scale(1, ry / rx)
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
+  g.addColorStop(0, 'rgba(255,255,255,.075)'); g.addColorStop(0.7, 'rgba(255,255,255,.035)'); g.addColorStop(1, 'rgba(255,255,255,0)')
+  ctx.fillStyle = g
+  ctx.beginPath(); ctx.arc(0, 0, rx, 0, Math.PI * 2); ctx.fill()
+  ctx.restore()
+  ctx.beginPath(); ctx.ellipse(x, y, rx * 0.9, ry * 0.9, 0, 0, Math.PI * 2)
+  ctx.strokeStyle = 'rgba(255,255,255,.1)'; ctx.lineWidth = 1; ctx.stroke()
 }
 
 function strokeRange(ctx, from, to, styleFor) {
-  // Групуємо за кольором (парність шару), щоб робити лише два stroke() на виклик
-  for (let par = 0; par < 2; par++) {
-    ctx.beginPath()
-    let any = false
-    for (let k = from; k < to; k++) {
-      if ((L[k] & 1) !== par) continue
-      const o = k * 4
-      ctx.moveTo(S[o], S[o + 1]); ctx.lineTo(S[o + 2], S[o + 3]); any = true
+  // Групуємо за кольором (парність шару) і глибиною: шість stroke() на виклик, спершу задні, потім передні
+  for (let band = 0; band < 3; band++) {
+    ctx.globalAlpha = BAND_ALPHA[band]
+    for (let par = 0; par < 2; par++) {
+      ctx.beginPath()
+      let any = false
+      for (let k = from; k < to; k++) {
+        if ((L[k] & 1) !== par || D[k] !== band) continue
+        const o = k * 4
+        ctx.moveTo(S[o], S[o + 1]); ctx.lineTo(S[o + 2], S[o + 3]); any = true
+      }
+      if (any) { ctx.strokeStyle = styleFor(par); ctx.stroke() }
     }
-    if (any) { ctx.strokeStyle = styleFor(par); ctx.stroke() }
   }
+  ctx.globalAlpha = 1
 }
 
 /** Скільки відрізків (у нашому зменшеному наборі) надруковано */
@@ -101,7 +136,9 @@ function full() {
   base = document.createElement('canvas')
   base.width = c.width; base.height = c.height
   const b = base.getContext('2d')
-  b.scale(dpr, dpr); b.lineWidth = 1; b.lineCap = 'round'
+  b.scale(dpr, dpr)
+  drawFloor(b)
+  b.lineWidth = 1; b.lineCap = 'round'
   strokeRange(b, 0, n, par => (par ? 'rgba(160,170,190,.30)' : 'rgba(160,170,190,.20)'))
   const ctx = c.getContext('2d')
   ctx.setTransform(1, 0, 0, 1, 0, 0)
