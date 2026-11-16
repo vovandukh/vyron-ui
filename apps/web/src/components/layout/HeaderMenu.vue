@@ -6,7 +6,8 @@ import { usePrinterStore } from '../../stores/printerStore'
 import { useUiStore } from '../../stores/uiStore'
 import { useConfirm } from '../../composables/useConfirm'
 import { useI18n } from '../../composables/useI18n'
-import { normalizeHost, savedHost, resolveHost } from '@vyron/shared/moonraker/client'
+import { normalizeHost, savedHost, resolveHost, mixedContentRisk } from '@vyron/shared/moonraker/client'
+import { DEMO_MAX_TOOLS } from '../../services/demo'
 import { DEMO_BUILD } from '../../config'
 
 const printer = usePrinterStore()
@@ -28,9 +29,18 @@ onBeforeUnmount(() => { document.removeEventListener('click', onDoc); document.r
 const host = ref(printer.host || savedHost() || '')
 watch(() => printer.host, h => { if (h) host.value = h })
 
+// Демо на https (GitHub Pages): після невдалої спроби підключитись до принтера в мережі — підказка, що дозволити
+const tried = ref(false)
+const origin = location.origin
+const showHelp = computed(() => DEMO_BUILD && tried.value && !printer.demoMode && mixedContentRisk(normalizeHost(host.value)) &&
+  !['open', 'ready', 'shutdown', 'connecting'].includes(printer.link))
+// Кількість голів у демо: 1–6 (сегменти), для перевірки інтерфейсу з різними принтерами
+const HEADS = Array.from({ length: Math.min(6, DEMO_MAX_TOOLS) }, (_, i) => i + 1)
+
 function connect() {
   const h = normalizeHost(host.value)
   if (!h) return
+  tried.value = true
   host.value = h
   printer.connect(h, { remember: true })
 }
@@ -100,7 +110,12 @@ function onEnter(el) {
                    autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="url">
             <button type="submit" class="pri" :disabled="printer.link === 'connecting'">{{ t('conn.connect') }}</button>
           </form>
-          <div v-else class="hostRo">
+          <div v-if="showHelp" class="help" role="note">
+            <b>{{ t('conn.help.t') }}</b>
+            <ol><li>{{ t('conn.help.1') }}</li><li>{{ t('conn.help.2', { origin }) }}</li><li>{{ t('conn.help.3') }}</li></ol>
+            <small>{{ t('conn.help.alt') }}</small>
+          </div>
+          <div v-if="!DEMO_BUILD" class="hostRo">
             <small>{{ t('cc.address') }}</small>
             <b :title="shownHost">{{ shownHost || t('island.noHost') }}</b>
           </div>
@@ -111,6 +126,12 @@ function onEnter(el) {
           </button>
           <!-- Імітація помилок: розкривається, щоб не роздувати центр керування -->
           <template v-if="DEMO_BUILD && printer.demoMode">
+            <div class="heads">
+              <small>{{ t('cc.heads') }}</small>
+              <div class="hseg" role="radiogroup" :aria-label="t('cc.heads')">
+                <button v-for="n in HEADS" :key="n" type="button" role="radio" :aria-checked="String(printer.toolCount === n)" :class="{ on: printer.toolCount === n }" @click="printer.startDemo(n)">{{ n }}</button>
+              </div>
+            </div>
             <button type="button" class="tgl derr-hd" :aria-expanded="String(errOpen)" @click="errOpen = !errOpen">
               <span class="tgl-tx"><b>{{ t('cc.demoErr') }}</b><small>{{ t('cc.demoErrHint') }}</small></span>
               <span class="chev" :class="{ on: errOpen }" aria-hidden="true"></span>
@@ -162,6 +183,15 @@ function onEnter(el) {
 @keyframes blink{50%{opacity:.3}}
 
 .host{display:flex;gap:6px}
+.help{display:grid;gap:6px;padding:10px 12px;border-radius:var(--r);background:rgba(255,159,10,.1);border:1px solid rgba(255,159,10,.25);font-size:12px;line-height:1.45;color:#ffd9a0}
+.help b{color:#ffcf85;font-size:12.5px}
+.help ol{margin:0;padding-left:18px;display:grid;gap:4px}
+.help small{color:var(--dim);font-size:11.5px}
+.heads{display:grid;gap:6px}
+.heads small{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+.hseg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;padding:2px;border-radius:9px;background:rgba(118,118,128,.24)}
+.hseg button{border:0;background:none;color:var(--ink);font:inherit;font-size:12.5px;font-weight:600;padding:6px 0;border-radius:7px;cursor:pointer}
+.hseg button.on{background:rgba(255,255,255,.16);box-shadow:0 1px 3px rgba(0,0,0,.35)}
 /* Адреса принтера лише для читання (збірка для принтера) */
 .hostRo{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:9px 11px;border-radius:var(--r);background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.06)}
 .hostRo small{color:var(--dim);font-size:11px;white-space:nowrap}
