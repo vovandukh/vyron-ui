@@ -178,6 +178,7 @@ function onEnter(el) {
                 <small class="scr-more">{{ t('cc.screensMore') }}</small>
               </div>
             </Transition>
+            <a role="menuitem" class="fb" href="https://github.com/vovandukh/vyron-demo/issues" target="_blank" rel="noopener">{{ t('cc.feedback') }} ↗</a>
             <hr>
           </template>
           <button role="menuitem" @click="nav('set')">{{ t('menu.settings') }}</button>
@@ -289,6 +290,8 @@ function onEnter(el) {
 .list button:hover:not(:disabled){background:rgba(255,255,255,.07)}
 .list button:active:not(:disabled){transform:scale(.98);background:rgba(255,255,255,.1)}
 .list button:disabled{opacity:.35;cursor:not-allowed}
+.list .fb{display:block;color:var(--dim);font-size:13px;text-decoration:none;padding:10px 12px;border-radius:var(--r);transition:background-color var(--t-fast),color var(--t-fast)}
+.list .fb:hover{background:rgba(255,255,255,.07);color:var(--ink)}
 .list hr{border:0;border-top:1px solid rgba(255,255,255,.07);margin:4px 8px;width:auto}
 .mbtn:focus-visible,.list button:focus-visible,.tgl:focus-visible,.pri:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
 

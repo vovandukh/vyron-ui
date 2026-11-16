@@ -2,7 +2,7 @@
 // Про систему: версії програм, хост і залізо (лише читання).
 import { ref } from 'vue'
 import { whenOnline } from '../online'
-import { usePrinter } from '../store'
+import { usePrinter, DEMO } from '../store'
 import { t } from '../i18n'
 import { interfaces } from '../net'
 import { VYRON_VERSION, coreInfo } from '@vyron/shared/version'
@@ -23,7 +23,8 @@ whenOnline(async () => {
   ])
   rows.value = [
     { k: 'Vyron Screen', v: 'v' + VYRON_VERSION },
-    { k: 'Vyron Core', v: core ? 'v' + core.version : t('set.coreNone') },
+    // У демо ядро не показуємо — для глядача воно нічого не означає
+    ...(DEMO ? [] : [{ k: 'Vyron Core', v: core ? 'v' + core.version : t('set.coreNone') }]),
     { k: 'Klipper', v: short(pi.software_version) },
     { k: 'Moonraker', v: short(si.moonraker_version) }
   ]

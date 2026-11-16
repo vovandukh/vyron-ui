@@ -11,8 +11,6 @@ import AppHeader from './components/layout/AppHeader.vue'
 import ProgressBar from './components/layout/ProgressBar.vue'
 import KlippyCard from './components/layout/KlippyCard.vue'
 import KlipperToasts from './components/layout/KlipperToasts.vue'
-import DemoIntro from './components/modals/DemoIntro.vue'
-import { DEMO_BUILD } from './config'
 
 import ControlTab from './components/tabs/ControlTab.vue'
 import ConsoleTab from './components/tabs/ConsoleTab.vue'
@@ -69,7 +67,6 @@ watch(() => printer.klippy.state, (s, o) => { if (settings.sound && o && s !== o
   <KlippyCard />
   <KlipperToasts />
   <!-- Демо (GitHub Pages): вітальна картка при першому відкритті -->
-  <DemoIntro v-if="DEMO_BUILD" />
   <TemperatureModal />
   <ConfirmModal />
 </template>
