@@ -3,7 +3,7 @@
 # працює з низьким пріоритетом і обмеженою пам'яттю. Якщо вона впаде, принтер цього не помітить.
 [Unit]
 Description=Vyron Core (helper service next to Moonraker, never controls the printer)
-Documentation=https://github.com/vovandukh/vyron/tree/main/core
+Documentation=https://github.com/vovandukh/vyron-ui/tree/main/core
 After=network.target moonraker.service
 StartLimitIntervalSec=600
 StartLimitBurst=5

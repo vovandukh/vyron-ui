@@ -3,10 +3,10 @@
 Потрібно: принтер із Klipper, Moonraker і nginx (стандартна установка Mainsail або Fluidd через KIAUH).
 
 ```bash
-cd ~ && git clone -b stable https://github.com/vovandukh/vyron.git
-~/vyron/install/install.sh --dry-run   # подивитися, що буде зроблено
-~/vyron/install/install.sh             # встановити (плата без відеокарти: CB1, Pi 3, SPI-екран)
-~/vyron/install/install.sh --gpu       # встановити (плата з відеокартою: Pi 4/5, CM4, Orange Pi 5)
+cd ~ && git clone -b stable https://github.com/vovandukh/vyron-ui.git
+~/vyron-ui/install/install.sh --dry-run   # подивитися, що буде зроблено
+~/vyron-ui/install/install.sh             # встановити (плата без відеокарти: CB1, Pi 3, SPI-екран)
+~/vyron-ui/install/install.sh --gpu       # встановити (плата з відеокартою: Pi 4/5, CM4, Orange Pi 5)
 ```
 
 Після встановлення:
@@ -46,9 +46,9 @@ cd ~ && git clone -b stable https://github.com/vovandukh/vyron.git
 ## Видалення
 
 ```bash
-~/vyron/install/uninstall.sh --dry-run
-~/vyron/install/uninstall.sh            # тека репозиторію лишається
-~/vyron/install/uninstall.sh --purge    # і видалити теку
+~/vyron-ui/install/uninstall.sh --dry-run
+~/vyron-ui/install/uninstall.sh            # тека репозиторію лишається
+~/vyron-ui/install/uninstall.sh --purge    # і видалити теку
 ```
 
 Повертає Mainsail на порт 80 (вмикає знову), прибирає сайт `vyron`, запис з `moonraker.conf` і службу Vyron Core.
@@ -56,9 +56,9 @@ cd ~ && git clone -b stable https://github.com/vovandukh/vyron.git
 ## Vyron Screen на екрані принтера (замість KlipperScreen)
 
 ```bash
-~/vyron/install/screen.sh --dry-run   # подивитися план
-~/vyron/install/screen.sh             # поставити Vyron Screen на екран
-~/vyron/install/screen.sh --remove    # повернути KlipperScreen
+~/vyron-ui/install/screen.sh --dry-run   # подивитися план
+~/vyron-ui/install/screen.sh             # поставити Vyron Screen на екран
+~/vyron-ui/install/screen.sh --remove    # повернути KlipperScreen
 ```
 
 `install.sh` запускає цей крок сам; окремо він потрібен, щоб лише перемкнути екран. Для екрана піднімається локальний сайт nginx на `127.0.0.1:7136`

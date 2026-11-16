@@ -5,7 +5,7 @@
 #   - зупиняє й прибирає службу Vyron Core, якщо вона є.
 # Теку репозиторію не видаляє (тільки з --purge). Klipper і printer.cfg не чіпає.
 #
-#   ~/vyron/install/uninstall.sh [--dry-run] [--purge]
+#   ~/vyron-ui/install/uninstall.sh [--dry-run] [--purge]
 set -euo pipefail
 
 DRY=0

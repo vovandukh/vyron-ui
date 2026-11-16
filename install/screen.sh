@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Vyron Screen на екрані принтера замість KlipperScreen.
 #
-#   ~/vyron/install/screen.sh             — поставити Vyron Screen на екран
-#   ~/vyron/install/screen.sh --dry-run   — лише показати, що буде зроблено
-#   ~/vyron/install/screen.sh --remove    — повернути KlipperScreen
-#   ~/vyron/install/screen.sh --gpu       — плата з відеокартою (Raspberry Pi 4/5, CM4…): прискорення в браузері
-#   ~/vyron/install/screen.sh --no-gpu    — без прискорення (CB1, Pi 3, SPI-екрани; так за замовчуванням)
+#   ~/vyron-ui/install/screen.sh             — поставити Vyron Screen на екран
+#   ~/vyron-ui/install/screen.sh --dry-run   — лише показати, що буде зроблено
+#   ~/vyron-ui/install/screen.sh --remove    — повернути KlipperScreen
+#   ~/vyron-ui/install/screen.sh --gpu       — плата з відеокартою (Raspberry Pi 4/5, CM4…): прискорення в браузері
+#   ~/vyron-ui/install/screen.sh --no-gpu    — без прискорення (CB1, Pi 3, SPI-екрани; так за замовчуванням)
 #
 # Що робить:
 #   1. Локальний сайт nginx «vyron-screen» на 127.0.0.1:7136 (лише для екрана; з мережі недоступний,

@@ -25,7 +25,7 @@ const scrOpen = ref(false)
       <small class="scr-more">{{ t('cc.screensMore') }}</small>
     </div>
   </Transition>
-  <a role="menuitem" class="fb" href="https://github.com/vovandukh/vyron/issues" target="_blank" rel="noopener">{{ t('cc.feedback') }} ↗</a>
+  <a role="menuitem" class="fb" href="https://github.com/vovandukh/vyron-ui/issues" target="_blank" rel="noopener">{{ t('cc.feedback') }} ↗</a>
   <hr>
 </template>
 

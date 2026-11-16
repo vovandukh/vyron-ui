@@ -6,7 +6,7 @@
 **[Демо](https://vovandukh.github.io/vyron-demo/)** — працює в браузері без принтера.
 
 > **Ранній проєкт.** Перевірено на кількох принтерах автора (Voron, CAN-голови, BTT TFT35). На іншому
-> залізі можуть вилізти нюанси — пиши в [Issues](https://github.com/vovandukh/vyron/issues).
+> залізі можуть вилізти нюанси — пиши в [Issues](https://github.com/vovandukh/vyron-ui/issues).
 > Mainsail, Fluidd і KlipperScreen не видаляються, тож повернутися можна будь-коли.
 
 *English: Vyron is a web UI and a touchscreen UI for Klipper printers sharing one design, talking only to Moonraker.
@@ -26,20 +26,20 @@ Early stage; the UI is available in Ukrainian and English. Install instructions 
 Команди виконуються на принтері через SSH (наприклад, `ssh pi@192.168.1.50` — логін і IP твої).
 
 ```bash
-cd ~ && git clone -b stable https://github.com/vovandukh/vyron.git
-~/vyron/install/install.sh --dry-run   # подивитися, що буде зроблено (нічого не змінює)
+cd ~ && git clone -b stable https://github.com/vovandukh/vyron-ui.git
+~/vyron-ui/install/install.sh --dry-run   # подивитися, що буде зроблено (нічого не змінює)
 ```
 
 Далі — одна з двох команд, залежно від плати-хоста:
 
 | Плата | Команда |
 |---|---|
-| **Без відеокарти:** BTT CB1, Raspberry Pi 3 / Zero 2, будь-яка плата з SPI-екраном (TFT35 тощо) | `~/vyron/install/install.sh` |
-| **З відеокартою:** Raspberry Pi 4 / 5, CM4, Orange Pi 5 (RK3588) — з екраном DSI або HDMI | `~/vyron/install/install.sh --gpu` |
+| **Без відеокарти:** BTT CB1, Raspberry Pi 3 / Zero 2, будь-яка плата з SPI-екраном (TFT35 тощо) | `~/vyron-ui/install/install.sh` |
+| **З відеокартою:** Raspberry Pi 4 / 5, CM4, Orange Pi 5 (RK3588) — з екраном DSI або HDMI | `~/vyron-ui/install/install.sh --gpu` |
 
 Різниця лише для екрана принтера: з `--gpu` браузер малює через відеокарту, і процесор лишається Klipperу.
 Не впевнений — став без `--gpu`, так працює на будь-якій платі. Якщо з `--gpu` екран чорний чи мерехтить —
-`~/vyron/install/install.sh --no-gpu`. Vyron Web у браузері на ПК чи телефоні від цього не залежить.
+`~/vyron-ui/install/install.sh --no-gpu`. Vyron Web у браузері на ПК чи телефоні від цього не залежить.
 
 Скрипт може попросити пароль (для `sudo`). Після встановлення:
 
@@ -64,14 +64,14 @@ Mainsail/Fluidd і KlipperScreen лише ховаються. Якщо Vyron Scr
 
 | Канал | Гілка | Що приходить |
 |---|---|---|
-| **stable** | `stable` | Перевірені випуски ([Releases](https://github.com/vovandukh/vyron/releases)). Для звичайного користування. |
+| **stable** | `stable` | Перевірені випуски ([Releases](https://github.com/vovandukh/vyron-ui/releases)). Для звичайного користування. |
 | **dev** | `main` | Кожна зміна одразу після збірки. Для тих, хто хоче тестувати нове й готовий до багів. |
 
 Перемкнути канал:
 
 ```bash
-~/vyron/install/install.sh --dev      # на dev
-~/vyron/install/install.sh --stable   # назад на stable
+~/vyron-ui/install/install.sh --dev      # на dev
+~/vyron-ui/install/install.sh --stable   # назад на stable
 ```
 
 ## Видалення
@@ -79,7 +79,7 @@ Mainsail/Fluidd і KlipperScreen лише ховаються. Якщо Vyron Scr
 Повертає все як було (Mainsail знову на `http://IP-принтера/`, KlipperScreen на екрані):
 
 ```bash
-~/vyron/install/uninstall.sh --purge
+~/vyron-ui/install/uninstall.sh --purge
 ```
 
 ## Як це влаштовано
