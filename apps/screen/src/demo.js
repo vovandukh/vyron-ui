@@ -15,8 +15,13 @@ export function startDemo({ merge, setKlippy }) {
   merge({ gcode_move: { homing_origin: [0, 0, 0, 0], speed_factor: 1, extrude_factor: 1 }, fan: { speed: idle0(q) ? 0 : 0.4 } })
   const idle = want === 'idle'
   let p = idle ? 0 : 0.37, d = 2860
+  // Імітація нагріву: температура щосекунди наближається до цілі (або до кімнатної)
+  heat.extruder = { t: idle ? 24.6 : 239.8, tg: idle ? 0 : 240 }
+  heat.heater_bed = { t: idle ? 23.9 : 79.9, tg: idle ? 0 : 80 }
+  const step = h => { const goal = Math.max(h.tg, 24); h.t += (goal - h.t) * (h.tg > h.t ? 0.18 : 0.08); if (Math.abs(goal - h.t) < 0.3) h.t = goal + (h.tg ? Math.random() * 0.4 - 0.2 : 0) }
   const tick = () => {
     if (want === 'printing') { p = Math.min(1, p + 0.0004); d += 1 }
+    step(heat.extruder); step(heat.heater_bed)
     merge({
       print_stats: idle ? { state: 'standby', filename: '' } : {
         state: want === 'paused' ? 'paused' : 'printing',
@@ -25,20 +30,22 @@ export function startDemo({ merge, setKlippy }) {
         info: { current_layer: Math.round(p * 412), total_layer: 412 }
       },
       display_status: { progress: p },
-      extruder: { temperature: idle ? 24.6 : 239.8 + Math.random() * 0.4, target: idle ? 0 : 240 },
-      heater_bed: { temperature: idle ? 23.9 : 79.9 + Math.random() * 0.2, target: idle ? 0 : 80 }
+      extruder: { temperature: heat.extruder.t, target: heat.extruder.tg },
+      heater_bed: { temperature: heat.heater_bed.t, target: heat.heater_bed.tg }
     })
   }
   tick()
   setInterval(tick, 1000)
 }
 
+const heat = {}
+
 const NETS = [
   ['Vyron Lab', 92, 'WPA2'], ['Kyivstar_5G', 74, 'WPA2 WPA3'], ['Workshop', 61, 'WPA2'],
   ['Guest', 48, ''], ['TP-Link_3F2A', 33, 'WPA2'], ['DIRECT-printer', 21, 'WPA2']
 ]
 const wait = ms => new Promise(r => setTimeout(r, ms))
-let db = { 'vyron_core/info': { version: '0.3.5', started: 0 } }
+let db = { 'vyron_core/info': { version: '0.3.6', started: 0 } }
 
 /** Імітація викликів Moonraker для сторінок налаштувань */
 export async function demoCall(method, params, { emitGcode, merge }) {
@@ -63,6 +70,8 @@ export async function demoCall(method, params, { emitGcode, merge }) {
     case 'server.history.list': return { count: 1, jobs: [{ filename: 'SSR DIN clip.gcode', status: 'completed', print_duration: 8040, end_time: Date.now() / 1000 - 3 * 3600 }] }
     case 'printer.gcode.script':
       if (/G28|M84|QUAD_GANTRY_LEVEL|Z_TILT_ADJUST|G1 /.test(params.script)) return demoMotion(params.script, merge)
+      { const m = /SET_HEATER_TEMPERATURE HEATER=(\S+) TARGET=(\d+)/.exec(params.script); if (m && heat[m[1]]) heat[m[1]].tg = +m[2] }
+      if (/TURN_OFF_HEATERS/.test(params.script)) Object.values(heat).forEach(h => { h.tg = 0 })
       if (/^WIFI_SCAN/.test(params.script)) {
         setTimeout(() => NETS.forEach(([s, sig, sec], i) => setTimeout(() => emitGcode('// ' + s + ':' + sig + ':' + sec), 120 * i)), 900)
       }

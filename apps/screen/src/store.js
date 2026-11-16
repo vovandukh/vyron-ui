@@ -12,6 +12,7 @@ import { model, loadModel, indexForPos } from '@vyron/shared/gcode/model'
 import { startDemo, demoCall, demoGcode, setDemoUpdateSink } from './demo'
 import { watchDesign, handleCoreEvent } from '@vyron/shared/live'
 import { TUNE_OBJECTS, tuneScript, tunePatch } from '@vyron/shared/klipper/tune'
+import { heaterScript, HEAT_OFF } from '@vyron/shared/klipper/heat'
 
 /** Найбільший G-code, який екран розбирає для візуалізації: на CB1 лише 1 ГБ пам'яті, Klipper важливіший */
 const MAX_GCODE_BYTES = 20 * 1024 * 1024
@@ -198,7 +199,7 @@ export const usePrinter = defineStore('printer', () => {
       loadLastJob()
       // ?demo&page=wifi — одразу відкрити сторінку налаштувань (для розробки)
       const pg = new URLSearchParams(location.search).get('page')
-      if (pg) stack.value = pg === 'settings' || pg === 'move' ? ['home', pg] : ['home', 'settings', pg]
+      if (pg) stack.value = ['settings', 'move', 'temp'].includes(pg) ? ['home', pg] : ['home', 'settings', pg]
       return
     }
     host.value = resolveHost()
@@ -256,6 +257,10 @@ export const usePrinter = defineStore('printer', () => {
     const script = tuneScript(kind, v)
     if (script) { try { await gcode(script) } catch { /* причину покаже Klipper */ } }
   }
+
+  /** Нагрів: ціль для нагрівача (extruder, heater_bed …) і «вимкнути все» */
+  async function setTemp(name, target) { try { await gcode(heaterScript(name, target)) } catch { /* причину покаже Klipper */ } }
+  async function heatOff() { try { await gcode(HEAT_OFF) } catch { /* причину покаже Klipper */ } }
 
   function jog(axis, dist) {
     const f = axis === 'z' ? FEED.z : FEED.xy
@@ -363,7 +368,7 @@ export const usePrinter = defineStore('printer', () => {
   return {
     gcodeState, modelVer, done, filename, showModel, event, updates, refreshUpdates, runUpdate,
     link, host, hostname, lastJob, klippy, st, printState, active, progress, remaining, layer, heaters, busy, design,
-    stack, page, dir, go, back, home, tune,
+    stack, page, dir, go, back, home, tune, setTemp, heatOff,
     call, gcode, onGcode, setPreset,
     leveling, homed, position, leveled, moving, homeAll, motorsOff, level, jog,
     start, pause, resume, cancel, estop, firmwareRestart, restart, restartMoonraker, reboot, shutdown

@@ -1,7 +1,7 @@
 export default {
   'nav.main': 'Керування', 'nav.console': 'Консоль', 'nav.mesh': 'Карта столу',
   'nav.hist': 'Історія', 'nav.eng': 'Інженерне меню',
-  'navs.main': 'Головна', 'navs.console': 'Консоль', 'navs.mesh': 'Карта', 'navs.hist': 'Історія', 'navs.eng': 'Інженер',
+  'navs.main': 'Головна', 'navs.console': 'Консоль', 'navs.mesh': 'Карта', 'navs.hist': 'Історія', 'navs.eng': 'Сервіс',
 
   'common.set': 'Задати', 'common.off': 'Вимкнути', 'common.cancel': 'Скасувати', 'common.save': 'Зберегти', 'common.ok': 'Так',
   'fmt.hm': '{h} г {m} хв', 'fmt.m': '{m} хв',
@@ -52,6 +52,7 @@ export default {
   'set.fxyShort': 'Швидкість X/Y', 'set.fxyHint': 'мм/хв для кнопок руху', 'set.fzShort': 'Швидкість Z', 'set.fzHint': 'мм/хв для кнопок руху',
   'set.secAbout': 'Про систему', 'set.ui': 'Інтерфейс', 'set.core': 'Ядро', 'set.coreNone': 'не встановлено', 'set.klipper': 'Klipper', 'set.moonraker': 'Moonraker', 'set.host': 'Хост', 'set.os': 'ОС', 'set.addr': 'Адреса',
   'tune.title': 'Під час друку', 'tune.open': 'Налаштувати', 'tune.z': 'Z-зсув', 'tune.speed': 'Швидкість', 'tune.flow': 'Потік', 'tune.fan': 'Обдув', 'tune.reset': 'Скинути зсув Z', 'tune.hint': 'Зсув Z діє одразу — підкручуй, дивлячись на перший шар', 'tune.mm': 'мм', 'common.done': 'Готово',
+  'scr.needHome': 'Стрілки ввімкнуться після Home — принтер має знати, де нуль осей', 'heat.material': 'Матеріал', 'heat.off': 'Вимкнути нагрів', 'heat.now': 'зараз', 'heat.hint': 'Пресет задає сопло й стіл разом. Klipper не дасть перевищити max_temp із printer.cfg',
   'job.elapsed': 'минуло {t}', 'job.layer': 'шар {l}', 'job.fil': '{m} м філаменту',
   'set.secNotify': 'Сповіщення', 'set.secNotifyHint': 'Як інтерфейс повідомляє про події',
   'set.toasts': 'Спливні повідомлення про помилки', 'set.toastsHint': 'Короткі картки, коли принтер не виконав команду: «Сопло ще не нагріте», «Спершу потрібно знайти нуль осей»…',
@@ -166,7 +167,7 @@ export default {
   'print.pausing': 'Пауза…', 'print.resuming': 'Продовження…', 'print.cancelling': 'Скасування…',
   'print.cancelConfirm': 'Скасувати поточний друк? Продовжити його вже не вийде.', 'print.failed': 'Не вдалося виконати — перевір зв’язок з принтером або подивись консоль',
   'print.cancelOk': 'Скасувати друк', 'print.keep': 'Залишити',
-  'status.nozzle': 'Активне сопло', 'status.nozzleShort': 'Сопло', 'status.bed': 'Стіл', 'status.chamber': 'Камера', 'status.speed': 'Швидкість',
+  'status.nozzle': 'Активне сопло', 'status.nozzleShort': 'Сопло', 'status.bed': 'Стіл', 'status.chamber': 'Термокамера', 'status.speed': 'Швидкість',
   'status.fan': 'Обдув', 'status.z': 'Висота Z', 'status.layer': 'Шар', 'status.qgl': 'QGL',
   'status.setNozzle': 'Задати температуру сопла', 'status.setBed': 'Задати температуру столу',
   'status.qglDone': 'вирівняно', 'status.qglNot': 'не вирівняно', 'status.ztilt': 'Z-Tilt',
