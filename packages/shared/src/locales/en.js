@@ -230,6 +230,8 @@ export default {
   'cfg.search': 'Search files', 'cfg.new': '+ New', 'cfg.unsaved': '● unsaved', 'cfg.find': 'Find',
   'cfg.saveRestart': 'Save and restart', 'cfg.replaceWith': 'Replace with', 'cfg.replace': 'Replace', 'cfg.all': 'All',
   'cfg.prev': 'Back', 'cfg.next': 'Next', 'cfg.editor': 'Config editor',
+  'ide.comment': 'Comment', 'ide.sections': 'Sections', 'ide.foldAll': 'Fold all', 'ide.unfoldAll': 'Unfold all', 'ide.goto': 'Line…', 'ide.filter': 'Find section', 'ide.noSections': 'No sections', 'ide.keys': 'Keyboard shortcuts', 'ide.keysList': 'Ctrl+/ — comment line or selection\nCtrl+S — save\nCtrl+F / Ctrl+H — find / replace\nCtrl+G — go to line\nCtrl+D — select next occurrence\nAlt+click — add a cursor\nAlt+↑ / Alt+↓ — move line\nShift+Alt+↓ — duplicate line\nCtrl+Shift+K — delete line\nCtrl+Space — parameter suggestions\nCtrl+Shift+[ / ] — fold / unfold section\nCtrl+Z / Ctrl+Shift+Z — undo / redo',
+  'ide.lint.dupSection': 'This section already exists on line {l} — Klipper will not start', 'ide.lint.indent': 'Indented line with no parameter above — Klipper will treat it as an error', 'ide.lint.noColon': 'Missing «:» — Klipper expects «parameter: value»', 'ide.lint.noSection': 'Parameter outside a section — add [section_name] above', 'ide.lint.dupKey': 'Parameter is already set on line {l} of this section',
   'cfg.stat': 'Line {l}, column {c} · {n} lines', 'cfg.matches': '{n} matches', 'cfg.noChanges': 'No changes',
   'cfg.saved': 'Saved. The previous version was kept in the backups/ folder', 'cfg.discard': 'You have unsaved changes. Discard them?',
   'cfg.newName': 'File name (for example, macros.cfg)', 'cfg.saveError': 'Could not save: {msg}',
