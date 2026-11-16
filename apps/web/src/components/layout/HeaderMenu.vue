@@ -38,6 +38,8 @@ const showHelp = computed(() => DEMO_BUILD && tried.value && !printer.demoMode &
 // Екрани принтера (Vyron Screen): готові моделі зі сторінкою-пристроєм у демо (у dev — сервер екрана на :5200)
 const SCREENS = [{ id: 'tft35', name: 'BTT TFT35 SPI', spec: '3.5″ · 480×320', href: import.meta.env.DEV ? 'http://localhost:5200/?demo' : './screens/tft35.html' }]
 const scrOpen = ref(false)
+const DEMO_STATES = ['printing', 'paused', 'complete', 'idle']
+const demoStateOf = () => { const s = printer.printState; return s === 'standby' || !s ? 'idle' : s }
 const HEADS = Array.from({ length: Math.min(6, DEMO_MAX_TOOLS) }, (_, i) => i + 1)
 
 function connect() {
@@ -133,6 +135,13 @@ function onEnter(el) {
               <small>{{ t('cc.heads') }}</small>
               <div class="hseg" role="radiogroup" :aria-label="t('cc.heads')">
                 <button v-for="n in HEADS" :key="n" type="button" role="radio" :aria-checked="String(printer.toolCount === n)" :class="{ on: printer.toolCount === n }" @click="printer.startDemo(n)">{{ n }}</button>
+              </div>
+            </div>
+            <!-- Стан демо-друку: побачити і «готово», і очікування, а не лише нескінченний друк -->
+            <div class="heads">
+              <small>{{ t('cc.demoState') }}</small>
+              <div class="hseg" role="radiogroup" :aria-label="t('cc.demoState')">
+                <button v-for="s in DEMO_STATES" :key="s" type="button" role="radio" :aria-checked="String(demoStateOf() === s)" :class="{ on: demoStateOf() === s }" @click="printer.demoSet(s)">{{ t('cc.ds.' + s) }}</button>
               </div>
             </div>
             <button type="button" class="tgl derr-hd" :aria-expanded="String(errOpen)" @click="errOpen = !errOpen">

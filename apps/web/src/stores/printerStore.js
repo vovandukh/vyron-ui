@@ -626,6 +626,30 @@ export const usePrinterStore = defineStore('printer', () => {
     return script ? rpc(script) : false
   }
 
+  /**
+   * Демо: показати стан друку одним дотиком — printing | paused | complete | idle (без друку).
+   * Щоб відвідувач побачив і «друк завершено», і очікування, а не лише нескінченний друк.
+   */
+  function demoSet(state) {
+    if (!demoMode.value) return
+    if (state === 'idle') {
+      Object.assign(demoJob, { file: null, state: 'standby', k: 0, pos: null, progress: 0 })
+      applyModel({ P: new Float32Array(0), F: [], T: null })
+      done.value = 0
+    } else {
+      if (!demoJob.file) demoBeginPrint(DEMO_PRINTING_FILE)
+      if (state === 'complete') {
+        demoJob.k = model.N; done.value = indexForPos(model.N)
+        demoJob.pos = done.value ? segEnd(done.value - 1) : null
+        demoJob.progress = 1
+      } else if (demoJob.state === 'complete' || demoJob.state === 'cancelled') {
+        Object.assign(demoJob, { k: 0, pos: null, progress: 0 }); done.value = 0
+      }
+      demoJob.state = state
+    }
+    mergeStatus({ print_stats: { state: demoJob.state, filename: demoJob.file || '' }, virtual_sdcard: { progress: demoJob.progress } })
+  }
+
   function demoBeginPrint(file) {
     applyModel(file === DEMO_PRINTING_FILE ? demoGcode() : demoPreviewModel(file))
     Object.assign(demoJob, { file, state: 'printing', k: 0, pos: null, progress: 0 })
@@ -813,7 +837,7 @@ export const usePrinterStore = defineStore('printer', () => {
     nozzleTarget, bedTarget, hasBed, hasFan, chamberObj, leveling, heaterMax, quickSet,
     mcuObjects, hwSensors, hostInfo, mcuBadAt, mcuRate, mcuConn,
     // actions
-    preview, openPreview, closePreview, printBusy, startPrint,
+    preview, openPreview, closePreview, printBusy, startPrint, demoSet,
     on, log, connect, startDemo, exitDemo, autoStart, rpc, sendRaw, consoleSend, call, selectTool, setToolTarget,
     setHeater, emergencyStop, printAction, levelGantry, levelingBusy, mergeStatus,
     // помилки Klipper

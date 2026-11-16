@@ -142,7 +142,7 @@ const act = s => { tap(); printer.rpc(s) }
           <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path :d="ICON[x.icon]" /></svg></span>
           <span class="tx">
             <small>{{ x.label }}</small>
-            <b><RollNumber :value="x.value" :decimals="x.decimals || 0" /><em>{{ x.unit }}</em></b>
+            <b><RollNumber :value="x.value" :decimals="x.decimals || 0" fade /><em>{{ x.unit }}</em></b>
           </span>
           <span v-if="sub(x)" class="tg">{{ sub(x) }}</span>
         </component>
