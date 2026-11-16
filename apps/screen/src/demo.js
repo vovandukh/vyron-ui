@@ -1,6 +1,8 @@
 // Демо для розробки (npm run dev:screen, ?demo): імітація друку й відповідей Moonraker без принтера.
 // ?demo&state=idle|printing|paused|shutdown — потрібний стан одразу. Лише в dev-збірці.
 
+const idle0 = q => q.get('state') === 'idle'
+
 export function startDemo({ merge, setKlippy }) {
   const q = new URLSearchParams(location.search)
   const want = q.get('state') || 'printing'
@@ -10,6 +12,7 @@ export function startDemo({ merge, setKlippy }) {
   }
   setKlippy('ready')
   merge(demoMotionStatus())
+  merge({ gcode_move: { homing_origin: [0, 0, 0, 0], speed_factor: 1, extrude_factor: 1 }, fan: { speed: idle0(q) ? 0 : 0.4 } })
   const idle = want === 'idle'
   let p = idle ? 0 : 0.37, d = 2860
   const tick = () => {
@@ -35,7 +38,7 @@ const NETS = [
   ['Guest', 48, ''], ['TP-Link_3F2A', 33, 'WPA2'], ['DIRECT-printer', 21, 'WPA2']
 ]
 const wait = ms => new Promise(r => setTimeout(r, ms))
-let db = { 'vyron_core/info': { version: '0.3.4.1', started: 0 } }
+let db = { 'vyron_core/info': { version: '0.3.5', started: 0 } }
 
 /** Імітація викликів Moonraker для сторінок налаштувань */
 export async function demoCall(method, params, { emitGcode, merge }) {

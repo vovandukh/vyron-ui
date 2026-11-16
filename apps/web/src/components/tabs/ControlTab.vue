@@ -4,6 +4,7 @@ import { usePrinterStore } from '../../stores/printerStore'
 import { useI18n } from '../../composables/useI18n'
 import StatusPanel from './control/StatusPanel.vue'
 import JogControls from './control/JogControls.vue'
+import TuneControls from './control/TuneControls.vue'
 import ToolStrip from './control/ToolStrip.vue'
 import RollNumber from '../ui/RollNumber.vue'
 import MobileControl from './control/MobileControl.vue'
@@ -28,7 +29,9 @@ const mobile = useMobile()
     <MobileControl v-if="mobile" />
     <template v-else>
       <StatusPanel />
-      <JogControls />
+      <!-- Під час друку замість руху — тонке налаштування (Z-зсув, швидкість, потік, обдув) -->
+      <TuneControls v-if="printer.printBusy" />
+      <JogControls v-else />
       <div class="pct"><RollNumber :value="printer.progressPct" /><small>%</small></div>
       <div class="meta">{{ tm(printer.meta) }}</div>
       <ToolStrip />

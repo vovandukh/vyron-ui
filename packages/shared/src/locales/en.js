@@ -51,6 +51,7 @@ export default {
   'set.inv': 'Invert axes', 'set.invHint': 'If a button moves the axis the wrong way',
   'set.fxyShort': 'X/Y speed', 'set.fxyHint': 'mm/min for jog buttons', 'set.fzShort': 'Z speed', 'set.fzHint': 'mm/min for jog buttons',
   'set.secAbout': 'About system', 'set.ui': 'Interface', 'set.core': 'Core', 'set.coreNone': 'not installed', 'set.klipper': 'Klipper', 'set.moonraker': 'Moonraker', 'set.host': 'Host', 'set.os': 'OS', 'set.addr': 'Address',
+  'tune.title': 'While printing', 'tune.open': 'Tune', 'tune.z': 'Z offset', 'tune.speed': 'Speed', 'tune.flow': 'Flow', 'tune.fan': 'Fan', 'tune.reset': 'Reset Z offset', 'tune.hint': 'Z offset applies instantly — adjust while watching the first layer', 'tune.mm': 'mm', 'common.done': 'Done',
   'set.secNotify': 'Notifications', 'set.secNotifyHint': 'How the interface tells you about events',
   'set.toasts': 'Error pop-ups', 'set.toastsHint': 'Short cards when the printer skips a command: “The nozzle is not hot yet”, “The axes need to be homed first”…',
   'set.sound': 'Event sounds', 'set.soundHint': 'When a print finishes or fails, or the printer stops on an error', 'set.soundTest': 'Play',

@@ -17,6 +17,7 @@ import Spinner from '../../ui/Spinner.vue'
 import PrintControls from './PrintControls.vue'
 import ToolStrip from './ToolStrip.vue'
 import QuickSlider from './QuickSlider.vue'
+import TuneControls from './TuneControls.vue'
 import ToolPopover from './ToolPopover.vue'
 
 const printer = usePrinterStore()
@@ -154,9 +155,14 @@ const act = s => { tap(); printer.rpc(s) }
       <ToolPopover :name="printer.toolObjects[0]" :index="0" inline />
     </template>
 
+    <!-- ---------- під час друку: тонке налаштування замість руху ---------- -->
+    <template v-if="printer.printBusy">
+      <h3 class="cap">{{ t('tune.title') }}</h3>
+      <TuneControls inline />
+    </template>
     <!-- ---------- рух ---------- -->
-    <h3 class="cap">{{ t('jog.title') }}</h3>
-    <section class="grp mv">
+    <h3 v-if="!printer.printBusy" class="cap">{{ t('jog.title') }}</h3>
+    <section v-if="!printer.printBusy" class="grp mv">
       <div class="seg" role="radiogroup" :aria-label="t('jog.stepAll')">
         <button v-for="s in STEPS" :key="s" type="button" role="radio" :aria-checked="String(step === s)" :class="{ on: step === s }" @click="step = s; tap()">{{ s }}</button>
       </div>

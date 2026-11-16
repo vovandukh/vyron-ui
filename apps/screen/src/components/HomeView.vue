@@ -1,15 +1,19 @@
 <script setup>
 // Головний екран у стилі Vyron: «скляні» картки, кільце прогресу з градієнтом фірмового кольору,
 // температури з іконками, унизу — дії друку або док розділів (як в iOS).
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { fmtDuration } from '@vyron/shared/format'
 import { usePrinter } from '../store'
 import { t } from '../i18n'
 import Icon from './Icon.vue'
 import GcodeView from './GcodeView.vue'
+import TuneSheet from './TuneSheet.vue'
 
 const emit = defineEmits(['cancel'])
+/** Панель тонкого налаштування під час друку; закривається сама, коли друк завершився */
 const p = usePrinter()
+const tuneOpen = ref(false)
+watch(() => p.active, a => { if (!a) tuneOpen.value = false })
 
 // Кільце прогресу: SVG-обведення (дешево для слабкої графіки), радіус 44 у сітці 100×100
 const C = 2 * Math.PI * 44
@@ -38,7 +42,7 @@ function open(d) { if (!d.soon) p.go(d.id) }
 
 <template>
   <div class="home page">
-    <section class="hero glass" :class="{ model: showModel }">
+    <section class="hero glass" :class="{ model: showModel, tunable: p.active }" @click="p.active && (tuneOpen = true)">
       <!-- Модель друку (G-code) на всю картку; поверх — відсоток, файл і час. Під моделлю — легка шестикутна сітка (статична, малюється раз). -->
       <template v-if="showModel">
         <GcodeView />
@@ -124,6 +128,7 @@ function open(d) { if (!d.soon) p.go(d.id) }
       <button type="button" class="btn glass danger tap" :disabled="!!p.busy" @click="emit('cancel')">
         <Icon name="stop" size="1.5rem" :stroke="2.4" />{{ t('print.cancel') }}
       </button>
+      <button type="button" class="btn glass sq tap" :aria-label="t('tune.open')" @click="tuneOpen = true"><Icon name="sliders" size="2rem" /></button>
       <button type="button" class="btn glass sq tap" :aria-label="t('scr.page.settings')" @click="p.go('settings')"><Icon name="gear" size="2rem" /></button>
     </footer>
     <!-- Без друку: дві окремі картки — розділи (Рух, Нагрів, Налаштування) і швидкі дії (Home, QGL, мотори) -->
@@ -149,6 +154,7 @@ function open(d) { if (!d.soon) p.go(d.id) }
         </button>
       </div>
     </footer>
+    <TuneSheet v-if="tuneOpen && p.active" @close="tuneOpen = false" />
   </div>
 </template>
 

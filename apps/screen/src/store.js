@@ -11,6 +11,7 @@ import { parseGcode } from '@vyron/shared/gcode/parser'
 import { model, loadModel, indexForPos } from '@vyron/shared/gcode/model'
 import { startDemo, demoCall, demoGcode, setDemoUpdateSink } from './demo'
 import { watchDesign, handleCoreEvent } from '@vyron/shared/live'
+import { TUNE_OBJECTS, tuneScript, tunePatch } from '@vyron/shared/klipper/tune'
 
 /** Найбільший G-code, який екран розбирає для візуалізації: на CB1 лише 1 ГБ пам'яті, Klipper важливіший */
 const MAX_GCODE_BYTES = 20 * 1024 * 1024
@@ -23,7 +24,9 @@ const BASE = {
   extruder: ['temperature', 'target'],
   heater_bed: ['temperature', 'target'],
   webhooks: ['state', 'state_message'],
-  toolhead: ['homed_axes', 'position']
+  toolhead: ['homed_axes', 'position'],
+  // Тонке налаштування під час друку: Z-зсув, швидкість, потік, обдув
+  ...TUNE_OBJECTS
 }
 const DESIGN = { namespace: 'vyron_ui', key: 'design' }
 
@@ -247,6 +250,13 @@ export const usePrinter = defineStore('printer', () => {
     motion('level', (all ? '' : 'G28\n') + (lv.kind === 'ztilt' ? 'Z_TILT_ADJUST' : 'QUAD_GANTRY_LEVEL') + '\nG28 Z')
   }
   /** Відносне переміщення осі на dist мм (G91 → G1 → G90) */
+  /** Тонке налаштування під час друку: kind 'z' (приріст, мм) | 'zreset' | 'speed' | 'flow' | 'fan' (%) */
+  async function tune(kind, v) {
+    if (DEMO) { merge(tunePatch(st, kind, v)); return }
+    const script = tuneScript(kind, v)
+    if (script) { try { await gcode(script) } catch { /* причину покаже Klipper */ } }
+  }
+
   function jog(axis, dist) {
     const f = axis === 'z' ? FEED.z : FEED.xy
     motion('jog', 'G91\nG1 ' + axis.toUpperCase() + dist + ' F' + f + '\nG90')
@@ -353,7 +363,7 @@ export const usePrinter = defineStore('printer', () => {
   return {
     gcodeState, modelVer, done, filename, showModel, event, updates, refreshUpdates, runUpdate,
     link, host, hostname, lastJob, klippy, st, printState, active, progress, remaining, layer, heaters, busy, design,
-    stack, page, dir, go, back, home,
+    stack, page, dir, go, back, home, tune,
     call, gcode, onGcode, setPreset,
     leveling, homed, position, leveled, moving, homeAll, motorsOff, level, jog,
     start, pause, resume, cancel, estop, firmwareRestart, restart, restartMoonraker, reboot, shutdown
