@@ -5,7 +5,8 @@
 ```bash
 cd ~ && git clone -b stable https://github.com/vovandukh/vyron.git
 ~/vyron/install/install.sh --dry-run   # подивитися, що буде зроблено
-~/vyron/install/install.sh             # встановити
+~/vyron/install/install.sh             # встановити (плата без відеокарти: CB1, Pi 3, SPI-екран)
+~/vyron/install/install.sh --gpu       # встановити (плата з відеокартою: Pi 4/5, CM4, Orange Pi 5)
 ```
 
 Після встановлення:
@@ -39,6 +40,7 @@ cd ~ && git clone -b stable https://github.com/vovandukh/vyron.git
 | `--no-updates` | не додавати запис в Update Manager |
 | `--no-core` | не встановлювати службу Vyron Core |
 | `--no-screen` | не чіпати екран принтера (KlipperScreen лишається) |
+| `--gpu` / `--no-gpu` | прискорення відеокартою для екрана принтера (Pi 4/5, CM4, Orange Pi 5) або без нього (CB1, Pi 3, SPI-екрани — за замовчуванням). Вибір запам'ятовується |
 | `--stable` / `--dev` | канал оновлень: перевірені випуски (гілка `stable`) або кожна зміна (гілка `main`). Перемикає репозиторій на потрібну гілку й оновлює запис Update Manager. Без параметра — канал поточної гілки |
 
 ## Видалення

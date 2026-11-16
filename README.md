@@ -28,8 +28,18 @@ Early stage; the UI is available in Ukrainian and English. Install instructions 
 ```bash
 cd ~ && git clone -b stable https://github.com/vovandukh/vyron.git
 ~/vyron/install/install.sh --dry-run   # подивитися, що буде зроблено (нічого не змінює)
-~/vyron/install/install.sh             # встановити
 ```
+
+Далі — одна з двох команд, залежно від плати-хоста:
+
+| Плата | Команда |
+|---|---|
+| **Без відеокарти:** BTT CB1, Raspberry Pi 3 / Zero 2, будь-яка плата з SPI-екраном (TFT35 тощо) | `~/vyron/install/install.sh` |
+| **З відеокартою:** Raspberry Pi 4 / 5, CM4, Orange Pi 5 (RK3588) — з екраном DSI або HDMI | `~/vyron/install/install.sh --gpu` |
+
+Різниця лише для екрана принтера: з `--gpu` браузер малює через відеокарту, і процесор лишається Klipperу.
+Не впевнений — став без `--gpu`, так працює на будь-якій платі. Якщо з `--gpu` екран чорний чи мерехтить —
+`~/vyron/install/install.sh --no-gpu`. Vyron Web у браузері на ПК чи телефоні від цього не залежить.
 
 Скрипт може попросити пароль (для `sudo`). Після встановлення:
 

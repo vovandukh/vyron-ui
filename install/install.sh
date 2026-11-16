@@ -24,6 +24,7 @@ UPDATES=1
 CORE=1
 SCREEN=1
 CHANNEL=""
+SCREEN_ARGS=()
 ARGS=("$@")
 
 usage() { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; cat <<'EOF'
@@ -34,6 +35,9 @@ usage() { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; cat <<'EOF'
   --no-updates        не додавати запис в Update Manager
   --no-core           не встановлювати службу Vyron Core
   --no-screen         не чіпати екран принтера (KlipperScreen лишається)
+  --gpu               плата з відеокартою (Raspberry Pi 4/5, CM4, Orange Pi 5): прискорення для екрана.
+                      Без нього (за замовчуванням) екран малює процесор — для CB1, Pi 3, SPI-екранів
+  --no-gpu            вимкнути прискорення, якщо раніше ставили з --gpu
   --channel stable|dev  канал оновлень: stable — перевірені випуски (гілка stable),
                       dev — кожна зміна одразу (гілка main). Без параметра — канал поточної гілки.
   --stable / --dev    те саме коротше
@@ -49,6 +53,8 @@ while [ $# -gt 0 ]; do
     --core) CORE=1 ;;
     --no-core) CORE=0 ;;
     --no-screen) SCREEN=0 ;;
+    --gpu) SCREEN_ARGS+=(--gpu) ;;
+    --no-gpu) SCREEN_ARGS+=(--no-gpu) ;;
     --channel) CHANNEL="${2:-}"; shift ;;
     --stable) CHANNEL=stable ;;
     --dev) CHANNEL=dev ;;
@@ -301,9 +307,9 @@ if [ $SCREEN = 1 ]; then
     info "KlipperScreen не встановлено — екран не чіпаю"
     SCREEN_RES="немає KlipperScreen — не змінювався"
   elif [ $DRY = 1 ]; then
-    if bash "$REPO/install/screen.sh" --dry-run; then SCREEN_RES="Vyron Screen замість KlipperScreen"
+    if bash "$REPO/install/screen.sh" --dry-run ${SCREEN_ARGS[@]+"${SCREEN_ARGS[@]}"}; then SCREEN_RES="Vyron Screen замість KlipperScreen"
     else warn "перевірка екрана завершилась помилкою (див. вище)"; SCREEN_RES="перевірка не пройшла — див. вище"; fi
-  elif bash "$REPO/install/screen.sh"; then
+  elif bash "$REPO/install/screen.sh" ${SCREEN_ARGS[@]+"${SCREEN_ARGS[@]}"}; then
     SCREEN_RES="Vyron Screen (KlipperScreen приховано)"
   else
     # screen.sh сам повертає KlipperScreen, якщо щось не так; Vyron Web при цьому вже працює

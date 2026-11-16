@@ -15,11 +15,17 @@ Type=simple
 User=@USER@
 @GROUPS@
 Environment=XDG_RUNTIME_DIR=/run/user/@UID@
+# 1 — плата з відеокартою (install.sh --gpu): браузер малює через неї; 0 — процесором
+Environment=VYRON_GPU=@GPU@
 ExecStart=/usr/bin/xinit @KIOSK@ @URL@ -- :0 -nolisten tcp -nocursor
 Restart=always
 SuccessExitStatus=1 2 SIGTERM SIGINT SIGHUP
 RestartSec=3
+# Klipper важливіший за екран: менший пріоритет на процесор, а якщо забракне пам'яті —
+# система першим зупинить браузер (systemd його перезапустить), а не Klipper
 Nice=5
+CPUWeight=50
+OOMScoreAdjust=500
 
 [Install]
 WantedBy=multi-user.target
