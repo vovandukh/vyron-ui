@@ -8,6 +8,7 @@ import { useDesignStore } from '../../stores/designStore'
 import { useI18n } from '../../composables/useI18n'
 import { resolveHost } from '@vyron/shared/moonraker/client'
 import { VYRON_VERSION as uiVersion, coreInfo } from '@vyron/shared/version'
+import { DEMO_BUILD } from '../../config'
 import GlassSelect from '../ui/GlassSelect.vue'
 import StepperInput from '../ui/StepperInput.vue'
 import SegmentedControl from '../ui/SegmentedControl.vue'
@@ -53,7 +54,8 @@ watch(() => printer.link, loadSys)
 const os = computed(() => { const d = (printer.hostInfo || {}).distribution || {}; return d.name || null })
 const about = computed(() => [
   { k: 'set.ui', v: 'Vyron Web v' + uiVersion },
-  { k: 'set.core', v: printer.connected || printer.demoMode ? (sys.value.core ? 'Vyron Core v' + sys.value.core.version : t('set.coreNone')) : null },
+  // У публічному демо ядро не показуємо — воно невидиме для користувача і лише плутає
+  ...(DEMO_BUILD ? [] : [{ k: 'set.core', v: printer.connected ? (sys.value.core ? 'Vyron Core v' + sys.value.core.version : t('set.coreNone')) : null }]),
   { k: 'set.klipper', v: sys.value.klipper, mono: true },
   { k: 'set.moonraker', v: sys.value.moonraker, mono: true },
   { k: 'set.host', v: sys.value.hostname },
