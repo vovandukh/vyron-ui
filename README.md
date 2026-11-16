@@ -41,6 +41,17 @@ cd ~ && git clone -b stable https://github.com/vovandukh/vyron-ui.git
 Не впевнений — став без `--gpu`, так працює на будь-якій платі. Якщо з `--gpu` екран чорний чи мерехтить —
 `~/vyron-ui/install/install.sh --no-gpu`. Vyron Web у браузері на ПК чи телефоні від цього не залежить.
 
+**Експериментально — повний Vyron Web (з 3D) на екрані принтера** замість Vyron Screen. Лише для потужних плат
+з відеокартою (Raspberry Pi 5, Orange Pi 5) і екраном від 5″:
+
+```bash
+~/vyron-ui/install/install.sh --gpu --screen-app web      # повний веб на екрані
+~/vyron-ui/install/install.sh --screen-app screen         # назад на Vyron Screen
+```
+
+Без `--gpu` скрипт відмовить: на платі без відеокарти веб з 3D займає майже весь процесор (на CB1 — 88%),
+а він потрібен Klipperу. Якщо пробуєш — напиши в Issues, як працює на твоїй платі.
+
 Скрипт може попросити пароль (для `sudo`). Після встановлення:
 
 | Що | Адреса |

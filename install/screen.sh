@@ -6,6 +6,8 @@
 #   ~/vyron-ui/install/screen.sh --remove    — повернути KlipperScreen
 #   ~/vyron-ui/install/screen.sh --gpu       — плата з відеокартою (Raspberry Pi 4/5, CM4…): прискорення в браузері
 #   ~/vyron-ui/install/screen.sh --no-gpu    — без прискорення (CB1, Pi 3, SPI-екрани; так за замовчуванням)
+#   ~/vyron-ui/install/screen.sh --gpu --app web — ЕКСПЕРИМЕНТАЛЬНО: повний Vyron Web (з 3D) на екрані,
+#                                               лише для плат з відеокартою (Pi 5, Orange Pi 5); --app screen — назад
 #
 # Що робить:
 #   1. Локальний сайт nginx «vyron-screen» на 127.0.0.1:7136 (лише для екрана; з мережі недоступний,
@@ -21,12 +23,14 @@ DRY=0
 REMOVE=0
 LPORT=7136
 GPU=""
+APP=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) DRY=1 ;;
     --remove|--uninstall) REMOVE=1 ;;
     --gpu) GPU=1 ;;
     --no-gpu) GPU=0 ;;
+    --app) APP="${2:-}"; shift ;;
     -h|--help) sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "Невідомий параметр: $1 (див. --help)" >&2; exit 2 ;;
   esac
@@ -40,7 +44,6 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 UNIT=/etc/systemd/system/vyron-screen.service
 SITE_AV=/etc/nginx/sites-available/vyron-screen
 SITE_EN=/etc/nginx/sites-enabled/vyron-screen
-URL="http://127.0.0.1:$LPORT/screen.html"
 KS=KlipperScreen.service
 has_ks() { has_unit "$KS"; }
 
@@ -78,6 +81,19 @@ has_ks || die "Не знайдено KlipperScreen. Від нього берем
 [ -x /usr/bin/xinit ] || die "Не знайдено xinit (пакет xinit)."
 UID_N="$(id -u "$USER_NAME")"
 
+# Відеокарта й застосунок на екрані: з параметрів, інакше — як у попередньому встановленні
+[ -n "$GPU" ] || GPU="$(state_get SCREEN_GPU)"
+[ "$GPU" = 1 ] || GPU=0
+[ -n "$APP" ] || APP="$(state_get SCREEN_APP)"
+case "$APP" in web) PAGE=index.html ;; ""|screen) APP=screen; PAGE=screen.html ;; *) die "--app: screen або web." ;; esac
+if [ "$APP" = web ] && [ "$GPU" != 1 ]; then
+  die "Повний Vyron Web на екрані — лише з відеокартою (--gpu): без неї 3D-сцена й скло займають процесор,
+         потрібний Klipperу (на CB1 це 88% процесора). Для цієї плати — Vyron Screen: install.sh --screen-app screen"
+fi
+[ -f "$REPO/$PAGE" ] || die "У $REPO немає $PAGE — онови репозиторій (git pull)."
+URL="http://127.0.0.1:$LPORT/$PAGE"
+[ "$APP" = web ] && warn "ЕКСПЕРИМЕНТАЛЬНО: на екрані буде повний Vyron Web. Якщо гальмує чи гріється — screen.sh --app screen"
+
 info "екран:        $(for f in /sys/class/graphics/fb*; do [ -e "$f/name" ] && printf '%s(%s %s) ' "$(basename "$f")" "$(cat "$f/name")" "$(cat "$f/virtual_size" 2>/dev/null)"; done)"
 info "пам'ять:      $(free -m | awk '/^Mem:/{print $2" МБ, вільно "$7" МБ"}')"
 info "сторінка:     $URL"
@@ -92,7 +108,7 @@ say "1. Локальний сайт nginx (127.0.0.1:$LPORT)"
 if port_busy "$LPORT" && [ ! -e "$SITE_EN" ]; then die "Порт $LPORT уже зайнятий іншою програмою."; fi
 CONF="$(mktemp)"; UNITF="$(mktemp)"
 trap 'rm -f "$CONF" "$UNITF"' EXIT
-sed -e "s|@PORT@|$LPORT|g" -e "s|@ROOT@|$REPO|g" -e "s|@MOONRAKER_PORT@|$MR_PORT|g" "$REPO/install/nginx-vyron-screen.conf" > "$CONF"
+sed -e "s|@PORT@|$LPORT|g" -e "s|@ROOT@|$REPO|g" -e "s|@MOONRAKER_PORT@|$MR_PORT|g" -e "s|@HOME@|/$PAGE|g" "$REPO/install/nginx-vyron-screen.conf" > "$CONF"
 if [ $DRY = 1 ]; then
   info "буде створено $SITE_AV (слухає лише 127.0.0.1:$LPORT)"
 else
@@ -147,9 +163,6 @@ fi
 
 # 3. служба
 say "3. Служба vyron-screen (замість KlipperScreen)"
-# Прискорення відеокартою: з параметра, інакше — як у попередньому встановленні, інакше вимкнене
-[ -n "$GPU" ] || GPU="$(state_get SCREEN_GPU)"
-[ "$GPU" = 1 ] || GPU=0
 info "відеокарта в браузері: $([ $GPU = 1 ] && echo 'увімкнена (--gpu)' || echo 'вимкнена — малює процесор (--gpu, якщо плата з відеокартою)')"
 GROUPS_LINE=""; [ -n "$KS_GROUPS" ] && GROUPS_LINE="SupplementaryGroups=$KS_GROUPS"
 sed -e "s|@USER@|$USER_NAME|g" -e "s|@UID@|$UID_N|g" -e "s|@GROUPS@|$GROUPS_LINE|" \
@@ -168,6 +181,7 @@ else
   sudo systemctl start vyron-screen.service
   state_set SCREEN 1
   state_set SCREEN_GPU "$GPU"
+  state_set SCREEN_APP "$APP"
   info "чекаю запуску браузера (до 40 с)…"
   up=0
   for i in $(seq 1 20); do

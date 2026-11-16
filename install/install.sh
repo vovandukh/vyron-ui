@@ -38,6 +38,8 @@ usage() { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; cat <<'EOF'
   --gpu               плата з відеокартою (Raspberry Pi 4/5, CM4, Orange Pi 5): прискорення для екрана.
                       Без нього (за замовчуванням) екран малює процесор — для CB1, Pi 3, SPI-екранів
   --no-gpu            вимкнути прискорення, якщо раніше ставили з --gpu
+  --screen-app web    ЕКСПЕРИМЕНТАЛЬНО, лише разом з --gpu: на екрані принтера повний Vyron Web (з 3D)
+                      замість Vyron Screen. Назад: --screen-app screen
   --channel stable|dev  канал оновлень: stable — перевірені випуски (гілка stable),
                       dev — кожна зміна одразу (гілка main). Без параметра — канал поточної гілки.
   --stable / --dev    те саме коротше
@@ -55,6 +57,7 @@ while [ $# -gt 0 ]; do
     --no-screen) SCREEN=0 ;;
     --gpu) SCREEN_ARGS+=(--gpu) ;;
     --no-gpu) SCREEN_ARGS+=(--no-gpu) ;;
+    --screen-app) SCREEN_ARGS+=(--app "${2:-}"); shift ;;
     --channel) CHANNEL="${2:-}"; shift ;;
     --stable) CHANNEL=stable ;;
     --dev) CHANNEL=dev ;;
