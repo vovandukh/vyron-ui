@@ -44,11 +44,11 @@ function open(d) { if (!d.soon) p.go(d.id) }
   <div class="home page">
     <section class="hero" :class="{ glass: !showModel, model: showModel, tunable: p.active }" @click="p.active && (tuneOpen = true)">
       <!-- Модель друку (G-code) без картки — просто на фоні екрана, як 3D-сцена у вебі.
-           Унизу скляна плашка в стилі плиток: відсоток, файл, шар і час, під нею — смужка прогресу. -->
+           Зліва вгорі — відсоток у скляній картці; унизу — плашка з файлом, шаром і часом та смужкою прогресу. -->
       <template v-if="showModel">
         <GcodeView />
+        <div class="jpc glass"><b>{{ pctShown }}</b><small>%</small></div>
         <div class="job glass">
-          <span class="jp"><b>{{ pctShown }}</b><small>%</small></span>
           <span class="jt">
             <span class="jf">{{ file }}</span>
             <span class="js">
@@ -172,10 +172,11 @@ function open(d) { if (!d.soon) p.go(d.id) }
 /* Підписи поверх моделі; знизу — легке затемнення, щоб назва читалась, якщо модель заходить під неї */
 /* Плашка друку: те саме скло, що й плитки температур; відсоток великий, решта — дрібніше й тьмяніше */
 .job{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:1rem;padding:.75rem 1rem .9rem;border-radius:var(--r);overflow:hidden;pointer-events:none}
-.jp{flex:none;display:flex;align-items:baseline}
-.jp b{font-size:2.6rem;font-weight:700;letter-spacing:-.05em;line-height:1}
-.jp small{font-size:1.2rem;font-weight:600;color:var(--dim);margin-left:.1rem}
-.jt{min-width:0;display:grid;gap:.2rem;padding-left:1rem;border-left:1px solid var(--line)}
+/* Відсоток — окрема скляна картка зліва вгорі, як було, але в стилі плиток */
+.jpc{position:absolute;left:0;top:0;display:flex;align-items:baseline;padding:.6rem 1rem .7rem;border-radius:var(--r);pointer-events:none}
+.jpc b{font-size:2.8rem;font-weight:700;letter-spacing:-.05em;line-height:1}
+.jpc small{font-size:1.3rem;font-weight:600;color:var(--dim);margin-left:.1rem}
+.jt{min-width:0;display:grid;gap:.2rem}
 .jf{font-size:1.25rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .js{display:flex;align-items:center;gap:.35rem;font-size:1.1rem;color:var(--dim);white-space:nowrap;overflow:hidden}
 .js .sep{opacity:.6}
