@@ -30,6 +30,8 @@ const BASE = {
   ...TUNE_OBJECTS
 }
 const DESIGN = { namespace: 'vyron_ui', key: 'design' }
+/** Ключ, під яким Vyron Web зберігає тему в браузері — для синхронізації в демо */
+const DEMO_DESIGN_KEY = 'vyron-design'
 
 // Демо: у dev — з ?demo; у збірці для GitHub Pages (vite build --mode demo) — завжди
 export const DEMO = import.meta.env.MODE === 'demo' || (import.meta.env.DEV && new URLSearchParams(location.search).has('demo'))
@@ -160,6 +162,7 @@ export const usePrinter = defineStore('printer', () => {
     if (!p) return
     useDesign({ ...design.value, preset: p.id, accent: p.accent, brand: p.brand, updated: Date.now() })
     try { await call('server.database.post_item', { ...DESIGN, value: { ...design.value } }) } catch { /* лишається локально до наступного підключення */ }
+    if (DEMO) { try { localStorage.setItem(DEMO_DESIGN_KEY, JSON.stringify(design.value)) } catch { /* приватний режим */ } }
   }
 
   function onNotify(method, params) {
@@ -196,6 +199,10 @@ export const usePrinter = defineStore('printer', () => {
       link.value = 'open'
       leveling.value = { obj: 'quad_gantry_level', kind: 'qgl' }
       startDemo({ merge, setKlippy })
+      // Демо (GitHub Pages): веб і екран — окремі сторінки без принтера; тему передаємо через localStorage
+      // того самого сайту: зміна у вебі одразу перефарбовує екран (подія storage), і навпаки
+      try { const saved = JSON.parse(localStorage.getItem(DEMO_DESIGN_KEY) || 'null'); if (saved) useDesign(saved) } catch { /* немає */ }
+      addEventListener('storage', e => { if (e.key === DEMO_DESIGN_KEY && e.newValue) { try { useDesign(JSON.parse(e.newValue)) } catch { /* пошкоджено */ } } })
       hostname.value = 'vyron-demo'
       loadLastJob()
       // ?demo&page=wifi — одразу відкрити сторінку налаштувань (для розробки)
