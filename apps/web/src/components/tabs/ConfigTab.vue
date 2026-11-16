@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, shallowRef, onActivated, onDeactivated, onMounted, onBeforeUnmount, watch } from 'vue'
+import { computed, nextTick, ref, shallowRef, onActivated, onDeactivated, onMounted, onBeforeUnmount, watch } from 'vue'
 import { holdReveal } from '@vyron/shared/live'
 import { usePrinterStore } from '../../stores/printerStore'
 import { useConfirm } from '../../composables/useConfirm'
@@ -19,6 +19,19 @@ const orig = ref('')
 const text = ref('')
 const isNew = ref(false)
 const cursor = ref({ line: 1, col: 1 })
+// Розділи файлу (з редактора) — випадаючий список для переходу
+const sections = ref([])
+const secOpen = ref(false), secQ = ref(''), secIn = ref(null)
+const shownSections = computed(() => {
+  const q = secQ.value.trim().toLowerCase()
+  return q ? sections.value.filter(s => s.name.toLowerCase().includes(q)) : sections.value
+})
+function toggleSections() {
+  secOpen.value = !secOpen.value
+  if (secOpen.value) { secQ.value = ''; nextTick(() => secIn.value?.focus()) }
+}
+function jump(s) { secOpen.value = false; editor.value?.goto(s.from) }
+const jumpFirst = () => { if (shownSections.value[0]) jump(shownSections.value[0]) }
 const msg = ref(null) // { m: {key,params}, bad }
 
 const dirty = computed(() => text.value !== orig.value)
@@ -101,11 +114,38 @@ onBeforeUnmount(() => removeEventListener('beforeunload', beforeUnload))
           <b>{{ path || '–' }}</b>
           <span v-if="dirty" class="ceDirty">{{ t('cfg.unsaved') }}</span>
           <span class="sp"></span>
-          <button @click="editor.toggleFind()">{{ t('cfg.find') }}</button>
+          <!-- Інструменти редактора (CodeMirror): коментар, розділи, згортання, рядок, пошук, гарячі клавіші -->
+          <div class="tools">
+            <button :title="'Ctrl+/'" @click="editor.comment()"><code>#</code> {{ t('ide.comment') }}</button>
+            <div class="secW">
+              <button :aria-expanded="String(secOpen)" @click="toggleSections">{{ t('ide.sections') }} <span class="cnt">{{ sections.length }}</span> ▾</button>
+              <div v-if="secOpen" class="secPop" @keydown.esc="secOpen = false">
+                <input ref="secIn" v-model="secQ" :placeholder="t('ide.filter')" :aria-label="t('ide.filter')" @keydown.enter="jumpFirst">
+                <div class="secList">
+                  <button v-for="s in shownSections" :key="s.from" @click="jump(s)"><span>{{ s.name }}</span><small>{{ s.line }}</small></button>
+                  <p v-if="!shownSections.length">{{ t('ide.noSections') }}</p>
+                </div>
+              </div>
+            </div>
+            <!-- Другорядне — компактні іконки з підказками, щоб панель уміщалась в один рядок -->
+            <button class="ib" :title="t('ide.foldAll')" :aria-label="t('ide.foldAll')" @click="editor.foldAll()">
+              <svg viewBox="0 0 16 16"><path d="M4 6l4-3 4 3M4 10l4 3 4-3" transform="rotate(180 8 8)" /></svg>
+            </button>
+            <button class="ib" :title="t('ide.unfoldAll')" :aria-label="t('ide.unfoldAll')" @click="editor.unfoldAll()">
+              <svg viewBox="0 0 16 16"><path d="M4 6l4-3 4 3M4 10l4 3 4-3" /></svg>
+            </button>
+            <button class="ib" :title="t('ide.goto') + ' (Ctrl+G)'" :aria-label="t('ide.goto')" @click="editor.gotoLine()"><b class="ln">Ln</b></button>
+            <button class="ib" :title="t('cfg.find') + ' (Ctrl+F)'" :aria-label="t('cfg.find')" @click="editor.toggleFind()">
+              <svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.2" /><path d="M10.2 10.2 13.5 13.5" /></svg>
+            </button>
+            <button class="ib keys" :title="t('ide.keysList')" :aria-label="t('ide.keys')">
+              <svg viewBox="0 0 16 16"><rect x="1.5" y="4" width="13" height="8.5" rx="1.5" /><path d="M4 7h.01M6.5 7h.01M9 7h.01M11.5 7h.01M5 10h6" /></svg>
+            </button>
+          </div>
           <button @click="save(false)">{{ t('common.save') }}</button>
           <button :disabled="printer.isPrinting" @click="save(true)">{{ t('cfg.saveRestart') }}</button>
         </div>
-        <ConfigEditor ref="editor" v-model="text" @save="save(false)" @cursor="cursor = $event" />
+        <ConfigEditor ref="editor" v-model="text" @save="save(false)" @cursor="cursor = $event" @sections="sections = $event" />
         <div class="ceStat">
           <span>{{ stat }}</span>
           <span :class="{ bad: msg && msg.bad }">{{ msg ? tm(msg.m) : '' }}</span>
@@ -134,6 +174,24 @@ onBeforeUnmount(() => removeEventListener('beforeunload', beforeUnload))
 .ceBar b{font-weight:500;font-size:13px}
 .ceDirty{color:var(--coral);font-size:11px;padding:2px 8px;border-radius:999px;background:rgba(var(--accent-rgb),.12)}
 .sp{flex:1}
+/* Інструменти редактора: компактна група між назвою файлу і «Зберегти» */
+.tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tools code{font-family:var(--mono);color:var(--coral);font-weight:700}
+.cnt{display:inline-block;min-width:16px;padding:0 5px;border-radius:999px;background:rgba(255,255,255,.08);font-size:10.5px;color:var(--dim)}
+.secW{position:relative}
+.secPop{position:absolute;top:calc(100% + 6px);left:0;z-index:20;width:280px;display:grid;gap:6px;padding:8px;border-radius:var(--r-lg);
+  background:rgba(18,18,20,.97);border:1px solid rgba(255,255,255,.1);box-shadow:0 18px 40px -12px rgba(0,0,0,.8)}
+.secPop input{width:100%;box-sizing:border-box;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);border-radius:var(--r);color:var(--ink);font:inherit;font-size:12.5px;padding:7px 9px}
+.secPop input:focus{outline:none;border-color:rgba(var(--accent-rgb),.6)}
+.secList{max-height:320px;overflow:auto;display:flex;flex-direction:column;gap:2px}
+.view .secList button{flex:none;display:flex;justify-content:space-between;gap:10px;text-align:left;padding:6px 9px;font-size:12px;background:transparent;border-color:transparent;font-family:var(--mono)}
+.view .secList button:hover{background:rgba(var(--accent-rgb),.12)}
+.secList small{color:var(--dim)}
+.secList p{margin:6px 9px;color:var(--dim);font-size:12px}
+.keys{cursor:help}
+.view .ib{width:34px;padding-left:0;padding-right:0;display:inline-grid;place-items:center}
+.ib svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.ln{font-family:var(--mono);font-size:11px;font-weight:700}
 .ceStat{display:flex;justify-content:space-between;gap:12px;color:var(--dim);font-size:12px}
 .bad{color:var(--red)}
 @media(max-width:700px){.ce{grid-template-columns:1fr}.ceSide{max-height:140px}}

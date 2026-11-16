@@ -230,6 +230,8 @@ export default {
   'cfg.search': 'Пошук файлу', 'cfg.new': '+ Нова', 'cfg.unsaved': '● не збережено', 'cfg.find': 'Знайти',
   'cfg.saveRestart': 'Зберегти й перезапустити', 'cfg.replaceWith': 'Замінити на', 'cfg.replace': 'Замінити', 'cfg.all': 'Усі',
   'cfg.prev': 'Назад', 'cfg.next': 'Далі', 'cfg.editor': 'Редактор конфігурації',
+  'ide.comment': 'Коментар', 'ide.sections': 'Розділи', 'ide.foldAll': 'Згорнути все', 'ide.unfoldAll': 'Розгорнути все', 'ide.goto': 'Рядок…', 'ide.filter': 'Знайти розділ', 'ide.noSections': 'Розділів немає', 'ide.keys': 'Гарячі клавіші', 'ide.keysList': 'Ctrl+/ — закоментувати рядок чи виділення\nCtrl+S — зберегти\nCtrl+F / Ctrl+H — пошук / заміна\nCtrl+G — перейти до рядка\nCtrl+D — виділити наступне таке саме\nAlt+клік — ще один курсор\nAlt+↑ / Alt+↓ — перемістити рядок\nShift+Alt+↓ — дублювати рядок\nCtrl+Shift+K — видалити рядок\nCtrl+Пробіл — підказки параметрів\nCtrl+Shift+[ / ] — згорнути / розгорнути розділ\nCtrl+Z / Ctrl+Shift+Z — скасувати / повернути',
+  'ide.lint.dupSection': 'Такий розділ уже є в рядку {l} — Klipper не запуститься', 'ide.lint.indent': 'Рядок з відступом без параметра вище — Klipper сприйме це як помилку', 'ide.lint.noColon': 'Немає «:» — Klipper очікує «параметр: значення»', 'ide.lint.noSection': 'Параметр поза розділом — додай [назва_розділу] вище', 'ide.lint.dupKey': 'Параметр уже заданий у рядку {l} цього розділу',
   'cfg.stat': 'Рядок {l}, колонка {c} · {n} рядків', 'cfg.matches': '{n} збігів', 'cfg.noChanges': 'Немає змін',
   'cfg.saved': 'Збережено. Попередня версія лишилась у папці backups/', 'cfg.discard': 'Є незбережені зміни. Відкинути?',
   'cfg.newName': 'Назва файлу (наприклад, macros.cfg)', 'cfg.saveError': 'Не вдалося зберегти: {msg}',
