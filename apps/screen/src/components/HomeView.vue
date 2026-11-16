@@ -60,7 +60,7 @@ function open(d) { if (!d.soon) p.go(d.id) }
               </template>
             </span>
           </span>
-          <i class="jbar" :style="{ width: pctShown + '%' }"></i>
+          <i class="jtrack"><i class="jbar" :style="{ width: pctShown + '%' }"></i></i>
         </div>
       </template>
       <template v-else-if="p.active">
@@ -172,7 +172,7 @@ function open(d) { if (!d.soon) p.go(d.id) }
 .hero.model{padding:0;overflow:visible;border-radius:0}
 /* Підписи поверх моделі; знизу — легке затемнення, щоб назва читалась, якщо модель заходить під неї */
 /* Плашка друку: те саме скло, що й плитки температур; відсоток великий, решта — дрібніше й тьмяніше */
-.job{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:1rem;padding:.75rem 1rem .9rem;border-radius:var(--r);overflow:hidden;pointer-events:none}
+.job{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:1rem;padding:.7rem 1.1rem 1.35rem;border-radius:var(--r);overflow:hidden;pointer-events:none}
 /* Відсоток — окрема скляна картка зліва вгорі, як було, але в стилі плиток */
 .jpc{position:absolute;left:0;top:0;display:flex;align-items:baseline;padding:.6rem 1rem .7rem;border-radius:var(--r);pointer-events:none}
 .jpc b{font-size:2.8rem;font-weight:700;letter-spacing:-.05em;line-height:1}
@@ -181,8 +181,10 @@ function open(d) { if (!d.soon) p.go(d.id) }
 .jf{font-size:1.25rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .js{display:flex;align-items:center;gap:.35rem;font-size:1.1rem;color:var(--dim);white-space:nowrap;overflow:hidden}
 .js .sep{opacity:.6}
-/* Смужка прогресу по нижньому краю плашки — градієнт фірмового кольору, як у кільці */
-.jbar{position:absolute;left:0;bottom:0;height:.3rem;background:linear-gradient(90deg,var(--coral),var(--brand));border-radius:0 .2rem .2rem 0;transition:width 1s linear}
+/* Смужка прогресу — доріжка з відступами від країв (заокруглення плашки її не зрізає),
+   заповнення — градієнт фірмового кольору, як у кільці */
+.jtrack{position:absolute;left:1.1rem;right:1.1rem;bottom:.6rem;height:.35rem;border-radius:.2rem;background:rgba(255,255,255,.08);overflow:hidden}
+.jbar{display:block;height:100%;border-radius:.2rem;background:linear-gradient(90deg,var(--coral),var(--brand));transition:width 1s linear}
 
 .ring{position:relative;flex:none;width:12.4rem;height:12.4rem}
 .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
