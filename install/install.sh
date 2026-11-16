@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Vyron — встановлення на принтер (Klipper + Moonraker + nginx).
 #
-#   ~/vyron-ecosystem/install/install.sh             — встановити або полагодити (можна запускати повторно)
-#   ~/vyron-ecosystem/install/install.sh --dry-run   — лише показати, що буде зроблено
+#   ~/vyron/install/install.sh             — встановити або полагодити (можна запускати повторно)
+#   ~/vyron/install/install.sh --dry-run   — лише показати, що буде зроблено
 #
 # Що робить:
 #   1. Сайт nginx «vyron»: Vyron Web на http://IP/ (порт 80), Vyron Screen на http://IP/screen.html.

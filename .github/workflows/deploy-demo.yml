@@ -38,7 +38,7 @@ jobs:
       - name: Check deploy token
         id: tok
         run: |
-          if [ -z "$TOKEN" ] && [ "$GITHUB_REPOSITORY" = "vovandukh/vyron-ecosystem" ]; then
+          if [ -z "$TOKEN" ] && [ "$GITHUB_REPOSITORY" = "vovandukh/vyron" ]; then
             echo "::error::DEMO_DEPLOY_TOKEN is not set — the demo was NOT published (see the setup notes at the top of this file)"; exit 1
           fi
           if [ -z "$TOKEN" ]; then

@@ -1,4 +1,4 @@
-# Vyron Ecosystem
+# Vyron
 
 Відкрита екосистема для 3D-принтерів на Klipper: вебінтерфейс і застосунок для сенсорного екрана принтера
 в одному дизайні, плюс невелика служба на хості. Без підписок і хмар — усе працює на принтері через Moonraker.
@@ -6,7 +6,7 @@
 **[Демо](https://vovandukh.github.io/vyron-demo/)** — працює в браузері без принтера.
 
 > **Ранній проєкт.** Перевірено на кількох принтерах автора (Voron, CAN-голови, BTT TFT35). На іншому
-> залізі можуть вилізти нюанси — пиши в [Issues](https://github.com/vovandukh/vyron-ecosystem/issues).
+> залізі можуть вилізти нюанси — пиши в [Issues](https://github.com/vovandukh/vyron/issues).
 > Mainsail, Fluidd і KlipperScreen не видаляються, тож повернутися можна будь-коли.
 
 *English: Vyron is a web UI and a touchscreen UI for Klipper printers sharing one design, talking only to Moonraker.
@@ -26,9 +26,9 @@ Early stage; the UI is available in Ukrainian and English. Install instructions 
 Команди виконуються на принтері через SSH (наприклад, `ssh pi@192.168.1.50` — логін і IP твої).
 
 ```bash
-cd ~ && git clone -b stable https://github.com/vovandukh/vyron-ecosystem.git
-~/vyron-ecosystem/install/install.sh --dry-run   # подивитися, що буде зроблено (нічого не змінює)
-~/vyron-ecosystem/install/install.sh             # встановити
+cd ~ && git clone -b stable https://github.com/vovandukh/vyron.git
+~/vyron/install/install.sh --dry-run   # подивитися, що буде зроблено (нічого не змінює)
+~/vyron/install/install.sh             # встановити
 ```
 
 Скрипт може попросити пароль (для `sudo`). Після встановлення:
@@ -54,14 +54,14 @@ Mainsail/Fluidd і KlipperScreen лише ховаються. Якщо Vyron Scr
 
 | Канал | Гілка | Що приходить |
 |---|---|---|
-| **stable** | `stable` | Перевірені випуски ([Releases](https://github.com/vovandukh/vyron-ecosystem/releases)). Для звичайного користування. |
+| **stable** | `stable` | Перевірені випуски ([Releases](https://github.com/vovandukh/vyron/releases)). Для звичайного користування. |
 | **dev** | `main` | Кожна зміна одразу після збірки. Для тих, хто хоче тестувати нове й готовий до багів. |
 
 Перемкнути канал:
 
 ```bash
-~/vyron-ecosystem/install/install.sh --dev      # на dev
-~/vyron-ecosystem/install/install.sh --stable   # назад на stable
+~/vyron/install/install.sh --dev      # на dev
+~/vyron/install/install.sh --stable   # назад на stable
 ```
 
 ## Видалення
@@ -69,7 +69,7 @@ Mainsail/Fluidd і KlipperScreen лише ховаються. Якщо Vyron Scr
 Повертає все як було (Mainsail знову на `http://IP-принтера/`, KlipperScreen на екрані):
 
 ```bash
-~/vyron-ecosystem/install/uninstall.sh --purge
+~/vyron/install/uninstall.sh --purge
 ```
 
 ## Як це влаштовано

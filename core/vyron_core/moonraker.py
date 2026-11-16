@@ -51,7 +51,7 @@ class MoonrakerClient:
             "client_name": CLIENT_NAME,
             "version": __version__,
             "type": "agent",
-            "url": "https://github.com/vovandukh/vyron-ecosystem",
+            "url": "https://github.com/vovandukh/vyron",
         })
         log.info("connected to Moonraker at %s", self.socket_path)
 

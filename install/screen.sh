@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Vyron Screen на екрані принтера замість KlipperScreen.
 #
-#   ~/vyron-ecosystem/install/screen.sh             — поставити Vyron Screen на екран
-#   ~/vyron-ecosystem/install/screen.sh --dry-run   — лише показати, що буде зроблено
-#   ~/vyron-ecosystem/install/screen.sh --remove    — повернути KlipperScreen
+#   ~/vyron/install/screen.sh             — поставити Vyron Screen на екран
+#   ~/vyron/install/screen.sh --dry-run   — лише показати, що буде зроблено
+#   ~/vyron/install/screen.sh --remove    — повернути KlipperScreen
 #
 # Що робить:
 #   1. Локальний сайт nginx «vyron-screen» на 127.0.0.1:7136 (лише для екрана; з мережі недоступний,

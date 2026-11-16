@@ -3,9 +3,9 @@
 Потрібно: принтер із Klipper, Moonraker і nginx (стандартна установка Mainsail або Fluidd через KIAUH).
 
 ```bash
-cd ~ && git clone -b stable https://github.com/vovandukh/vyron-ecosystem.git
-~/vyron-ecosystem/install/install.sh --dry-run   # подивитися, що буде зроблено
-~/vyron-ecosystem/install/install.sh             # встановити
+cd ~ && git clone -b stable https://github.com/vovandukh/vyron.git
+~/vyron/install/install.sh --dry-run   # подивитися, що буде зроблено
+~/vyron/install/install.sh             # встановити
 ```
 
 Після встановлення:
@@ -44,9 +44,9 @@ cd ~ && git clone -b stable https://github.com/vovandukh/vyron-ecosystem.git
 ## Видалення
 
 ```bash
-~/vyron-ecosystem/install/uninstall.sh --dry-run
-~/vyron-ecosystem/install/uninstall.sh            # тека репозиторію лишається
-~/vyron-ecosystem/install/uninstall.sh --purge    # і видалити теку
+~/vyron/install/uninstall.sh --dry-run
+~/vyron/install/uninstall.sh            # тека репозиторію лишається
+~/vyron/install/uninstall.sh --purge    # і видалити теку
 ```
 
 Повертає Mainsail на порт 80 (вмикає знову), прибирає сайт `vyron`, запис з `moonraker.conf` і службу Vyron Core.
@@ -54,9 +54,9 @@ cd ~ && git clone -b stable https://github.com/vovandukh/vyron-ecosystem.git
 ## Vyron Screen на екрані принтера (замість KlipperScreen)
 
 ```bash
-~/vyron-ecosystem/install/screen.sh --dry-run   # подивитися план
-~/vyron-ecosystem/install/screen.sh             # поставити Vyron Screen на екран
-~/vyron-ecosystem/install/screen.sh --remove    # повернути KlipperScreen
+~/vyron/install/screen.sh --dry-run   # подивитися план
+~/vyron/install/screen.sh             # поставити Vyron Screen на екран
+~/vyron/install/screen.sh --remove    # повернути KlipperScreen
 ```
 
 `install.sh` запускає цей крок сам; окремо він потрібен, щоб лише перемкнути екран. Для екрана піднімається локальний сайт nginx на `127.0.0.1:7136`
