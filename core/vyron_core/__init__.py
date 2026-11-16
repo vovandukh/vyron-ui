@@ -4,5 +4,5 @@
 бази Moonraker (простір імен vyron*) і розсилає події клієнтам. Див. safety.py.
 """
 
-__version__ = "0.3.6.5"
+__version__ = "0.3.6.6"
 CLIENT_NAME = "vyron-core"

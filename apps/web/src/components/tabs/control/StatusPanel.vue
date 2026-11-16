@@ -78,7 +78,9 @@ watch(() => ui.homeTick, () => { open.value = null })   // клік по лог�
       </Transition>
     </div>
   </Transition>
-  <ToolPopover v-if="printer.toolCount === 1" :name="printer.toolObjects[0]" :index="0" inline class="head" />
+  <!-- Обгортка: у ToolPopover кілька кореневих вузлів, тож клас на самому компоненті не застосовується —
+       а без pointer-events:auto картка успадковує none від колонки й не клікається -->
+  <div v-if="printer.toolCount === 1" class="head"><ToolPopover :name="printer.toolObjects[0]" :index="0" inline /></div>
   </div>
   <Transition name="qs">
     <QuickSlider v-if="open && rowEls[open]" :key="open" :kind="open" :anchor="rowEls[open]" :panel="panel" @close="open = null" />
