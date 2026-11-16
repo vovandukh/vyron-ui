@@ -197,7 +197,7 @@ export default {
   'console.macros': 'Quick macros',
   'mesh.save': 'Save profile', 'mesh.saveConfirm': 'Save this bed mesh? The printer will remember it and restart briefly (SAVE_CONFIG).',
   'mesh.profile': 'Profile', 'mesh.savedShort': 'saved', 'mesh.min': 'Min, mm', 'mesh.max': 'Max, mm', 'mesh.range': 'Range, mm', 'mesh.exag': 'Scale',
-  'mesh.calibrate': 'Calibrate', 'mesh.none': 'No bed mesh yet. Press “Calibrate” to let the printer measure the bed.', 'mesh.front': 'The front edge of the bed is at the bottom.',
+  'mesh.no3d': '3D view is not available in this browser (no WebGL) — see the values in the table', 'mesh.calibrate': 'Calibrate', 'mesh.none': 'No bed mesh yet. Press “Calibrate” to let the printer measure the bed.', 'mesh.front': 'The front edge of the bed is at the bottom.',
   'mesh.calSent': 'Calibration started. Progress is shown in the console.',
   'mesh.info': '{name}{saved} · {lo}…{hi} mm · range {range} mm · ×{k}', 'mesh.savedSuffix': ' · saved profile',
 

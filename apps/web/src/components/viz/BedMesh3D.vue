@@ -4,6 +4,9 @@ import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import * as THREE from 'three'
 import { useOrbitCamera } from '../../composables/useOrbitCamera'
 import { meshInside } from '@vyron/shared/klipper/bed'
+import { useI18n } from '../../composables/useI18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   matrix: { type: Array, default: null },
@@ -18,8 +21,10 @@ const orbit = useOrbitCamera(cv, { rotX: 0.6, rotY: 0.6, dist: 380, speed: 0.008
 const ORIGIN = { x: 0, y: 0, z: 0 }
 
 let renderer, scene, cam, obj = null, raf = 0, ro = null, w = 0, h = 0
+const no3d = ref(false)
 
 function resize() {
+  if (!renderer) return
   const c = wrap.value
   if (!c || !c.clientWidth || !c.clientHeight) return
   w = c.clientWidth; h = c.clientHeight
@@ -62,6 +67,7 @@ function ring(r, n = 96) {
 }
 
 function surface(mx, lim, round) {
+  if (!scene) return            // WebGL недоступний
   dispose()
   if (!mx) return
   const R = mx.length, C = mx[0].length, k = 40 / lim, pos = [], col = [], idx = []
@@ -93,7 +99,15 @@ function surface(mx, lim, round) {
 }
 
 onMounted(() => {
-  renderer = new THREE.WebGLRenderer({ canvas: cv.value, antialias: true, alpha: true })
+  // Без WebGL 3D-поверхні немає — таблиця значень поруч лишається
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas: cv.value, antialias: true, alpha: true })
+  } catch (e) {
+    console.warn('Vyron: WebGL недоступний — 3D-карту столу вимкнено', e)
+    renderer = null
+    no3d.value = true
+    return
+  }
   scene = new THREE.Scene()
   cam = new THREE.PerspectiveCamera(40, 1, 1, 3000)
   scene.add(new THREE.AmbientLight(0xffffff, 0.65))
@@ -119,12 +133,13 @@ watch(() => props.active, a => { if (a) resize() })
 </script>
 
 <template>
-  <div ref="wrap" class="m3"><canvas ref="cv"></canvas></div>
+  <div ref="wrap" class="m3"><canvas v-show="!no3d" ref="cv"></canvas><p v-if="no3d" class="no3d">{{ t('mesh.no3d') }}</p></div>
 </template>
 
 <style scoped>
 .m3{position:relative;min-height:280px;background:radial-gradient(ellipse at 50% 40%,rgba(255,255,255,.04),transparent 70%),var(--surface);border:1px solid var(--hair);border-radius:var(--r-lg);overflow:hidden}
 @media(max-width:900px){.m3{min-height:180px}}
 @media(max-width:700px){.m3{min-height:260px}}
+.no3d{position:absolute;inset:0;display:grid;place-items:center;margin:0;padding:16px;text-align:center;font-size:12.5px;color:var(--dim)}
 canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
 </style>

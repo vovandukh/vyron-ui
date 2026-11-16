@@ -68,6 +68,8 @@ const orbit = useOrbitCamera(cv, { ...HOME_ROT, dist: 650, speed: 0.007, minX: -
 
 // Кнопка «Скинути ракурс» видна, лише коли камеру зрушено (верхньорівневий ref — щоб шаблон розгорнув його)
 const camMoved = orbit.isCameraMoved
+/** WebGL недоступний — полотно сцени й кнопку ракурсу не показуємо */
+const no3d = ref(false)
 const { t } = useI18n()
 
 let renderer, scene, cam, lines = null, colAttr = null, raf = 0
@@ -193,6 +195,7 @@ function buildGeometry(newStep) {
 
 /** Нова модель: кадрування (без purge-лінії/skirt першого шару — див. gcodeModel), світло, геометрія. */
 function build() {
+  if (!scene) return            // 3D недоступний або сцену вже прибрано
   if (!model.P || !model.N) {
     disposeLines()
     const v = idleView()
@@ -480,7 +483,16 @@ function loop(now) {
 }
 
 onMounted(() => {
-  renderer = new THREE.WebGLRenderer({ canvas: cv.value, antialias: true, alpha: true })
+  // Без WebGL (браузер на слабкій платі без відеокарти, вимкнене прискорення, старий драйвер) Three.js кидає
+  // помилку. Тоді 3D-перегляду просто немає — решта інтерфейсу працює як завжди.
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas: cv.value, antialias: true, alpha: true })
+  } catch (e) {
+    console.warn('Vyron: WebGL недоступний — 3D-перегляд вимкнено', e)
+    renderer = null
+    no3d.value = true
+    return
+  }
   scene = new THREE.Scene()
   cam = new THREE.PerspectiveCamera(40, 1, 1, 6000)
   makeStage()
@@ -551,10 +563,10 @@ watch(() => ui.view, kick)
 </script>
 
 <template>
-  <canvas ref="cv" class="bg3d"></canvas>
+  <canvas v-show="!no3d" ref="cv" class="bg3d"></canvas>
   <!-- Скидання ракурсу: з'являється, коли камеру зрушено; подвійний клік/тап по сцені теж працює -->
   <Transition name="rv">
-    <button v-if="camMoved && ui.view === 'main'" type="button" class="rv glass" :title="t('view.reset')" :aria-label="t('view.reset')" @click="orbit.reset()">
+    <button v-if="camMoved && !no3d && ui.view === 'main'" type="button" class="rv glass" :title="t('view.reset')" :aria-label="t('view.reset')" @click="orbit.reset()">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3" /><path d="M4.5 4.5v3.7h3.7" /><circle cx="12" cy="12" r="2.2" /></svg>
     </button>
   </Transition>
