@@ -31,6 +31,7 @@ export default defineConfig(({ mode }) => {
       port: 5200,
       proxy: Object.fromEntries(['/websocket', '/printer', '/server', '/machine', '/api'].map(p => [p, moonraker]))
     },
-    build: { outDir: r('./dist'), emptyOutDir: true }
+    // mode 'demo' — збірка для GitHub Pages (екран у демо-режимі) у dist-demo/
+    build: { outDir: r(mode === 'demo' ? './dist-demo' : './dist'), emptyOutDir: true }
   }
 })

@@ -8,6 +8,7 @@ import { useI18n } from '../../../composables/useI18n'
 import { toolNum } from '@vyron/shared/klipper/objects'
 import ToolBoardInfo from './ToolBoardInfo.vue'
 import EddyInfo from './EddyInfo.vue'
+import { HEAT_PRESETS } from '@vyron/shared/klipper/heat'
 
 const props = defineProps({
   name: { type: String, required: true },   // 'extruder', 'extruder1', …
@@ -19,7 +20,8 @@ const props = defineProps({
 const emit = defineEmits(['close'])
 
 const MAX_T = 320
-const PRESETS = [200, 230, 260, 280]
+// Ті самі матеріали, що на екрані принтера й у повзунку сопла (PLA / PETG / ABS / ASA)
+const PRESETS = [...new Set(HEAT_PRESETS.map(x => x.nozzle))]
 const GAP = 8      // відступ від смуги та країв вікна
 const MAX_W = 320
 

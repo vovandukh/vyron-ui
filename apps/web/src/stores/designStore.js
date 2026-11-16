@@ -106,6 +106,16 @@ export const useDesignStore = defineStore('design', () => {
     onDesign: u => { if (u !== d.updated && sync.value !== 'saving') pullRemote() }
   }))
 
+  // Тема, змінена в іншій вкладці чи на сторінці екрана в демо (той самий сайт), — через подію storage.
+  // У демо це єдиний шлях між вебом і екраном (принтера й бази Moonraker немає).
+  addEventListener('storage', e => {
+    if (e.key !== KEY || !e.newValue) return
+    try {
+      const v = sanitizeDesign(JSON.parse(e.newValue))
+      if (v.updated !== d.updated) { applyingRemote = true; Object.assign(d, v) }
+    } catch { /* пошкоджено */ }
+  })
+
   /** Імпорт із файлу налаштувань: невідомі ключі відкидаються, числа обмежуються */
   function importDesign(raw) {
     Object.assign(d, sanitizeDesign(raw))

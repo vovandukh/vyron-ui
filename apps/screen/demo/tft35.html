@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="uk" translate="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="google" content="notranslate">
+<title>Vyron Screen — BTT TFT35 SPI</title>
+<!-- Демо Vyron Screen на GitHub Pages: екран 480×320 у рамці пристрою, збільшений для перегляду.
+     Усередині — справжня збірка Vyron Screen у демо-режимі (../screen.html), ?state= перемикає стан. -->
+<style>
+:root{--bg:#060607;--ink:#f5f5f7;--dim:#8e8e93;--line:rgba(255,255,255,.08);--brand:#f03a2e;--brand-rgb:240,58,46}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:radial-gradient(ellipse 70% 60% at 50% 110%,rgba(var(--brand-rgb),.22),transparent 70%),var(--bg);color:var(--ink);
+  font-family:-apple-system,"SF Pro Text",system-ui,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+body{display:flex;flex-direction:column;align-items:center;gap:22px;padding:28px 16px 40px}
+header{width:min(980px,100%);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header a{color:var(--dim);text-decoration:none;font-size:14px}
+header a:hover{color:var(--ink)}
+h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-.02em}
+.spec{color:var(--dim);font-size:13px}
+.grow{flex:1}
+/* Пристрій: тонка рамка-бампер із «склом» дисплея, без важких тіней */
+.dev{position:relative;padding:18px 18px 26px;border-radius:22px;background:linear-gradient(180deg,#1b1b1e,#0e0e10);border:1px solid #2a2a2e;
+  box-shadow:0 30px 60px -30px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.06)}
+.dev::after{content:'BIGTREETECH · TFT35 SPI';position:absolute;left:0;right:0;bottom:7px;text-align:center;font-size:9.5px;letter-spacing:.18em;color:#55555b}
+.glass{position:relative;width:calc(480px * var(--k));height:calc(320px * var(--k));border-radius:6px;overflow:hidden;background:#000;
+  box-shadow:0 0 0 1px #000,0 0 0 3px #232326}
+iframe{position:absolute;left:0;top:0;width:480px;height:320px;border:0;transform:scale(var(--k));transform-origin:0 0;background:#000}
+.states{display:flex;gap:6px;padding:4px;border-radius:12px;background:rgba(118,118,128,.18);flex-wrap:wrap;justify-content:center}
+.states button{border:0;background:none;color:var(--ink);font:inherit;font-size:13.5px;font-weight:600;padding:8px 14px;border-radius:9px;cursor:pointer}
+.states button.on{background:rgba(255,255,255,.14);box-shadow:0 1px 3px rgba(0,0,0,.35)}
+p.note{max-width:620px;margin:0;color:var(--dim);font-size:13px;line-height:1.55;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <a href="../">← Vyron Web</a>
+  <span class="grow"></span>
+  <div>
+    <h1>Vyron Screen</h1>
+    <div class="spec">BIGTREETECH TFT35 SPI · 3.5″ · 480×320 · резистивний тач</div>
+  </div>
+</header>
+
+<div class="dev"><div class="glass"><iframe id="scr" title="Vyron Screen 480×320" src="../screen.html?state=printing"></iframe></div></div>
+
+<div class="states" role="radiogroup" aria-label="Стан принтера">
+  <button type="button" data-s="printing" class="on">Друк</button>
+  <button type="button" data-s="paused">Пауза</button>
+  <button type="button" data-s="idle">Очікування</button>
+  <button type="button" data-s="shutdown">Помилка Klipper</button>
+</div>
+<p class="note">Це справжній інтерфейс екрана принтера в демо-режимі: працюють навігація, налаштування, нагрів, рух, G-code і тонке налаштування під час друку — без принтера. Масштаб збільшено для зручності; на принтері він займає весь дисплей 480×320.</p>
+
+<script>
+// Масштаб: якомога більший, але щоб пристрій уміщався у вікно (не більше ×2.2)
+function fit() {
+  const k = Math.max(0.6, Math.min(2.2, (innerWidth - 80) / 480, (innerHeight - 260) / 320))
+  document.documentElement.style.setProperty('--k', k.toFixed(3))
+}
+addEventListener('resize', fit); fit()
+const scr = document.getElementById('scr')
+document.querySelectorAll('.states button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.states button').forEach(x => x.classList.toggle('on', x === b))
+  scr.src = '../screen.html?state=' + b.dataset.s
+}))
+</script>
+</body>
+</html>

@@ -15,6 +15,7 @@
     "build": "npm run build -w @vyron/web --",
     "build:demo": "npm run build:demo -w @vyron/web --",
     "dev:screen": "npm run dev -w @vyron/screen --",
-    "build:screen": "npm run build -w @vyron/screen --"
+    "build:screen": "npm run build -w @vyron/screen --",
+    "build:screen:demo": "npm run build:demo -w @vyron/screen --"
   }
 }

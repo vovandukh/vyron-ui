@@ -35,6 +35,9 @@ const origin = location.origin
 const showHelp = computed(() => DEMO_BUILD && tried.value && !printer.demoMode && mixedContentRisk(normalizeHost(host.value)) &&
   !['open', 'ready', 'shutdown', 'connecting'].includes(printer.link))
 // Кількість голів у демо: 1–6 (сегменти), для перевірки інтерфейсу з різними принтерами
+// Екрани принтера (Vyron Screen): готові моделі зі сторінкою-пристроєм у демо (у dev — сервер екрана на :5200)
+const SCREENS = [{ id: 'tft35', name: 'BTT TFT35 SPI', spec: '3.5″ · 480×320', href: import.meta.env.DEV ? 'http://localhost:5200/?demo' : './screens/tft35.html' }]
+const scrOpen = ref(false)
 const HEADS = Array.from({ length: Math.min(6, DEMO_MAX_TOOLS) }, (_, i) => i + 1)
 
 function connect() {
@@ -150,6 +153,24 @@ function onEnter(el) {
         </section>
 
         <div class="list" role="menu">
+          <!-- Демо: екрани принтера — розгортається список готових дисплеїв із посиланням на сторінку-пристрій -->
+          <template v-if="DEMO_BUILD">
+            <button role="menuitem" class="scr-hd" :aria-expanded="String(scrOpen)" @click="scrOpen = !scrOpen">
+              <span>{{ t('cc.screens') }}<small>{{ t('cc.screensHint') }}</small></span>
+              <span class="chev" :class="{ on: scrOpen }" aria-hidden="true"></span>
+            </button>
+            <Transition name="derr">
+              <div v-if="scrOpen" class="scrs">
+                <a v-for="s in SCREENS" :key="s.id" class="scr" :href="s.href" target="_blank" rel="noopener">
+                  <i class="scr-ic" aria-hidden="true"></i>
+                  <span class="scr-tx"><b>{{ s.name }}</b><small>{{ s.spec }} · <em>{{ t('cc.ready') }}</em></small></span>
+                  <span class="scr-go" aria-hidden="true">↗</span>
+                </a>
+                <small class="scr-more">{{ t('cc.screensMore') }}</small>
+              </div>
+            </Transition>
+            <hr>
+          </template>
           <button role="menuitem" @click="nav('set')">{{ t('menu.settings') }}</button>
           <button role="menuitem" @click="nav('upd')">{{ t('menu.updates') }}</button>
           <button role="menuitem" @click="nav('net')">{{ t('menu.net') }}</button>
@@ -183,6 +204,19 @@ function onEnter(el) {
 @keyframes blink{50%{opacity:.3}}
 
 .host{display:flex;gap:6px}
+.scr-hd{display:flex!important;align-items:center;justify-content:space-between;gap:10px}
+.scr-hd > span:first-child{display:grid;gap:1px}
+.scr-hd small{font-size:11px;color:var(--dim);font-weight:400}
+.scrs{display:grid;gap:6px;padding:4px 6px 8px}
+.scr{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);color:var(--ink);text-decoration:none;transition:background-color var(--t-fast) var(--ease-out)}
+.scr:hover{background:rgba(255,255,255,.1)}
+.scr-ic{flex:none;width:34px;height:23px;border-radius:4px;border:1.5px solid rgba(255,255,255,.35);background:linear-gradient(135deg,rgba(var(--brand-rgb),.35),rgba(var(--accent-rgb),.12));box-shadow:inset 0 0 0 2px #0e0e10}
+.scr-tx{flex:1;min-width:0;display:grid;gap:1px}
+.scr-tx b{font-size:13px;font-weight:600}
+.scr-tx small{font-size:11px;color:var(--dim)}
+.scr-tx em{font-style:normal;color:#30d158}
+.scr-go{color:var(--dim);font-size:15px}
+.scr-more{font-size:11px;color:var(--dim);padding:0 4px}
 .help{display:grid;gap:6px;padding:10px 12px;border-radius:var(--r);background:rgba(255,159,10,.1);border:1px solid rgba(255,159,10,.25);font-size:12px;line-height:1.45;color:#ffd9a0}
 .help b{color:#ffcf85;font-size:12.5px}
 .help ol{margin:0;padding-left:18px;display:grid;gap:4px}

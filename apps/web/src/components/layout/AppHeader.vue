@@ -7,6 +7,9 @@ import EStopButton from './EStopButton.vue'
 import HeaderMenu from './HeaderMenu.vue'
 import StatusIsland from './StatusIsland.vue'
 import VyronLogo from '../ui/VyronLogo.vue'
+import { DEMO_BUILD } from '../../config'
+// Демо: видимий вхід на сторінку екрана принтера (найунікальніша частина — не ховаємо її в меню)
+const screenHref = import.meta.env.DEV ? 'http://localhost:5200/?demo' : './screens/tft35.html'
 
 const ui = useUiStore()
 const settings = useSettingsStore()
@@ -67,6 +70,7 @@ onBeforeUnmount(() => { removeEventListener('resize', onResize); ro?.disconnect(
         <VyronLogo :size="30" /><b>VYRON</b>
       </button>
       <StatusIsland />
+      <a v-if="DEMO_BUILD" class="scrchip" :href="screenHref" target="_blank" rel="noopener"><i aria-hidden="true"></i>{{ t('demo.screenChip') }} ↗</a>
     </div>
     <nav ref="nav" class="nav glass">
       <span class="pill" :class="{ on: pill.on, instant }" :style="{ transform: `translateX(${pill.x}px)`, width: pill.w + 'px' }" aria-hidden="true"></span>
@@ -116,6 +120,12 @@ onBeforeUnmount(() => { removeEventListener('resize', onResize); ro?.disconnect(
 .pill.instant{transition:none}
 
 .acts{display:flex;gap:8px;align-items:center;pointer-events:auto}
+/* Демо: «Екран принтера ↗» — скляна капсула поруч зі статусом */
+.scrchip{pointer-events:auto;display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px 0 9px;border-radius:999px;font-size:12px;font-weight:600;color:var(--ink);text-decoration:none;white-space:nowrap;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);transition:background-color var(--t-fast) var(--ease-out),border-color var(--t-fast) var(--ease-out)}
+.scrchip:hover{background:rgba(255,255,255,.11);border-color:rgba(var(--accent-rgb),.45)}
+.scrchip i{width:16px;height:11px;border-radius:2px;border:1.4px solid currentColor;background:linear-gradient(135deg,rgba(var(--brand-rgb),.5),transparent);opacity:.85}
+@media(max-width:1100px){.scrchip{display:none}}
 /* 1024×600: усе в один рядок — компактніші вкладки та проміжки */
 @media(max-width:1100px){
   .hd{gap:12px}
