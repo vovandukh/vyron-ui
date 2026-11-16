@@ -54,7 +54,7 @@ const VASE_WINDOW = 90     // «поточний шар» спіральної �
 // Центр столу — початок координат сцени; Y сцени — вгору, Z сцени — до глядача (= −Y принтера).
 let B = null
 // Круглий об'єм (дельта) зазвичай вищий за ширину — камера трохи далі, щоб верхнє коло не впиралось у шапку
-const idleView = () => ({ target: [0, B.h * 0.21, 0], dist: Math.max(B.w, B.d, B.h) * (B.round ? 3.5 : 2.8) })
+const idleView = () => ({ target: [0, B.h * 0.21, 0], dist: Math.max(B.w, B.d, B.h) * (B.round ? 3.2 : 2.8) })
 const HOME_ROT = { rotX: 0.45, rotY: 0.7 }
 const PULSE_MS = 1700      // період «дихання» поточного шару
 const PULSE_FPS = 30       // коли рухається лише пульсація — рендеримо вдвічі рідше
@@ -327,17 +327,12 @@ function stageRound() {
   fx.stage.add(segments(circle(R, 0), lineMat(0xffffff, 0.16)))
   const vol = []
   if (B.kin === 'delta' || B.kin === 'rotary_delta') {
-    // Рама дельти — трикутна призма: три колони за краєм столу (кути веж Klipper), трикутники внизу й угорі
-    const RT = R * 1.3
-    const pt = deg => { const t = (deg * Math.PI) / 180; return [RT * Math.cos(t), -RT * Math.sin(t)] }
-    const T = [210, 330, 90].map(pt)
-    const cols = []
+    // Дельта: три лінії піднімаються з краю круглого столу (кути веж Klipper) і вгорі сходяться в трикутник
+    const T = [210, 330, 90].map(deg => { const t = (deg * Math.PI) / 180; return [R * Math.cos(t), -R * Math.sin(t)] })
     T.forEach(([x, z], k) => {
       const [nx, nz] = T[(k + 1) % 3]
-      cols.push(x, 0, z, x, H, z)
-      vol.push(x, 0, z, nx, 0, nz, x, H, z, nx, H, nz)
+      vol.push(x, 0, z, x, H, z, x, H, z, nx, H, nz)
     })
-    fx.idle.add(segments(cols, lineMat(0xffffff, 0.11)))   // колони — головне, що робить силует «дельтою»
   } else {
     // Polar: циліндр над столом
     vol.push(...circle(R, H, 96))
