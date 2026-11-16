@@ -56,6 +56,8 @@ let B = null
 // Круглий об'єм (дельта) зазвичай вищий за ширину — камера трохи далі, щоб верхнє коло не впиралось у шапку
 const idleView = () => ({ target: [0, B.h * 0.21, 0], dist: Math.max(B.w, B.d, B.h) * (B.round ? 3.2 : 2.8) })
 const HOME_ROT = { rotX: 0.45, rotY: 0.7 }
+// Дельта: камера строго спереду (між вежами A і B) — трикутник веж симетричний у кадрі
+const homeRot = () => (B && B.round ? { rotX: 0.45, rotY: 0 } : HOME_ROT)
 const PULSE_MS = 1700      // період «дихання» поточного шару
 const PULSE_FPS = 30       // коли рухається лише пульсація — рендеримо вдвічі рідше
 
@@ -195,7 +197,7 @@ function build() {
     disposeLines()
     const v = idleView()
     targetGoal.set(...v.target)
-    orbit.frame({ dist: v.dist, ...HOME_ROT })
+    orbit.frame({ dist: v.dist, ...homeRot() })
     updateGlow()
     kick()
     return
@@ -205,7 +207,7 @@ function build() {
   if (b) {
     const h = model.zmax * model.zScale
     targetGoal.set((b.x0 + b.x1) / 2 - B.cx, h / 2, -((b.y0 + b.y1) / 2 - B.cy))
-    orbit.frame({ dist: Math.max(b.x1 - b.x0, b.y1 - b.y0, h) * 2.1 + 25, ...HOME_ROT })
+    orbit.frame({ dist: Math.max(b.x1 - b.x0, b.y1 - b.y0, h) * 2.1 + 25, ...homeRot() })
   }
   buildGeometry(stepFor(orbit.dist))
 }
@@ -327,11 +329,13 @@ function stageRound() {
   fx.stage.add(segments(circle(R, 0), lineMat(0xffffff, 0.16)))
   const vol = []
   if (B.kin === 'delta' || B.kin === 'rotary_delta') {
-    // Дельта: три лінії піднімаються з краю круглого столу (кути веж Klipper) і вгорі сходяться в трикутник
-    const T = [210, 330, 90].map(deg => { const t = (deg * Math.PI) / 180; return [R * Math.cos(t), -R * Math.sin(t)] })
-    T.forEach(([x, z], k) => {
-      const [nx, nz] = T[(k + 1) % 3]
-      vol.push(x, 0, z, x, H, z, x, H, z, nx, H, nz)
+    // Дельта: три лінії піднімаються з краю круглого столу (кути веж Klipper) і звужуються конусом
+    // до меншого трикутника вгорі
+    const at = (deg, r) => { const t = (deg * Math.PI) / 180; return [r * Math.cos(t), -r * Math.sin(t)] }
+    const TOP = 0.42
+    ;[210, 330, 90].forEach((deg, k, all) => {
+      const [x, z] = at(deg, R), [tx, tz] = at(deg, R * TOP), [nx, nz] = at(all[(k + 1) % 3], R * TOP)
+      vol.push(x, 0, z, tx, H, tz, tx, H, tz, nx, H, nz)
     })
   } else {
     // Polar: циліндр над столом
