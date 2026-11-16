@@ -7,11 +7,17 @@ import { usePrinter } from '../store'
 import { t } from '../i18n'
 import { whenOnline } from '../online'
 import Icon from '../components/Icon.vue'
+import ConfirmSheet from '../components/ConfirmSheet.vue'
 
 const p = usePrinter()
 const meta = ref(null)
 const thumb = ref('')
 const starting = ref(false)
+const askDel = ref(false)
+async function del() {
+  askDel.value = false
+  if (await p.deleteFile(path.value)) p.back()
+}
 const path = computed(() => (p.selFile && p.selFile.path) || '')
 const name = computed(() => path.value.replace(/^.*\//, '').replace(/\.(gcode|g|gco)$/i, ''))
 // Після перезавантаження вибір файлу не зберігається — повертаємось до списку
@@ -60,9 +66,16 @@ async function print() {
     </section>
 
     <p v-if="p.active" class="note">{{ t('scr.filesBusy') }}</p>
-    <button v-else type="button" class="go tap" :disabled="starting" @click="print">
-      <Icon name="play" size="1.8rem" :stroke="2.4" />{{ t('scr.print') }}
-    </button>
+    <!-- Ті самі скляні кнопки, що «Пауза / Скасувати» на головній: колір лише в іконці -->
+    <footer class="acts">
+      <button type="button" class="btn glass del tap" :disabled="starting" @click="askDel = true">
+        <Icon name="trash" size="1.7rem" :stroke="2.2" />{{ t('files.delete') }}
+      </button>
+      <button type="button" class="btn glass go tap" :disabled="starting || p.active" @click="print">
+        <Icon name="play" size="1.7rem" :stroke="2.4" />{{ t('scr.print') }}
+      </button>
+    </footer>
+    <ConfirmSheet v-if="askDel" :text="t('scr.deleteQ', { name })" :ok="t('files.delete')" :cancel="t('common.cancel')" @ok="del" @cancel="askDel = false" />
   </div>
 </template>
 
@@ -79,6 +92,10 @@ dl{margin:.6rem 0 0;padding-top:.8rem;border-top:1px solid var(--line);display:g
 dt{color:var(--dim)}
 dd{margin:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ld{color:var(--dim);font-size:1.4rem}
-.go{flex:none;height:5rem;border-radius:var(--r);display:flex;align-items:center;justify-content:center;gap:.7rem;background:var(--primary);color:var(--on-primary);font-size:1.6rem;font-weight:600}
+.acts{flex:none;display:flex;gap:.8rem}
+.btn{flex:1;height:5rem;border-radius:var(--r);display:flex;align-items:center;justify-content:center;gap:.7rem;font-size:1.5rem;font-weight:600}
+.btn.go{flex:1.6}
+.btn.go .ic{color:var(--coral)}
+.btn.del .ic{color:var(--red)}
 .note{margin:0}
 </style>

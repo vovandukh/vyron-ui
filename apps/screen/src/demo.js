@@ -86,6 +86,11 @@ export async function demoCall(method, params, { emitGcode, merge }) {
       return { size: f[2], estimated_time: f[3], filament_type: f[4], filament_weight_total: f[5], layer_height: f[6], slicer: 'OrcaSlicer' }
     }
     case 'printer.print.start': await wait(400); return 'ok'
+    case 'server.files.delete_file': {
+      const i = DEMO_FILES.findIndex(x => 'gcodes/' + x[0] === params.path)
+      if (i >= 0) DEMO_FILES.splice(i, 1)
+      return { item: { path: params.path } }
+    }
     case 'server.history.list': return { count: 1, jobs: [{ filename: 'SSR DIN clip.gcode', status: 'completed', print_duration: 8040, end_time: Date.now() / 1000 - 3 * 3600 }] }
     case 'printer.gcode.script':
       if (/G28|M84|QUAD_GANTRY_LEVEL|Z_TILT_ADJUST|G1 /.test(params.script)) return demoMotion(params.script, merge)
