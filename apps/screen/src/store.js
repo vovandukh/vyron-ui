@@ -35,8 +35,8 @@ const DESIGN = { namespace: 'vyron_ui', key: 'design' }
 /** Ключ, під яким Vyron Web зберігає тему в браузері — для синхронізації в демо */
 const DEMO_DESIGN_KEY = 'vyron-design'
 
-// Демо: у dev — з ?demo; у збірці для GitHub Pages (vite build --mode demo) — завжди
-export const DEMO = import.meta.env.MODE === 'demo' || (import.meta.env.DEV && new URLSearchParams(location.search).has('demo'))
+// Демо: у dev — з ?demo (або ?state= зі сторінки-пристрою demo/tft35.html); у збірці для GitHub Pages (vite build --mode demo) — завжди
+export const DEMO = import.meta.env.MODE === 'demo' || (import.meta.env.DEV && ['demo', 'state'].some(k => new URLSearchParams(location.search).has(k)))
 
 export const usePrinter = defineStore('printer', () => {
   /** idle | connecting | open | lost */
