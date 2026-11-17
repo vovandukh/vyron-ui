@@ -41,11 +41,15 @@ const label = computed(() => (chars.value.length ? chars.value.map(x => x.c).joi
 </script>
 
 <template>
-  <span v-if="fade" class="rn rn-f" role="text" :aria-label="label">
+  <!-- Справжнє значення — невидимим текстом: його читає екранний диктор і бере копіювання
+       (інакше копіювалися б усі стрічки 0…9). Самі стрічки виділити не можна. -->
+  <span v-if="fade" class="rn rn-f">
+    <span class="rn-txt">{{ label }}</span>
     <Transition name="rnf"><span :key="label" class="rn-fv" aria-hidden="true">{{ chars.map(x => x.c).join('') }}</span></Transition>
     <span v-if="suffix && chars.length" class="rn-sfx" aria-hidden="true">{{ suffix }}</span>
   </span>
-  <span v-else class="rn" role="text" :aria-label="label">
+  <span v-else class="rn">
+    <span class="rn-txt">{{ label }}</span>
     <span v-for="ch in chars" :key="ch.key" class="rn-ch" aria-hidden="true">
       <span v-if="ch.d != null" class="rn-strip" :style="{ transform: `translateY(${-ch.d * 10}%)` }">
         <span v-for="d in DIGITS" :key="d">{{ d }}</span>
@@ -57,7 +61,9 @@ const label = computed(() => (chars.value.length ? chars.value.map(x => x.c).joi
 </template>
 
 <style scoped>
-.rn{display:inline-flex;align-items:baseline;white-space:nowrap;font-variant-numeric:tabular-nums}
+.rn{position:relative;display:inline-flex;align-items:baseline;white-space:nowrap;font-variant-numeric:tabular-nums}
+.rn-ch,.rn-sfx,.rn-fv{-webkit-user-select:none;user-select:none}
+.rn-txt{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
 /* Плавна зміна: старе й нове число в одній клітинці сітки, одне згасає, інше проявляється */
 .rn-f{display:inline-grid;grid-auto-flow:column;align-items:baseline}
 .rn-f > .rn-fv{grid-area:1 / 1;display:inline-block}
