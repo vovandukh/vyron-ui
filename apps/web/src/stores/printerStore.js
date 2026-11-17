@@ -42,6 +42,8 @@ export const usePrinterStore = defineStore('printer', () => {
    * message — state_message Klipper (текст shutdown / помилки конфігурації), info — його розбір (@vyron/shared/klipper/errors.js).
    */
   const klippy = ref({ state: null, message: '', info: null })
+  /** Ім'я хоста з printer.info (bigtreetech-cb1, voron…) — запасна назва плати в «Сервіс → Залізо» */
+  const hostName = ref('')
   /** Тости помилок G-code / друку: [{ id, at, n, src: 'gcode' | 'print', info }] — новіші в кінці */
   const alerts = ref([])
   /** Дія перезапуску, що виконується: 'fw' | 'restart' | 'service' | null (див. klippyAction) */
@@ -256,6 +258,7 @@ export const usePrinterStore = defineStore('printer', () => {
     clearTimeout(klippyTimer)
     clearTimeout(busyTimer)
     klippy.value = { state: null, message: '', info: null }
+    hostName.value = ''
     alerts.value = []
     klippyBusy.value = null
   }
@@ -368,6 +371,7 @@ export const usePrinterStore = defineStore('printer', () => {
       const s = await client.call('server.info')
       if (!s || !s.klippy_connected) { setKlippy((s && s.klippy_state) || 'disconnected', ''); return }
       const p = await client.call('printer.info')
+      if (p && p.hostname) hostName.value = p.hostname
       setKlippy(p.state, p.state_message)
     } catch {
       if (client.connected) klippyTimer = setTimeout(refreshKlippy, KLIPPY_POLL)
@@ -890,7 +894,7 @@ export const usePrinterStore = defineStore('printer', () => {
     // getters
     connected, isPrinting, printState, stateLabel, meta, activeToolName, canSwitchTools, toolCount, nozzleTemp, bedTemp, chamberTemp,
     speedFactor, fanSpeed, position, qgl, progressPct, etaSeconds, layerText, nozzleHeater, tune,
-    nozzleTarget, bedTarget, hasBed, hasFan, chamberObj, leveling, heaterMax, quickSet, kinematics, meshRound, bed, bedAuto, bedOverride, setBedOverride,
+    nozzleTarget, bedTarget, hasBed, hasFan, chamberObj, leveling, heaterMax, quickSet, kinematics, meshRound, bed, hostName, bedAuto, bedOverride, setBedOverride,
     mcuObjects, hwSensors, hostInfo, mcuBadAt, mcuRate, mcuConn,
     // actions
     preview, openPreview, closePreview, printBusy, startPrint, demoSet, demoBed, setDemoBed,
