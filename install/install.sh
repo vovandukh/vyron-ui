@@ -250,6 +250,9 @@ if [ $UPDATES = 1 ]; then
       echo "path: $REPO"
       echo "origin: $ORIGIN"
       echo "primary_branch: $BRANCH"
+      # Окремої системної служби «vyron» немає (Core перезапускається сам, коли змінюється його код),
+      # тож Moonraker не повинен її шукати — інакше попередження «not permitted to restart service vyron»
+      echo "is_system_service: False"
       echo "$MARK_END"
     } > "$BLOCK"
     LEGACY="$(legacy_um_sections "$MR_CONF" "$REPO")"
