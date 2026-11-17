@@ -1,8 +1,8 @@
 {
   "name": "vyron",
   "private": true,
-  "version": "0.4.0",
-  "vyronVersion": "0.4.0",
+  "version": "0.4.1",
+  "vyronVersion": "0.4.1",
   "description": "Vyron — open-source web UI and touchscreen UI for Klipper printers, with a small host service",
   "workspaces": [
     "apps/web",

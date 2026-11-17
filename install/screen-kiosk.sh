@@ -24,10 +24,17 @@ fi
 
 # Розмір екрана — щоб вікно точно стало на весь дисплей
 SIZE="$(xdpyinfo 2>/dev/null | sed -n 's/.*dimensions: *\([0-9]*\)x\([0-9]*\).*/\1,\2/p')"
+# Chromium не дає вікну бути вужчим за 500 px: на екрані 480 px (TFT35) праві 20 px сторінки
+# опинялись за краєм. Тоді масштабуємо так, щоб 500 px сторінки стали рівно шириною екрана (480/500 = 0.96).
+W="${SIZE%,*}"
+SCALE=""
+if [ -n "$W" ] && [ "$W" -lt 500 ] 2>/dev/null; then
+  SCALE="--force-device-scale-factor=$(awk -v w="$W" 'BEGIN { printf "%.4f", w / 500 }')"
+fi
 
 exec "$BROWSER" \
   --kiosk "$URL" \
-  ${SIZE:+--window-size=$SIZE} --window-position=0,0 \
+  ${SIZE:+--window-size=$SIZE} --window-position=0,0 $SCALE \
   --user-data-dir="$HOME/.config/vyron-screen" \
   --noerrdialogs --no-first-run --disable-infobars \
   --disable-session-crashed-bubble --hide-crash-restore-bubble \

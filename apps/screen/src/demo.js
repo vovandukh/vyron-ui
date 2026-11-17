@@ -19,6 +19,8 @@ export function startDemo({ merge, setKlippy }) {
   heat.extruder = { t: idle ? 24.6 : 239.8, tg: idle ? 0 : 240 }
   heat.heater_bed = { t: idle ? 23.9 : 79.9, tg: idle ? 0 : 80 }
   const step = h => { const goal = Math.max(h.tg, 24); h.t += (goal - h.t) * (h.tg > h.t ? 0.18 : 0.08); if (Math.abs(goal - h.t) < 0.3) h.t = goal + (h.tg ? Math.random() * 0.4 - 0.2 : 0) }
+  // Потужність: на розігріві — майже повна, коли тримає — частка, щоб компенсувати втрати
+  const power = (h, hold) => (h.tg ? Math.min(1, Math.max(0, (h.tg - h.t) / 25 + hold + Math.random() * 0.04)) : 0)
   const tick = () => {
     if (want === 'printing') { p = Math.min(1, p + 0.0004); d += 1 }
     step(heat.extruder); step(heat.heater_bed)
@@ -30,8 +32,8 @@ export function startDemo({ merge, setKlippy }) {
         info: { current_layer: Math.round(p * 412), total_layer: 412 }
       },
       display_status: { progress: p },
-      extruder: { temperature: heat.extruder.t, target: heat.extruder.tg },
-      heater_bed: { temperature: heat.heater_bed.t, target: heat.heater_bed.tg }
+      extruder: { temperature: heat.extruder.t, target: heat.extruder.tg, power: power(heat.extruder, 0.28) },
+      heater_bed: { temperature: heat.heater_bed.t, target: heat.heater_bed.tg, power: power(heat.heater_bed, 0.4) }
     })
   }
   tick()

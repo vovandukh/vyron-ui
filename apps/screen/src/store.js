@@ -14,6 +14,7 @@ import { watchDesign, handleCoreEvent } from '@vyron/shared/live'
 import { dbGet, dbKnown } from '@vyron/shared/moonraker/db'
 import { TUNE_OBJECTS, tuneScript, tunePatch } from '@vyron/shared/klipper/tune'
 import { heaterScript, HEAT_OFF } from '@vyron/shared/klipper/heat'
+import { lang } from './i18n'
 
 /** Найбільший G-code, який екран розбирає для візуалізації: на CB1 лише 1 ГБ пам'яті, Klipper важливіший */
 const MAX_GCODE_BYTES = 20 * 1024 * 1024
@@ -23,8 +24,9 @@ const BASE = {
   print_stats: ['state', 'filename', 'print_duration', 'info', 'message'],
   virtual_sdcard: ['progress', 'is_active', 'file_position'],
   display_status: ['progress'],
-  extruder: ['temperature', 'target'],
-  heater_bed: ['temperature', 'target'],
+  // power — скільки зараз гріє нагрівач (0…1): «Нагрів 64%» у плитках
+  extruder: ['temperature', 'target', 'power'],
+  heater_bed: ['temperature', 'target', 'power'],
   webhooks: ['state', 'state_message'],
   toolhead: ['homed_axes', 'position'],
   // Тонке налаштування під час друку: Z-зсув, швидкість, потік, обдув
@@ -34,8 +36,8 @@ const DESIGN = { namespace: 'vyron_ui', key: 'design' }
 /** Ключ, під яким Vyron Web зберігає тему в браузері — для синхронізації в демо */
 const DEMO_DESIGN_KEY = 'vyron-design'
 
-// Демо: у dev — з ?demo; у збірці для GitHub Pages (vite build --mode demo) — завжди
-export const DEMO = import.meta.env.MODE === 'demo' || (import.meta.env.DEV && new URLSearchParams(location.search).has('demo'))
+// Демо: у dev — з ?demo (або ?state= зі сторінки-пристрою demo/tft35.html); у збірці для GitHub Pages (vite build --mode demo) — завжди
+export const DEMO = import.meta.env.MODE === 'demo' || (import.meta.env.DEV && ['demo', 'state'].some(k => new URLSearchParams(location.search).has(k)))
 
 export const usePrinter = defineStore('printer', () => {
   /** idle | connecting | open | lost */
@@ -150,6 +152,19 @@ export const usePrinter = defineStore('printer', () => {
   function useDesign(d) {
     design.value = sanitizeDesign(d)
     applyDesign(design.value, { layout: false })
+    // Мова спільна з вебінтерфейсом: якщо її обрали у вебі чи на іншому пристрої — застосовуємо
+    if (design.value.lang && design.value.lang !== lang.value) lang.value = design.value.lang
+  }
+  /** Записати поточний дизайн у базу Moonraker (його підхоплять веб та інші екрани) */
+  async function saveDesign() {
+    try { await call('server.database.post_item', { ...DESIGN, value: { ...design.value } }); dbKnown(DESIGN.namespace) } catch { /* лишається локально до наступного підключення */ }
+    if (DEMO) { try { localStorage.setItem(DEMO_DESIGN_KEY, JSON.stringify(design.value)) } catch { /* приватний режим */ } }
+  }
+  /** Мова на екрані — разом із вебінтерфейсом принтера */
+  function setLang(id) {
+    lang.value = id
+    useDesign({ ...design.value, lang: id, updated: Date.now() })
+    saveDesign()
   }
   async function pullDesign() {
     const v = await dbGet(call, DESIGN.namespace, DESIGN.key)
@@ -160,8 +175,7 @@ export const usePrinter = defineStore('printer', () => {
     const p = PRESETS.find(x => x.id === id)
     if (!p) return
     useDesign({ ...design.value, preset: p.id, accent: p.accent, brand: p.brand, updated: Date.now() })
-    try { await call('server.database.post_item', { ...DESIGN, value: { ...design.value } }); dbKnown(DESIGN.namespace) } catch { /* лишається локально до наступного підключення */ }
-    if (DEMO) { try { localStorage.setItem(DEMO_DESIGN_KEY, JSON.stringify(design.value)) } catch { /* приватний режим */ } }
+    await saveDesign()
   }
 
   function onNotify(method, params) {
@@ -400,7 +414,7 @@ export const usePrinter = defineStore('printer', () => {
 
   return {
     gcodeState, modelVer, done, filename, showModel, event, updates, refreshUpdates, runUpdate,
-    link, host, hostname, lastJob, klippy, st, printState, active, progress, remaining, layer, heaters, busy, design,
+    link, host, hostname, lastJob, klippy, st, printState, active, progress, remaining, layer, heaters, busy, design, setLang,
     stack, page, dir, go, back, home, tune, setTemp, heatOff, listFiles, fileMeta, printFile, thumbUrl, selFile, deleteFile,
     call, gcode, onGcode, setPreset,
     leveling, homed, position, leveled, moving, homeAll, motorsOff, level, jog,

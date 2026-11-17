@@ -1,19 +1,15 @@
 <script setup>
 // Головний екран у стилі Vyron: «скляні» картки, кільце прогресу з градієнтом фірмового кольору,
 // температури з іконками, унизу — дії друку або док розділів (як в iOS).
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 import { fmtDuration } from '@vyron/shared/format'
 import { usePrinter } from '../store'
 import { t } from '../i18n'
 import Icon from './Icon.vue'
 import GcodeView from './GcodeView.vue'
-import TuneSheet from './TuneSheet.vue'
 
 const emit = defineEmits(['cancel'])
-/** Панель тонкого налаштування під час друку; закривається сама, коли друк завершився */
 const p = usePrinter()
-const tuneOpen = ref(false)
-watch(() => p.active, a => { if (!a) tuneOpen.value = false })
 
 // Кільце прогресу: SVG-обведення (дешево для слабкої графіки), радіус 44 у сітці 100×100
 const C = 2 * Math.PI * 44
@@ -23,6 +19,15 @@ const file = computed(() => String((p.st.print_stats || {}).filename || '').repl
 const left = computed(() => (p.remaining == null ? '' : fmtDuration(p.remaining, t)))
 const temp = v => (v == null ? '–' : Math.round(v))
 const hot = h => h.target > 0
+/** Праворуч угорі плитки — потужність нагрівача у відсотках (як у KlipperScreen) або «Вимк.» */
+const ROOM = 20
+function heatState(h) {
+  if (h.target === undefined) return null                     // датчик без цілі (камера)
+  if (!(h.target > 0)) return { text: t('qs.off') }
+  return h.power != null ? { text: Math.round(h.power * 100) + '%', pw: true } : null
+}
+/** Скільки шляху від кімнатної до цілі вже пройдено (0…100) */
+const heatPct = h => (h.target > ROOM ? Math.max(0, Math.min(100, ((h.temperature ?? ROOM) - ROOM) / (h.target - ROOM) * 100)) : 0)
 /** Модель показуємо, коли G-code розібрано; інакше (завантаження, завеликий файл) — кільце прогресу */
 const showModel = computed(() => p.showModel && p.gcodeState === 'ready')
 const pctShown = computed(() => (p.printState === 'complete' ? 100 : pct.value))
@@ -42,17 +47,25 @@ function open(d) { if (!d.soon) p.go(d.id) }
 
 <template>
   <div class="home page">
-    <section class="hero glass" :class="{ model: showModel, tunable: p.active }" @click="p.active && (tuneOpen = true)">
-      <!-- Модель друку (G-code) на всю картку; поверх — відсоток, файл і час. Під моделлю — легка шестикутна сітка (статична, малюється раз). -->
+    <section class="hero" :class="{ glass: !showModel, model: showModel, tunable: p.active }" @click="p.active && p.go('tune')">
+      <!-- Модель друку (G-code) без картки — просто на фоні екрана, як 3D-сцена у вебі.
+           Зліва вгорі — відсоток у скляній картці; унизу — плашка з файлом, шаром і часом та смужкою прогресу. -->
       <template v-if="showModel">
         <GcodeView />
-        <div class="ov-top"><b>{{ pctShown }}</b><small>%</small><span v-if="p.printState === 'complete'" class="done">{{ t('state.complete') }}</span></div>
-        <div class="ov-bot">
-          <span class="file one">{{ file }}</span>
-          <span class="chips">
-            <span v-if="p.layer" class="chip">{{ t('scr.layer', p.layer) }}</span>
-            <span v-if="left" class="chip">{{ left }}</span>
+        <div class="jpc glass"><b>{{ pctShown }}</b><small>%</small></div>
+        <div class="job glass">
+          <span class="jt">
+            <span class="jf">{{ file }}</span>
+            <span class="js">
+              <template v-if="p.printState === 'complete'"><Icon name="check" size="1.2rem" :stroke="3" class="good" />{{ t('state.complete') }}</template>
+              <template v-else>
+                <span v-if="p.layer">{{ t('scr.layer', p.layer) }}</span>
+                <span v-if="p.layer && left" class="sep">·</span>
+                <span v-if="left">{{ left }}</span>
+              </template>
+            </span>
           </span>
+          <i class="jtrack"><i class="jbar" :style="{ width: pctShown + '%' }"></i></i>
         </div>
       </template>
       <template v-else-if="p.active">
@@ -109,12 +122,16 @@ function open(d) { if (!d.soon) p.go(d.id) }
 
     <section class="temps">
       <div v-for="h in p.heaters" :key="h.id" class="tile glass" :class="{ hot: hot(h) }">
-        <span class="ti"><Icon :name="h.icon" size="1.7rem" /></span>
-        <span class="tx">
+        <span class="th">
+          <span class="ti"><Icon :name="h.icon" size="1.5rem" /></span>
           <span class="lbl">{{ t(h.key) }}</span>
-          <span class="now">{{ temp(h.temperature) }}<i>°</i></span>
+          <span v-if="heatState(h)" class="hs" :class="{ pw: heatState(h).pw }">{{ heatState(h).text }}</span>
         </span>
-        <span v-if="h.target !== undefined" class="tgt">{{ hot(h) ? temp(h.target) + '°' : t('qs.off') }}</span>
+        <span class="tv">
+          <span class="now">{{ temp(h.temperature) }}<i>°</i></span>
+          <span v-if="hot(h)" class="tg">/ {{ temp(h.target) }}°</span>
+        </span>
+        <i v-if="hot(h)" class="tb"><i :style="{ width: heatPct(h) + '%' }"></i></i>
       </div>
     </section>
 
@@ -128,7 +145,7 @@ function open(d) { if (!d.soon) p.go(d.id) }
       <button type="button" class="btn glass danger tap" :disabled="!!p.busy" @click="emit('cancel')">
         <Icon name="stop" size="1.5rem" :stroke="2.4" />{{ t('print.cancel') }}
       </button>
-      <button type="button" class="btn glass sq tap" :aria-label="t('tune.open')" @click="tuneOpen = true"><Icon name="sliders" size="2rem" /></button>
+      <button type="button" class="btn glass sq tap" :aria-label="t('tune.open')" @click="p.go('tune')"><Icon name="sliders" size="2rem" /></button>
     </footer>
     <!-- Без друку: дві окремі картки — розділи (Рух, Нагрів, Налаштування) і швидкі дії (Home, QGL, мотори) -->
     <footer v-else class="cards">
@@ -153,25 +170,29 @@ function open(d) { if (!d.soon) p.go(d.id) }
         </button>
       </div>
     </footer>
-    <TuneSheet v-if="tuneOpen && p.active" @close="tuneOpen = false" />
   </div>
 </template>
 
 <style scoped>
 .home{display:grid;grid-template-columns:1fr 16.5rem;grid-template-rows:1fr auto;gap:.9rem;padding:.2rem 1.2rem 1.2rem}
 .hero{position:relative;min-width:0;border-radius:var(--r-lg);display:flex;align-items:center;gap:1.3rem;padding:1rem 1.4rem 1rem 1rem;overflow:hidden}
-.hero.model{padding:0}
-/* Шестикутна сітка Vyron під моделлю: статичний SVG-візерунок, яскравіший у центрі й згасає до країв */
-.hero.model::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:calc(.45 * var(--grid-k));
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48' viewBox='0 0 28 48'%3E%3Cpath d='M14 0 28 8v16L14 32 0 24V8zM14 32v16' fill='none' stroke='%23ffffff' stroke-opacity='.22' stroke-width='1'/%3E%3C/svg%3E") center / 2.8rem 4.8rem;
-  -webkit-mask-image:radial-gradient(ellipse 62% 66% at 50% 48%,#000 25%,transparent 100%);mask-image:radial-gradient(ellipse 62% 66% at 50% 48%,#000 25%,transparent 100%)}
-/* Підписи поверх моделі: темні градієнти зверху й знизу, щоб текст читався на будь-якому фоні */
-.ov-top{position:absolute;left:0;top:0;right:0;padding:.8rem 1.2rem 2rem;display:flex;align-items:baseline;pointer-events:none;background:linear-gradient(180deg,rgba(6,6,7,.7),transparent)}
-.ov-top b{font-size:3rem;font-weight:700;letter-spacing:-.05em;line-height:1}
-.ov-top .done{margin-left:.8rem;padding:.25rem .7rem;border-radius:1rem;background:rgba(48,209,88,.16);color:var(--green);font-size:1.1rem;font-weight:600;align-self:center}
-.ov-top small{font-size:1.3rem;font-weight:600;color:var(--dim);margin-left:.15rem}
-.ov-bot{position:absolute;left:0;right:0;bottom:0;padding:2.2rem 1.2rem .9rem;display:grid;gap:.5rem;pointer-events:none;background:linear-gradient(0deg,rgba(6,6,7,.85),transparent)}
-.file.one{-webkit-line-clamp:1;font-size:1.3rem}
+/* Без картки нічого не обрізаємо: інакше кути скляних плашок зрізались би під радіус зони */
+.hero.model{padding:0;overflow:visible;border-radius:0}
+/* Підписи поверх моделі; знизу — легке затемнення, щоб назва читалась, якщо модель заходить під неї */
+/* Плашка друку: те саме скло, що й плитки температур; відсоток великий, решта — дрібніше й тьмяніше */
+.job{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:1rem;padding:.7rem 1.1rem 1.35rem;border-radius:var(--r);overflow:hidden;pointer-events:none}
+/* Відсоток — окрема скляна картка зліва вгорі, як було, але в стилі плиток */
+.jpc{position:absolute;left:0;top:0;display:flex;align-items:baseline;padding:.6rem 1rem .7rem;border-radius:var(--r);pointer-events:none}
+.jpc b{font-size:2.8rem;font-weight:700;letter-spacing:-.05em;line-height:1}
+.jpc small{font-size:1.3rem;font-weight:600;color:var(--dim);margin-left:.1rem}
+.jt{min-width:0;display:grid;gap:.2rem}
+.jf{font-size:1.25rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.js{display:flex;align-items:center;gap:.35rem;font-size:1.1rem;color:var(--dim);white-space:nowrap;overflow:hidden}
+.js .sep{opacity:.6}
+/* Смужка прогресу — доріжка з відступами від країв (заокруглення плашки її не зрізає),
+   заповнення — градієнт фірмового кольору, як у кільці */
+.jtrack{position:absolute;left:1.1rem;right:1.1rem;bottom:.6rem;height:.35rem;border-radius:.2rem;background:rgba(255,255,255,.08);overflow:hidden}
+.jbar{display:block;height:100%;border-radius:.2rem;background:linear-gradient(90deg,var(--coral),var(--brand));transition:width 1s linear}
 
 .ring{position:relative;flex:none;width:12.4rem;height:12.4rem}
 .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
@@ -210,13 +231,20 @@ function open(d) { if (!d.soon) p.go(d.id) }
 @keyframes spin{to{transform:rotate(360deg)}}
 
 .temps{display:grid;gap:.7rem;align-content:stretch;grid-auto-rows:1fr}
-.tile{position:relative;display:flex;align-items:center;gap:.9rem;padding:.6rem 1rem;border-radius:var(--r)}
-.ti{flex:none;width:3rem;height:3rem;border-radius:.9rem;display:grid;place-items:center;background:rgba(255,255,255,.08);color:var(--dim)}
-.tx{display:grid;gap:.05rem;min-width:0}
-.lbl{font-size:1.1rem;color:var(--dim);font-weight:500}
-.now{font-size:2.2rem;font-weight:600;line-height:1.05;letter-spacing:-.03em}
+/* Плитка нагрівача: угорі іконка, назва і стан («Нагрів 64%», «Тримає», «Вимк.»),
+   посередині велика температура з ціллю, унизу — смужка: скільки шляху до цілі пройдено */
+.tile{position:relative;display:flex;flex-direction:column;justify-content:center;gap:.35rem;padding:.7rem 1rem .8rem;border-radius:var(--r);min-width:0}
+.th{display:flex;align-items:center;gap:.6rem;min-width:0}
+.ti{flex:none;width:2.5rem;height:2.5rem;border-radius:.8rem;display:grid;place-items:center;background:rgba(255,255,255,.08);color:var(--dim)}
+.lbl{font-size:1.1rem;color:var(--dim);font-weight:500;white-space:nowrap}
+.hs{margin-left:auto;font-size:1.05rem;color:var(--dim);white-space:nowrap}
+.hs.pw{font-weight:600;color:var(--tile-ink);font-variant-numeric:tabular-nums}
+.tv{display:flex;align-items:baseline;gap:.5rem;min-width:0}
+.now{font-size:2.4rem;font-weight:600;line-height:1.05;letter-spacing:-.03em}
 .now i{font-style:normal;font-weight:400;color:var(--dim)}
-.tgt{position:absolute;top:.7rem;right:1rem;font-size:1.05rem;color:var(--dim)}
+.tg{font-size:1.2rem;color:var(--dim);white-space:nowrap}
+.tb{display:block;height:.3rem;border-radius:.2rem;background:rgba(255,255,255,.08);overflow:hidden}
+.tb i{display:block;height:100%;border-radius:.2rem;background:linear-gradient(90deg,var(--coral),var(--brand));transition:width 1s linear}
 .hot .ti{color:var(--coral)}
 .hot .now{color:var(--coral)}
 
