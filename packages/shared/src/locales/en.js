@@ -295,7 +295,7 @@ export default {
   'scr.page.move': 'Move',
   'scr.page.temp': 'Heat',
   'scr.hello': 'All good', 'scr.axes': 'Axes', 'scr.levelSt': 'Level', 'scr.pos': 'Position', 'scr.notLeveled': 'no', 'scr.lastJob': 'Last print', 'scr.noJobs': 'No prints yet',
-  'scr.langHint': 'Language of this screen. The web interface has its own language setting.',
+  'scr.langHint': 'The language is shared by this screen and the printer\'s web interface.',
   'scr.themeHint': 'The colour is shared with the web interface: a change here applies to every device.',
   'scr.gb': 'GB',
   'scr.page.tune': 'Fine tuning', 'scr.tune.reset': 'Reset', 'scr.cores': 'cores',

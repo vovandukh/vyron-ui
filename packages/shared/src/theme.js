@@ -31,6 +31,8 @@ export const DEFAULT_DESIGN = {
   grid: 100,
   /** Кольорове світіння фону, % */
   glow: 100,
+  /** Мова інтерфейсу, спільна для вебу й екрана принтера ('' — ще ніхто не обирав) */
+  lang: '',
   /** Час останньої зміни (мс) — щоб між пристроями перемагала новіша версія */
   updated: 0
 }
@@ -135,6 +137,9 @@ export function applyDesign(d, { layout = true } = {}) {
   window.dispatchEvent(new CustomEvent('vyron-theme', { detail: d }))
 }
 
+/** Мови, які може нести спільний дизайн (словники в locales/) */
+export const DESIGN_LANGS = ['uk', 'en']
+
 /** Приводить збережений об'єкт до коректного дизайну (невідомі ключі відкидаються, числа обмежуються). */
 export function sanitizeDesign(raw) {
   const d = { ...DEFAULT_DESIGN }
@@ -144,6 +149,7 @@ export function sanitizeDesign(raw) {
     if (v == null) continue
     if (k === 'accent' || k === 'brand') { if (hexToRgb(v)) d[k] = String(v).toLowerCase() }
     else if (k === 'preset') d[k] = String(v)
+    else if (k === 'lang') { if (DESIGN_LANGS.includes(v)) d[k] = v }
     else if (Number.isFinite(Number(v))) d[k] = LIMITS[k] ? clamp(Number(v), ...LIMITS[k]) : Number(v)
   }
   return d

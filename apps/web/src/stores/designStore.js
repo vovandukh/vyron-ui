@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, reactive, ref, watch } from 'vue'
 import { DEFAULT_DESIGN, PRESETS, applyDesign, sanitizeDesign, brandFor, hexToRgb } from '@vyron/shared/theme'
 import { usePrinterStore } from './printerStore'
+import { useSettingsStore } from './settingsStore'
 import { watchDesign, handleCoreEvent } from '@vyron/shared/live'
 import { dbGet, dbKnown } from '@vyron/shared/moonraker/db'
 import { DEMO_BUILD } from '../config'
@@ -118,6 +119,12 @@ export const useDesignStore = defineStore('design', () => {
       if (v.updated !== d.updated) { applyingRemote = true; Object.assign(d, v) }
     } catch { /* пошкоджено */ }
   })
+
+  // Мова — спільна для вебу й екрана принтера: зміна в налаштуваннях іде в дизайн (і далі на принтер),
+  // мова, що прийшла з принтера (змінили на екрані чи в іншому браузері), — застосовується тут.
+  const settings = useSettingsStore()
+  watch(() => settings.lang, l => { if (l && l !== d.lang) { d.lang = l; touch() } })
+  watch(() => d.lang, l => { if (l && l !== settings.lang) settings.set('lang', l) }, { immediate: true })
 
   /** Імпорт із файлу налаштувань: невідомі ключі відкидаються, числа обмежуються */
   function importDesign(raw) {
